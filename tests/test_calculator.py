@@ -5,12 +5,20 @@ def test_add():
     assert calculate("add", [5, 3]) == 8
 
 
+def test_multiple_add():
+    assert calculate("add", [5, 10, 20]) == 35
+
+
 def test_subtract():
     assert calculate("subtract", [5, 3]) == 2
 
 
 def test_multiply():
     assert calculate("multiply", [5, 3]) == 15
+
+
+def test_multiple_multiply():
+    assert calculate("multiply", [2, 3, 4]) == 24
 
 
 def test_divide():
