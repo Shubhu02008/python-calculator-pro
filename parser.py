@@ -1,20 +1,42 @@
-def tokenize(expression):
-    tokens = []
-    number = ""
+def evaluate_tokens(tokens):
+    # First solve multiplication and division
+    index = 0
 
-    for char in expression:
-        if char.isdigit() or char == ".":
-            number += char
+    while index < len(tokens):
+        if tokens[index] == "*" or tokens[index] == "/":
+            left = tokens[index - 1]
+            right = tokens[index + 1]
+
+            if tokens[index] == "*":
+                result = left * right
+            else:
+                if right == 0:
+                    return "Cannot divide by zero"
+                result = left / right
+
+            tokens[index - 1:index + 2] = [result]
+            index = 0
 
         else:
-            if number:
-                tokens.append(float(number) if "." in number else int(number))
-                number = ""
+            index += 1
 
-            if char.strip():
-                tokens.append(char)
+    # Then solve addition and subtraction
+    index = 0
 
-    if number:
-        tokens.append(float(number) if "." in number else int(number))
+    while index < len(tokens):
+        if tokens[index] == "+" or tokens[index] == "-":
+            left = tokens[index - 1]
+            right = tokens[index + 1]
 
-    return tokens
+            if tokens[index] == "+":
+                result = left + right
+            else:
+                result = left - right
+
+            tokens[index - 1:index + 2] = [result]
+            index = 0
+
+        else:
+            index += 1
+
+    return tokens[0]
