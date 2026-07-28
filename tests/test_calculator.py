@@ -27,3 +27,7 @@ def test_divide():
 
 def test_divide_by_zero():
     assert calculate("divide", [10, 0]) == "Cannot divide by zero"
+
+
+def test_invalid_operation():
+    assert calculate("unknown", [5, 3]) == "Invalid operation"
