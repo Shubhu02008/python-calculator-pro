@@ -1,4 +1,17 @@
+def tokenize(expression):
+    tokens = []
+
+    for part in expression.split():
+        if part.isdigit():
+            tokens.append(int(part))
+        else:
+            tokens.append(part)
+
+    return tokens
+
+
 def evaluate_tokens(tokens):
+
     # First solve multiplication and division
     index = 0
 
