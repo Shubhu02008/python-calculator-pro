@@ -1,30 +1,66 @@
 def tokenize(expression):
     tokens = []
 
-    for part in expression.split():
-        if part.isdigit():
-            tokens.append(int(part))
+    number = ""
+
+    for char in expression:
+        if char.isdigit():
+            number += char
+
         else:
-            tokens.append(part)
+            if number:
+                tokens.append(int(number))
+                number = ""
+
+            if char != " ":
+                tokens.append(char)
+
+    if number:
+        tokens.append(int(number))
+
+    return tokens
+
+
+def resolve_brackets(tokens):
+    while "(" in tokens:
+
+        start = tokens.index("(")
+
+        end = start
+
+        while tokens[end] != ")":
+            end += 1
+
+        inside = tokens[start + 1:end]
+
+        result = evaluate_tokens(inside)
+
+        tokens[start:end + 1] = [result]
 
     return tokens
 
 
 def evaluate_tokens(tokens):
 
-    # First solve multiplication and division
+    tokens = resolve_brackets(tokens)
+
+    # Multiplication and division first
     index = 0
 
     while index < len(tokens):
+
         if tokens[index] == "*" or tokens[index] == "/":
+
             left = tokens[index - 1]
             right = tokens[index + 1]
 
             if tokens[index] == "*":
                 result = left * right
+
             else:
                 if right == 0:
                     return "Cannot divide by zero"
+
                 result = left / right
 
             tokens[index - 1:index + 2] = [result]
@@ -33,16 +69,20 @@ def evaluate_tokens(tokens):
         else:
             index += 1
 
-    # Then solve addition and subtraction
+
+    # Addition and subtraction
     index = 0
 
     while index < len(tokens):
+
         if tokens[index] == "+" or tokens[index] == "-":
+
             left = tokens[index - 1]
             right = tokens[index + 1]
 
             if tokens[index] == "+":
                 result = left + right
+
             else:
                 result = left - right
 
