@@ -13,11 +13,12 @@ def calculate(expression):
     return result
 
 
-while True:
+if __name__ == "__main__":
 
-    expression = input("Enter expression: ")
+    while True:
+        expression = input("Enter expression: ")
 
-    if expression == "exit":
-        break
+        if expression == "exit":
+            break
 
-    print("Answer:", calculate(expression))
+        print("Answer:", calculate(expression))
