@@ -1,26 +1,23 @@
-def calculate(operation, numbers):
-    if operation == "add":
-        return sum(numbers)
+from parser import tokenize, evaluate_tokens
 
-    elif operation == "subtract":
-        result = numbers[0]
-        for number in numbers[1:]:
-            result -= number
-        return result
 
-    elif operation == "multiply":
-        result = 1
-        for number in numbers:
-            result *= number
-        return result
+def calculate(expression):
 
-    elif operation == "divide":
-        result = numbers[0]
-        for number in numbers[1:]:
-            if number == 0:
-                return "Cannot divide by zero"
-            result /= number
-        return result
+    expression = expression.replace("×", "*")
+    expression = expression.replace("÷", "/")
 
-    else:
-        return "Invalid operation"
+    tokens = tokenize(expression)
+
+    result = evaluate_tokens(tokens)
+
+    return result
+
+
+while True:
+
+    expression = input("Enter expression: ")
+
+    if expression == "exit":
+        break
+
+    print("Answer:", calculate(expression))
