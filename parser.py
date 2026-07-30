@@ -4,22 +4,22 @@ def tokenize(expression):
     number = ""
 
     for char in expression:
-        if char.isdigit():
+
+        if char.isdigit() or char == ".":
             number += char
 
         else:
             if number:
-                tokens.append(int(number))
+                tokens.append(float(number))
                 number = ""
 
             if char != " ":
                 tokens.append(char)
 
     if number:
-        tokens.append(int(number))
+        tokens.append(float(number))
 
     return tokens
-
 
 def resolve_brackets(tokens):
 
