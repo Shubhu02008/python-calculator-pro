@@ -22,14 +22,18 @@ def tokenize(expression):
 
 
 def resolve_brackets(tokens):
+
     while "(" in tokens:
 
-        start = tokens.index("(")
+        start = None
 
-        end = start
+        for index, token in enumerate(tokens):
+            if token == "(":
+                start = index
 
-        while tokens[end] != ")":
-            end += 1
+            elif token == ")":
+                end = index
+                break
 
         inside = tokens[start + 1:end]
 
