@@ -1,24 +1,15 @@
-from parser import tokenize, evaluate_tokens
+def add(a, b):
+    return a + b
 
+def subtract(a, b):
+    return a - b
 
-def calculate(expression):
+def multiply(a, b):
+    return a * b
 
-    expression = expression.replace("×", "*")
-    expression = expression.replace("÷", "/")
+def divide(a, b):
+    if b == 0:
+        return "Cannot divide by zero"
+    return a / b
 
-    tokens = tokenize(expression)
-
-    result = evaluate_tokens(tokens)
-
-    return result
-
-
-if __name__ == "__main__":
-
-    while True:
-        expression = input("Enter expression: ")
-
-        if expression == "exit":
-            break
-
-        print("Answer:", calculate(expression))
+print("Python Calculator Pro")
