@@ -3,9 +3,14 @@ def tokenize(expression):
 
     number = ""
 
-    for char in expression:
+    for index, char in enumerate(expression):
 
         if char.isdigit() or char == ".":
+            number += char
+
+        elif char == "-" and (
+            index == 0 or expression[index - 1] in "+-*/("
+        ):
             number += char
 
         else:
