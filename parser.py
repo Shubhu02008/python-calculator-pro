@@ -9,10 +9,14 @@ _TOKEN_PATTERN = re.compile(r"\d+(?:\.\d*)?|\.\d+|[()+\-*/]")
 def tokenize(expression):
     """Convert an expression string into numbers and operator tokens.
 
-    Only decimal numbers, parentheses, whitespace, and + - * / are accepted.
+    Decimal numbers, parentheses, whitespace, + - * /, and the division
+    symbol ÷ are accepted.
     """
     if not isinstance(expression, str):
         raise ValueError("Expression must be text.")
+
+    # Treat the traditional division symbol exactly like a forward slash.
+    expression = expression.replace("÷", "/")
 
     tokens = []
     position = 0
