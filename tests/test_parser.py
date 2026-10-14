@@ -8,17 +8,40 @@ def evaluate(expression):
     return evaluate_tokens(tokenize(expression))
 
 
-def test_basic_arithmetic_and_precedence():
+def test_tokenize():
+    assert tokenize("5 + 10 * 3") == [5.0, "+", 10.0, "*", 3.0]
+
+
+def test_basic_bodmas():
     assert evaluate("5 + 10 * 3") == 35
+
+
+def test_parentheses():
     assert evaluate("(2 + 3) * 4") == 20
+
+
+def test_nested_parentheses():
     assert evaluate("2 * (3 + (4 - 1))") == 12
+
+
+def test_decimal_numbers():
     assert evaluate("1.5 + 2.25") == 3.75
 
 
-def test_multiplication_and_division_symbols():
+def test_division_symbol():
+    assert evaluate("10 ÷ 2") == 5
+    assert evaluate("20 ÷ (2 + 3)") == 4
+
+
+def test_negative_numbers_and_unary_minus():
+    assert evaluate("-5 + 2") == -3
+    assert evaluate("5 * -2") == -10
+    assert evaluate("-(2 + 3)") == -5
+
+
+def test_multiplication_symbols():
     assert evaluate("3 × 4") == 12
     assert evaluate("3 · 4") == 12
-    assert evaluate("10 ÷ 2") == 5
 
 
 def test_powers_and_precedence():
@@ -60,17 +83,28 @@ def test_scientific_notation():
     assert evaluate("1.2e3 + 2") == 1202
 
 
-@pytest.mark.parametrize("expression", [
-    "", "   ", ".", "1.2.3", "2 +", "* 2", "(2 + 3", "2 + 3)",
-    "()", "hello", "2 @ 3", "10 / 0", "sqrt(-1)", "5.5!",
-])
-def test_invalid_expressions_raise_clear_errors(expression):
+def test_division_by_zero_is_reported():
+    with pytest.raises(ValueError, match="divide by zero"):
+        evaluate("10 / 0")
+
+
+def test_division_by_zero_inside_parentheses_is_reported():
+    with pytest.raises(ValueError, match="divide by zero"):
+        evaluate("2 + (10 / 0)")
+
+
+@pytest.mark.parametrize(
+    "expression",
+    [
+        "", "   ", "1.2.3", ".", "2 +", "* 2", "(2 + 3",
+        "2 + 3)", "()", "hello", "2 @ 3", "sqrt(-1)", "5.5!",
+    ],
+)
+def test_malformed_or_invalid_expressions_are_rejected(expression):
     with pytest.raises(ValueError):
         evaluate(expression)
 
 
-def test_tokenize_preserves_legacy_simple_tokens():
-    assert tokenize("5 + 10 * 3") == [
-        ("NUMBER", 5.0), ("+", "+"), ("NUMBER", 10.0),
-        ("*", "*"), ("NUMBER", 3.0)
-    ]
+def test_unsupported_character_is_rejected_by_tokenizer():
+    with pytest.raises(ValueError, match="Unsupported character"):
+        tokenize("2 @ 3")
