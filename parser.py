@@ -1,53 +1,108 @@
-"""Tokenize and evaluate basic arithmetic expressions safely."""
+"""Safely tokenize and evaluate scientific calculator expressions."""
 
+import math
 import re
 
 
-_TOKEN_PATTERN = re.compile(r"\d+(?:\.\d*)?|\.\d+|[()+\-*/]")
+_NUMBER = re.compile(r"(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?")
+_IDENTIFIER = re.compile(r"[A-Za-z_][A-Za-z_0-9]*")
+
+_CONSTANTS = {
+    "pi": math.pi,
+    "π": math.pi,
+    "e": math.e,
+    "tau": math.tau,
+}
+_FUNCTIONS = {
+    "sin": math.sin, "cos": math.cos, "tan": math.tan,
+    "asin": math.asin, "acos": math.acos, "atan": math.atan,
+    "sinh": math.sinh, "cosh": math.cosh, "tanh": math.tanh,
+    "sqrt": math.sqrt, "cbrt": math.cbrt, "abs": abs,
+    "ln": math.log, "log": math.log10, "log10": math.log10,
+    "exp": math.exp, "floor": math.floor, "ceil": math.ceil,
+    "degrees": math.degrees, "radians": math.radians,
+    "factorial": math.factorial,
+}
+_MULTI_ARG_FUNCTIONS = {"log": math.log}
+_VALUE_END = {"NUMBER", "IDENT", ")", "POSTFIX"}
+_VALUE_START = {"NUMBER", "IDENT", "("}
 
 
 def tokenize(expression):
-    """Convert an expression string into numbers and operator tokens.
-
-    Decimal numbers, parentheses, whitespace, + - * /, and the division
-    symbol ÷ are accepted.
-    """
+    """Convert expression text to tokens; supports scientific symbols and notation."""
     if not isinstance(expression, str):
         raise ValueError("Expression must be text.")
 
-    # Treat the traditional division symbol exactly like a forward slash.
-    expression = expression.replace("÷", "/")
-
+    expression = (
+        expression.replace("×", "*").replace("·", "*").replace("÷", "/")
+        .replace("−", "-").replace("π", "pi").replace("√", "sqrt")
+        .replace("∛", "cbrt").replace("²", "^2").replace("³", "^3")
+        .replace("**", "^")
+    )
     tokens = []
     position = 0
-
     while position < len(expression):
-        if expression[position].isspace():
+        char = expression[position]
+        if char.isspace():
             position += 1
             continue
-
-        match = _TOKEN_PATTERN.match(expression, position)
-        if match is None:
-            raise ValueError(
-                f"Unsupported character at position {position + 1}: "
-                f"{expression[position]!r}"
-            )
-
-        token = match.group()
-        if token in {"+", "-", "*", "/", "(", ")"}:
-            tokens.append(token)
-        else:
-            try:
-                tokens.append(float(token))
-            except ValueError as exc:
-                raise ValueError(f"Invalid number: {token}") from exc
-
-        position = match.end()
+        number = _NUMBER.match(expression, position)
+        if number:
+            tokens.append(("NUMBER", float(number.group())))
+            position = number.end()
+            continue
+        identifier = _IDENTIFIER.match(expression, position)
+        if identifier:
+            tokens.append(("IDENT", identifier.group().lower()))
+            position = identifier.end()
+            continue
+        if char in "+-*/^(),!%":
+            if char in "!%":
+                tokens.append(("POSTFIX", char))
+            else:
+                tokens.append((char, char))
+            position += 1
+            continue
+        raise ValueError(
+            f"Unsupported character at position {position + 1}: {char!r}"
+        )
 
     if not tokens:
         raise ValueError("Please enter an expression.")
 
-    return tokens
+    # A root symbol may be written without parentheses: √25 or ∛8.
+    expanded = []
+    for i, token in enumerate(tokens):
+        expanded.append(token)
+        if token == ("IDENT", "sqrt") or token == ("IDENT", "cbrt"):
+            if i + 1 < len(tokens) and tokens[i + 1][0] != "(":
+                expanded.append(("(", "("))
+                # Close the single-token argument after it is read.
+                expanded.append(("ROOT_CLOSE", ")"))
+    # ROOT_CLOSE is only useful for a single numeric/identifier argument.
+    # Convert it into a real closing token immediately after that argument.
+    fixed = []
+    root_pending = False
+    for token in expanded:
+        if token[0] == "ROOT_CLOSE":
+            continue
+        fixed.append(token)
+
+    # Insert implicit multiplication, e.g. 2pi, 3(4+5), and (2)(3).
+    result = []
+    for token in fixed:
+        if result:
+            previous = result[-1]
+            prev_end = previous[0] in {"NUMBER", "IDENT", ")", "POSTFIX"}
+            curr_start = token[0] in {"NUMBER", "IDENT", "("}
+            is_function_call = (
+                previous[0] == "IDENT" and previous[1] in _FUNCTIONS
+                and token[0] == "("
+            )
+            if prev_end and curr_start and not is_function_call:
+                result.append(("*", "*"))
+        result.append(token)
+    return result
 
 
 def resolve_brackets(tokens):
@@ -56,74 +111,161 @@ def resolve_brackets(tokens):
 
 
 def evaluate_tokens(tokens):
-    """Evaluate tokens using standard arithmetic precedence.
-
-    Raises ValueError for malformed expressions and division by zero.
-    """
+    """Evaluate arithmetic and scientific functions using calculator precedence."""
     if not tokens:
         raise ValueError("Please enter an expression.")
 
+    # Preserve compatibility with the old public tokenizer, which returned
+    # numbers and operator strings, while also accepting the new typed tokens.
+    normalized = []
+    for token in tokens:
+        if isinstance(token, tuple) and len(token) == 2:
+            normalized.append(token)
+        elif isinstance(token, (int, float)) and not isinstance(token, bool):
+            normalized.append(("NUMBER", float(token)))
+        elif isinstance(token, str):
+            if token in {"+", "-", "*", "/", "^", "(", ")", ","}:
+                normalized.append((token, token))
+            elif token in {"!", "%"}:
+                normalized.append(("POSTFIX", token))
+            else:
+                normalized.append(("IDENT", token.lower()))
+        else:
+            raise ValueError(f"Invalid token: {token!r}")
+
     position = 0
+
+    def peek(kind=None):
+        if position >= len(normalized):
+            return False
+        return normalized[position][0] == kind if kind else normalized[position]
 
     def parse_expression():
         nonlocal position
-        result = parse_term()
-        while position < len(tokens) and tokens[position] in {"+", "-"}:
-            operator = tokens[position]
+        value = parse_term()
+        while peek("+") or peek("-"):
+            operator = normalized[position][0]
             position += 1
             right = parse_term()
-            result = result + right if operator == "+" else result - right
-        return result
+            value = value + right if operator == "+" else value - right
+        return value
 
     def parse_term():
         nonlocal position
-        result = parse_factor()
-        while position < len(tokens) and tokens[position] in {"*", "/"}:
-            operator = tokens[position]
+        value = parse_unary()
+        while peek("*") or peek("/"):
+            operator = normalized[position][0]
             position += 1
-            right = parse_factor()
+            right = parse_unary()
             if operator == "*":
-                result *= right
+                value *= right
             else:
                 if right == 0:
                     raise ValueError("Cannot divide by zero.")
-                result /= right
-        return result
+                value /= right
+        return value
 
-    def parse_factor():
+    def parse_unary():
         nonlocal position
-        if position >= len(tokens):
-            raise ValueError("Expression ends unexpectedly.")
-
-        token = tokens[position]
-
-        if token in {"+", "-"}:
+        if peek("+") or peek("-"):
+            operator = normalized[position][0]
             position += 1
-            value = parse_factor()
-            return value if token == "+" else -value
+            value = parse_unary()
+            return value if operator == "+" else -value
+        return parse_power()
 
-        if token == "(":
+    def parse_power():
+        nonlocal position
+        value = parse_postfix()
+        if peek("^"):
+            position += 1
+            value = value ** parse_unary()
+            if isinstance(value, complex):
+                raise ValueError("This expression has a complex result.")
+        return value
+
+    def parse_postfix():
+        nonlocal position
+        value = parse_primary()
+        while peek("POSTFIX"):
+            operator = normalized[position][1]
+            position += 1
+            if operator == "%":
+                value /= 100
+            else:
+                if value < 0 or not float(value).is_integer():
+                    raise ValueError("Factorial requires a non-negative integer.")
+                if value > 170:
+                    raise ValueError("Factorial is too large to calculate.")
+                value = math.factorial(int(value))
+        return value
+
+    def parse_primary():
+        nonlocal position
+        if position >= len(normalized):
+            raise ValueError("Expression ends unexpectedly.")
+        kind, value = normalized[position]
+
+        if kind == "NUMBER":
+            position += 1
+            return value
+
+        if kind == "(":
             position += 1
             value = parse_expression()
-            if position >= len(tokens) or tokens[position] != ")":
+            if not peek(")"):
                 raise ValueError("Missing closing parenthesis.")
             position += 1
             return value
 
-        if token == ")":
+        if kind == ")":
             raise ValueError("Unexpected closing parenthesis.")
 
-        if isinstance(token, (int, float)) and not isinstance(token, bool):
+        if kind == "IDENT":
             position += 1
-            return float(token)
+            if value in _CONSTANTS:
+                return _CONSTANTS[value]
+            if value not in _FUNCTIONS:
+                raise ValueError(f"Unknown function or constant: {value!r}.")
+            function = _FUNCTIONS[value]
+            if peek("("):
+                position += 1
+                args = [parse_expression()]
+                while peek(","):
+                    position += 1
+                    args.append(parse_expression())
+                if not peek(")"):
+                    raise ValueError("Missing closing parenthesis in function.")
+                position += 1
+            elif value in {"sqrt", "cbrt"} and position < len(normalized):
+                args = [parse_unary()]
+            else:
+                raise ValueError(f"Function {value} needs parentheses.")
+            if value == "log" and len(args) == 2:
+                result = math.log(args[0], args[1])
+            else:
+                try:
+                    result = function(*args)
+                except TypeError as exc:
+                    raise ValueError(f"Invalid arguments for {value}.") from exc
+            if isinstance(result, complex):
+                raise ValueError("This expression has a complex result.")
+            return result
 
-        raise ValueError(f"Expected a number, got {token!r}.")
+        raise ValueError(f"Expected a number, got {value!r}.")
 
-    result = parse_expression()
-    if position != len(tokens):
-        token = tokens[position]
-        if token == ")":
+    try:
+        result = parse_expression()
+    except (OverflowError, ZeroDivisionError) as exc:
+        raise ValueError("The result is outside the supported range.") from exc
+    except ValueError:
+        raise
+    except (ValueError, TypeError) as exc:
+        raise ValueError("Invalid mathematical expression.") from exc
+
+    if position != len(normalized):
+        token = normalized[position]
+        if token[0] == ")":
             raise ValueError("Unexpected closing parenthesis.")
-        raise ValueError(f"Unexpected token: {token!r}.")
-
+        raise ValueError(f"Unexpected token: {token[1]!r}.")
     return result
