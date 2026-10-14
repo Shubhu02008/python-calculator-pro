@@ -43,7 +43,7 @@ def test_solves_cubic_with_one_real_and_two_complex_roots():
 
 def test_solves_cubic_with_repeated_roots():
     roots = solve_equation("x^3 - 3x + 2 = 0")
-    assert roots == pytest.approx([2.0, -1.0, -1.0])
+    assert roots == pytest.approx([-2.0, 1.0, 1.0])
 
 
 def test_supports_cubic_notation_and_superscript():
