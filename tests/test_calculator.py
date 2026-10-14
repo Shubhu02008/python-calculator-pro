@@ -1,3 +1,5 @@
+import pytest
+
 from calculator import calculate
 
 
@@ -11,6 +13,10 @@ def test_multiple_add():
 
 def test_subtract():
     assert calculate("subtract", [5, 3]) == 2
+
+
+def test_multiple_subtract():
+    assert calculate("subtract", [10, 3, 2]) == 5
 
 
 def test_multiply():
@@ -31,3 +37,17 @@ def test_divide_by_zero():
 
 def test_invalid_operation():
     assert calculate("unknown", [5, 3]) == "Invalid operation"
+
+
+def test_expression_calculation():
+    assert calculate("5 + 10 * 3") == 35
+
+
+def test_empty_number_list_is_rejected():
+    with pytest.raises(ValueError, match="at least one number"):
+        calculate("add", [])
+
+
+def test_empty_number_tuple_is_rejected():
+    with pytest.raises(ValueError, match="at least one number"):
+        calculate("subtract", ())
