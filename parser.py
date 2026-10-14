@@ -70,39 +70,25 @@ def tokenize(expression):
     if not tokens:
         raise ValueError("Please enter an expression.")
 
-    # A root symbol may be written without parentheses: √25 or ∛8.
-    expanded = []
-    for i, token in enumerate(tokens):
-        expanded.append(token)
-        if token == ("IDENT", "sqrt") or token == ("IDENT", "cbrt"):
-            if i + 1 < len(tokens) and tokens[i + 1][0] != "(":
-                expanded.append(("(", "("))
-                # Close the single-token argument after it is read.
-                expanded.append(("ROOT_CLOSE", ")"))
-    # ROOT_CLOSE is only useful for a single numeric/identifier argument.
-    # Convert it into a real closing token immediately after that argument.
-    fixed = []
-    root_pending = False
-    for token in expanded:
-        if token[0] == "ROOT_CLOSE":
-            continue
-        fixed.append(token)
-
     # Insert implicit multiplication, e.g. 2pi, 3(4+5), and (2)(3).
     result = []
-    for token in fixed:
+    for token in tokens:
         if result:
             previous = result[-1]
             prev_end = previous[0] in {"NUMBER", "IDENT", ")", "POSTFIX"}
             curr_start = token[0] in {"NUMBER", "IDENT", "("}
-            is_function_call = (
-                previous[0] == "IDENT" and previous[1] in _FUNCTIONS
-                and token[0] == "("
+            is_function_argument = (
+                previous[0] == "IDENT"
+                and ((previous[1] in _FUNCTIONS and token[0] == "(")
+                     or (previous[1] in {"sqrt", "cbrt"}
+                         and token[0] in {"NUMBER", "IDENT", "("}))
             )
-            if prev_end and curr_start and not is_function_call:
+            if prev_end and curr_start and not is_function_argument:
                 result.append(("*", "*"))
         result.append(token)
-    return result
+
+    # Keep the original public tokenizer format for compatibility.
+    return [token[1] if token[0] in {"NUMBER", "IDENT", "POSTFIX"} else token[0] for token in result]
 
 
 def resolve_brackets(tokens):
