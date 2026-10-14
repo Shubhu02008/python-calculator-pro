@@ -227,7 +227,14 @@ def evaluate_tokens(tokens):
                 args = [parse_unary()]
             else:
                 raise ValueError(f"Function {value} needs parentheses.")
-            if value == "log" and len(args) == 2:
+            if value == "factorial" and len(args) == 1:
+                number = args[0]
+                if number < 0 or not float(number).is_integer():
+                    raise ValueError("Factorial requires a non-negative integer.")
+                if number > 170:
+                    raise ValueError("Factorial is too large to calculate.")
+                result = math.factorial(int(number))
+            elif value == "log" and len(args) == 2:
                 result = math.log(args[0], args[1])
             else:
                 try:
