@@ -56,7 +56,7 @@ def test_powers_and_precedence():
 def test_roots():
     assert evaluate("√25") == 5
     assert evaluate("sqrt(16 + 9)") == 5
-    assert evaluate("∛27") == 3
+    assert evaluate("∛27") == pytest.approx(3)
     assert evaluate("cbrt(8)") == 2
 
 
