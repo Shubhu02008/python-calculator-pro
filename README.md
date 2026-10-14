@@ -2,6 +2,8 @@
 
 A Python calculator engine for arithmetic, scientific functions, polynomial equations, and binomial expansions. The current interface is command-line based; a mobile button interface is a separate next step.
 
+**Requirements:** Python 3.11 or newer.
+
 ## Features
 
 - Addition, subtraction, multiplication, and division

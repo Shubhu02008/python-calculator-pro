@@ -28,6 +28,10 @@ def _tokenize_polynomial(expression):
         elif token in {"+", "-", "*", "/", "^", "(", ")"}:
             tokens.append(token)
         else:
+            # Adjacent numeric tokens indicate a malformed number or a missing
+            # operator (for example, "1.2.3" or "2 3"), not multiplication.
+            if tokens and isinstance(tokens[-1], (int, float)):
+                raise ValueError("Invalid number or missing operator in equation.")
             tokens.append(float(token))
         position = match.end()
 

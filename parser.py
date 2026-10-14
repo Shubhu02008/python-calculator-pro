@@ -48,7 +48,10 @@ def tokenize(expression):
             continue
         number = _NUMBER.match(expression, position)
         if number:
-            tokens.append(("NUMBER", float(number.group())))
+            value = float(number.group())
+            if not math.isfinite(value):
+                raise ValueError("Number is outside the supported range.")
+            tokens.append(("NUMBER", value))
             position = number.end()
             continue
         identifier = _IDENTIFIER.match(expression, position)
@@ -265,4 +268,6 @@ def evaluate_tokens(tokens):
         if token[0] == ")":
             raise ValueError("Unexpected closing parenthesis.")
         raise ValueError(f"Unexpected token: {token[1]!r}.")
+    if not math.isfinite(result):
+        raise ValueError("The result is outside the supported range.")
     return result
