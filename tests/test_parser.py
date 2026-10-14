@@ -1,3 +1,4 @@
+import math
 import pytest
 
 from parser import tokenize, evaluate_tokens
@@ -8,7 +9,7 @@ def evaluate(expression):
 
 
 def test_tokenize():
-    assert tokenize("5 + 10 * 3") == [5, "+", 10, "*", 3]
+    assert tokenize("5 + 10 * 3") == [5.0, "+", 10.0, "*", 3.0]
 
 
 def test_basic_bodmas():
@@ -38,6 +39,53 @@ def test_negative_numbers_and_unary_minus():
     assert evaluate("-(2 + 3)") == -5
 
 
+def test_multiplication_symbols():
+    assert evaluate("3 × 4") == 12
+    assert evaluate("3 · 4") == 12
+
+
+def test_powers_and_precedence():
+    assert evaluate("2^3") == 8
+    assert evaluate("2**3") == 8
+    assert evaluate("5²") == 25
+    assert evaluate("2^3^2") == 512
+    assert evaluate("-2^2") == -4
+    assert evaluate("2^-2") == 0.25
+
+
+def test_roots():
+    assert evaluate("√25") == 5
+    assert evaluate("sqrt(16 + 9)") == 5
+    # Cube roots may differ from the exact mathematical value by a tiny
+    # floating-point rounding error, so compare approximately.
+    assert evaluate("∛27") == pytest.approx(3)
+    assert evaluate("cbrt(8)") == pytest.approx(2)
+
+
+def test_scientific_functions_and_constants():
+    assert evaluate("sin(pi/2)") == pytest.approx(1)
+    assert evaluate("cos(0)") == 1
+    assert evaluate("log(100)") == 2
+    assert evaluate("ln(e)") == pytest.approx(1)
+    assert evaluate("log(8, 2)") == 3
+    assert evaluate("abs(-5)") == 5
+    assert evaluate("exp(1)") == pytest.approx(math.e)
+
+
+def test_percent_factorial_and_implicit_multiplication():
+    assert evaluate("50%") == 0.5
+    assert evaluate("200 * 10%") == 20
+    assert evaluate("5!") == 120
+    assert evaluate("factorial(5)") == 120
+    assert evaluate("2pi") == pytest.approx(2 * math.pi)
+    assert evaluate("3(4+5)") == 27
+    assert evaluate("(2)(3)") == 6
+
+
+def test_scientific_notation():
+    assert evaluate("1.2e3 + 2") == 1202
+
+
 def test_division_by_zero_is_reported():
     with pytest.raises(ValueError, match="divide by zero"):
         evaluate("10 / 0")
@@ -51,26 +99,15 @@ def test_division_by_zero_inside_parentheses_is_reported():
 @pytest.mark.parametrize(
     "expression",
     [
-        "",
-        "   ",
-        "1.2.3",
-        ".",
-        "2 ^ 3",
-        "2 ** 3",
-        "2 +",
-        "* 2",
-        "(2 + 3",
-        "2 + 3)",
-        "()",
-        "2 3",
-        "hello",
+        "", "   ", "1.2.3", ".", "2 +", "* 2", "(2 + 3",
+        "2 + 3)", "()", "hello", "2 @ 3", "sqrt(-1)", "5.5!",
     ],
 )
-def test_malformed_or_unsupported_expressions_are_rejected(expression):
+def test_malformed_or_invalid_expressions_are_rejected(expression):
     with pytest.raises(ValueError):
         evaluate(expression)
 
 
 def test_unsupported_character_is_rejected_by_tokenizer():
     with pytest.raises(ValueError, match="Unsupported character"):
-        tokenize("2 % 3")
+        tokenize("2 @ 3")
