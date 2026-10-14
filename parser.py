@@ -35,8 +35,8 @@ def tokenize(expression):
 
     expression = (
         expression.replace("×", "*").replace("·", "*").replace("÷", "/")
-        .replace("−", "-").replace("π", "pi").replace("√", "sqrt")
-        .replace("∛", "cbrt").replace("²", "^2").replace("³", "^3")
+        .replace("−", "-").replace("π", "pi").replace("√", "sqrt ")
+        .replace("∛", "cbrt ").replace("²", "^2").replace("³", "^3")
         .replace("**", "^")
     )
     tokens = []
