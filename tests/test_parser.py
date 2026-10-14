@@ -56,8 +56,10 @@ def test_powers_and_precedence():
 def test_roots():
     assert evaluate("√25") == 5
     assert evaluate("sqrt(16 + 9)") == 5
+    # Cube roots may differ from the exact mathematical value by a tiny
+    # floating-point rounding error, so compare approximately.
     assert evaluate("∛27") == pytest.approx(3)
-    assert evaluate("cbrt(8)") == 2
+    assert evaluate("cbrt(8)") == pytest.approx(2)
 
 
 def test_scientific_functions_and_constants():
