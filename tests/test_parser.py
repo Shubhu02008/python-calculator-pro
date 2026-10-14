@@ -27,6 +27,11 @@ def test_decimal_numbers():
     assert evaluate("1.5 + 2.25") == 3.75
 
 
+def test_division_symbol():
+    assert evaluate("10 ÷ 2") == 5
+    assert evaluate("20 ÷ (2 + 3)") == 4
+
+
 def test_negative_numbers_and_unary_minus():
     assert evaluate("-5 + 2") == -3
     assert evaluate("5 * -2") == -10

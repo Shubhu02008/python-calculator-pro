@@ -1,15 +1,19 @@
 # Python Calculator Pro
 
-A small command-line calculator written in Python. It supports basic arithmetic operations and validated arithmetic expressions.
+A command-line calculator written in Python for arithmetic expressions and basic linear and quadratic equations.
 
 ## Features
 
 - Addition, subtraction, multiplication, and division
-- Operations on multiple numbers
-- Expression evaluation with `+`, `-`, `*`, and `/`
-- Decimal and negative numbers
-- Parentheses and standard operator precedence
-- Clear errors for unsupported or malformed expressions and division by zero
+- Division with either `/` or `÷`
+- Decimal and negative numbers, parentheses, and standard arithmetic precedence
+- Linear equation solving, such as `2x + 4 = 10`
+- Quadratic equation solving, such as `x^2 - 5x + 6 = 0`
+- Implicit multiplication, such as `5x` and `x(x - 3)`
+- Real and complex roots, repeated roots, no-solution cases, and identities
+- Clear errors for unsupported or malformed expressions
+
+Equation solving supports polynomials of degree 1 or 2 in the variable `x`. Powers 0, 1, and 2 are supported; higher-degree equations and division by expressions containing `x` are not supported.
 
 ## Requirements
 
@@ -18,27 +22,24 @@ A small command-line calculator written in Python. It supports basic arithmetic 
 
 ## How to Run
 
-1. Clone or download this repository.
-2. Open a terminal in the project directory.
-3. Run:
+Open a terminal in the project directory and run:
 
-   ```bash
-   python main.py
-   ```
+```bash
+python main.py
+```
 
-On systems where Python 3 is invoked as `python3`, use `python3 main.py`.
+Use `python3 main.py` if your system uses `python3` as the command.
 
-Follow the menu prompts to select an operation and enter numbers separated by spaces. Choose **Evaluate an expression** to enter an expression such as:
+Choose **5** to evaluate an arithmetic expression, for example `10 ÷ 2`.
+Choose **6** to solve a linear or quadratic equation, for example:
 
 ```text
-(2 + 3) * 4
+x^2 - 5x + 6 = 0
 ```
 
 Choose **0** to exit.
 
 ## Run the Tests
-
-Install pytest if needed:
 
 ```bash
 python -m pip install pytest
@@ -47,13 +48,12 @@ python -m pytest
 
 ## Use from Python
 
-The calculation functions can also be imported:
-
 ```python
 from calculator import calculate
+from equation_solver import solve_equation
 
-print(calculate("add", [5, 3]))
-print(calculate("(2 + 3) * 4"))
+print(calculate("10 ÷ 2"))
+print(solve_equation("x^2 - 5x + 6 = 0"))
 ```
 
 ## Author

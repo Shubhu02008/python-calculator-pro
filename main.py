@@ -1,4 +1,5 @@
 from calculator import calculate
+from equation_solver import solve_equation
 
 
 def main():
@@ -12,6 +13,7 @@ def main():
         print("3. Multiply")
         print("4. Divide")
         print("5. Evaluate an expression")
+        print("6. Solve a linear or quadratic equation")
         print("0. Exit")
 
         choice = input("Your choice: ").strip()
@@ -28,6 +30,20 @@ def main():
                 print("Error:", error)
             continue
 
+        if choice == "6":
+            equation = input("Enter an equation in x (e.g. x^2 - 5x + 6 = 0): ")
+            try:
+                solutions = solve_equation(equation)
+                if isinstance(solutions, str):
+                    print(solutions)
+                else:
+                    print("Solution:" if len(solutions) == 1 else "Solutions:")
+                    for index, solution in enumerate(solutions, start=1):
+                        print(f"x{index} = {solution}")
+            except (ValueError, TypeError, IndexError, ZeroDivisionError) as error:
+                print("Error:", error)
+            continue
+
         operations = {
             "1": ("add", "add"),
             "2": ("subtract", "subtract"),
@@ -36,7 +52,7 @@ def main():
         }
 
         if choice not in operations:
-            print("Invalid choice. Please choose 0, 1, 2, 3, 4, or 5.")
+            print("Invalid choice. Please choose 0, 1, 2, 3, 4, 5, or 6.")
             continue
 
         operation, label = operations[choice]
