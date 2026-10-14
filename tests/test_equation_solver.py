@@ -66,6 +66,8 @@ def test_reports_infinite_solutions():
         "x + = 2",
         "x + 1",
         "x / (x + 1) = 2",
+        "2 3 = 6",
+        "1.2.3x = 4",
     ],
 )
 def test_rejects_unsupported_or_malformed_equations(equation):
