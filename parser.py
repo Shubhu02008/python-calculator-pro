@@ -1,104 +1,125 @@
+"""Tokenize and evaluate basic arithmetic expressions safely."""
+
+import re
+
+
+_TOKEN_PATTERN = re.compile(r"\d+(?:\.\d*)?|\.\d+|[()+\-*/]")
+
+
 def tokenize(expression):
+    """Convert an expression string into numbers and operator tokens.
+
+    Only decimal numbers, parentheses, whitespace, and + - * / are accepted.
+    """
+    if not isinstance(expression, str):
+        raise ValueError("Expression must be text.")
+
     tokens = []
+    position = 0
 
-    number = ""
+    while position < len(expression):
+        if expression[position].isspace():
+            position += 1
+            continue
 
-    for index, char in enumerate(expression):
+        match = _TOKEN_PATTERN.match(expression, position)
+        if match is None:
+            raise ValueError(
+                f"Unsupported character at position {position + 1}: "
+                f"{expression[position]!r}"
+            )
 
-        if char.isdigit() or char == ".":
-            number += char
-
-        elif char == "-" and (
-            index == 0 or expression[index - 1] in "+-*/("
-        ):
-            number += char
-
+        token = match.group()
+        if token in {"+", "-", "*", "/", "(", ")"}:
+            tokens.append(token)
         else:
-            if number:
-                tokens.append(float(number))
-                number = ""
+            try:
+                tokens.append(float(token))
+            except ValueError as exc:
+                raise ValueError(f"Invalid number: {token}") from exc
 
-            if char != " ":
-                tokens.append(char)
+        position = match.end()
 
-    if number:
-        tokens.append(float(number))
+    if not tokens:
+        raise ValueError("Please enter an expression.")
 
     return tokens
+
 
 def resolve_brackets(tokens):
-
-    while "(" in tokens:
-
-        start = None
-
-        for index, token in enumerate(tokens):
-            if token == "(":
-                start = index
-
-            elif token == ")":
-                end = index
-                break
-
-        inside = tokens[start + 1:end]
-
-        result = evaluate_tokens(inside)
-
-        tokens[start:end + 1] = [result]
-
-    return tokens
+    """Compatibility helper: evaluate the supplied expression tokens."""
+    return [evaluate_tokens(tokens)]
 
 
 def evaluate_tokens(tokens):
+    """Evaluate tokens using standard arithmetic precedence.
 
-    tokens = resolve_brackets(tokens)
+    Raises ValueError for malformed expressions and division by zero.
+    """
+    if not tokens:
+        raise ValueError("Please enter an expression.")
 
-    # Multiplication and division first
-    index = 0
+    position = 0
 
-    while index < len(tokens):
+    def parse_expression():
+        nonlocal position
+        result = parse_term()
+        while position < len(tokens) and tokens[position] in {"+", "-"}:
+            operator = tokens[position]
+            position += 1
+            right = parse_term()
+            result = result + right if operator == "+" else result - right
+        return result
 
-        if tokens[index] == "*" or tokens[index] == "/":
-
-            left = tokens[index - 1]
-            right = tokens[index + 1]
-
-            if tokens[index] == "*":
-                result = left * right
-
+    def parse_term():
+        nonlocal position
+        result = parse_factor()
+        while position < len(tokens) and tokens[position] in {"*", "/"}:
+            operator = tokens[position]
+            position += 1
+            right = parse_factor()
+            if operator == "*":
+                result *= right
             else:
                 if right == 0:
-                    return "Cannot divide by zero"
+                    raise ValueError("Cannot divide by zero.")
+                result /= right
+        return result
 
-                result = left / right
+    def parse_factor():
+        nonlocal position
+        if position >= len(tokens):
+            raise ValueError("Expression ends unexpectedly.")
 
-            tokens[index - 1:index + 2] = [result]
-            index = 0
+        token = tokens[position]
 
-        else:
-            index += 1
+        if token in {"+", "-"}:
+            position += 1
+            value = parse_factor()
+            return value if token == "+" else -value
 
+        if token == "(":
+            position += 1
+            value = parse_expression()
+            if position >= len(tokens) or tokens[position] != ")":
+                raise ValueError("Missing closing parenthesis.")
+            position += 1
+            return value
 
-    # Addition and subtraction
-    index = 0
+        if token == ")":
+            raise ValueError("Unexpected closing parenthesis.")
 
-    while index < len(tokens):
+        if isinstance(token, (int, float)) and not isinstance(token, bool):
+            position += 1
+            return float(token)
 
-        if tokens[index] == "+" or tokens[index] == "-":
+        raise ValueError(f"Expected a number, got {token!r}.")
 
-            left = tokens[index - 1]
-            right = tokens[index + 1]
+    result = parse_expression()
+    if position != len(tokens):
+        token = tokens[position]
+        if token == ")":
+            raise ValueError("Unexpected closing parenthesis.")
+        raise ValueError(f"Unexpected token: {token!r}.")
 
-            if tokens[index] == "+":
-                result = left + right
-
-            else:
-                result = left - right
-
-            tokens[index - 1:index + 2] = [result]
-            index = 0
-
-        else:
-            index += 1
-
-    return tokens[0]
+    return result
