@@ -1,5 +1,6 @@
 from calculator import calculate
 from equation_solver import solve_equation
+from binomial_theorem import expand_binomial
 
 
 def main():
@@ -13,7 +14,8 @@ def main():
         print("3. Multiply")
         print("4. Divide")
         print("5. Evaluate an expression")
-        print("6. Solve a linear or quadratic equation")
+        print("6. Solve a linear, quadratic, or cubic equation")
+        print("7. Expand a binomial using the binomial theorem")
         print("0. Exit")
 
         choice = input("Your choice: ").strip()
@@ -31,15 +33,28 @@ def main():
             continue
 
         if choice == "6":
-            equation = input("Enter an equation in x (e.g. x^2 - 5x + 6 = 0): ")
+            equation = input(
+                "Enter a linear, quadratic, or cubic equation in x "
+                "(e.g. x^3 - 6x^2 + 11x - 6 = 0): "
+            )
             try:
                 solutions = solve_equation(equation)
                 if isinstance(solutions, str):
                     print(solutions)
                 else:
-                    print("Solution:" if len(solutions) == 1 else "Solutions:")
+                    print("Solutions:")
                     for index, solution in enumerate(solutions, start=1):
                         print(f"x{index} = {solution}")
+            except (ValueError, TypeError, IndexError, ZeroDivisionError) as error:
+                print("Error:", error)
+            continue
+
+        if choice == "7":
+            expression = input(
+                "Enter a binomial like (x + 2)^3 or (a - b)^4: "
+            )
+            try:
+                print("Expansion:", expand_binomial(expression))
             except (ValueError, TypeError, IndexError, ZeroDivisionError) as error:
                 print("Error:", error)
             continue
@@ -52,7 +67,7 @@ def main():
         }
 
         if choice not in operations:
-            print("Invalid choice. Please choose 0, 1, 2, 3, 4, 5, or 6.")
+            print("Invalid choice. Please choose 0, 1, 2, 3, 4, 5, 6, or 7.")
             continue
 
         operation, label = operations[choice]
