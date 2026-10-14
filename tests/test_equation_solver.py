@@ -31,7 +31,7 @@ def test_supports_implicit_multiplication_and_parentheses():
 
 def test_solves_cubic_with_three_distinct_real_roots():
     roots = solve_equation("x^3 - 6x^2 + 11x - 6 = 0")
-    assert roots == pytest.approx([1.0, 3.0, 2.0])
+    assert sorted(roots) == pytest.approx([1.0, 2.0, 3.0])
 
 
 def test_solves_cubic_with_one_real_and_two_complex_roots():
