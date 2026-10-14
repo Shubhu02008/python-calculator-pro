@@ -75,6 +75,10 @@ def tokenize(expression):
     for token in tokens:
         if result:
             previous = result[-1]
+            # Two adjacent numeric tokens are almost always a malformed number
+            # (for example, 1.2.3) or missing an operator (2 3), not multiplication.
+            if previous[0] == "NUMBER" and token[0] == "NUMBER":
+                raise ValueError("Invalid number or missing operator.")
             prev_end = previous[0] in {"NUMBER", "IDENT", ")", "POSTFIX"}
             curr_start = token[0] in {"NUMBER", "IDENT", "("}
             is_function_argument = (
