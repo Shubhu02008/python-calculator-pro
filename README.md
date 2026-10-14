@@ -13,7 +13,7 @@ A command-line calculator written in Python for arithmetic expressions and basic
 - Real and complex roots, repeated roots, no-solution cases, and identities
 - Clear errors for unsupported or malformed expressions
 
-Equation solving supports polynomials of degree 1 or 2 in the variable `x). Powers 0, 1, and 2 are supported; higher-degree equations and division by expressions containing `x` are not supported.
+Equation solving supports polynomials of degree 1 or 2 in the variable `x`. Powers 0, 1, and 2 are supported; higher-degree equations and division by expressions containing `x` are not supported.
 
 ## Requirements
 
