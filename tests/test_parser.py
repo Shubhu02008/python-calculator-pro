@@ -111,3 +111,9 @@ def test_malformed_or_invalid_expressions_are_rejected(expression):
 def test_unsupported_character_is_rejected_by_tokenizer():
     with pytest.raises(ValueError, match="Unsupported character"):
         tokenize("2 @ 3")
+
+
+@pytest.mark.parametrize("expression", ["1e999", "1e308 * 1e308"])
+def test_non_finite_numbers_and_results_are_rejected(expression):
+    with pytest.raises(ValueError, match="supported range"):
+        evaluate(expression)
