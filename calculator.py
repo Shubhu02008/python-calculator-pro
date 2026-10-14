@@ -1,3 +1,5 @@
+"""Basic arithmetic operations and expression evaluation."""
+
 from parser import tokenize, evaluate_tokens
 
 
@@ -20,9 +22,16 @@ def divide(a, b):
 
 
 def calculate(operation, numbers=None):
+    """Calculate a named operation or evaluate an arithmetic expression.
+
+    When numbers is None, operation is treated as an expression string.
+    Named operations accept a non-empty list of numeric values.
+    """
     if numbers is None:
-        tokens = tokenize(operation)
-        return evaluate_tokens(tokens)
+        return evaluate_tokens(tokenize(operation))
+
+    if not isinstance(numbers, (list, tuple)) or not numbers:
+        raise ValueError("Please provide at least one number.")
 
     if operation == "add":
         return sum(numbers)
