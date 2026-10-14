@@ -74,6 +74,7 @@ def test_percent_factorial_and_implicit_multiplication():
     assert evaluate("50%") == 0.5
     assert evaluate("200 * 10%") == 20
     assert evaluate("5!") == 120
+    assert evaluate("factorial(5)") == 120
     assert evaluate("2pi") == pytest.approx(2 * math.pi)
     assert evaluate("3(4+5)") == 27
     assert evaluate("(2)(3)") == 6
