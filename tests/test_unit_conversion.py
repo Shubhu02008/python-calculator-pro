@@ -170,3 +170,33 @@ def test_cooking_and_customary_volume_conversions(value, source, target, expecte
 def test_cooking_volume_units_remain_volume_units():
     with pytest.raises(ValueError, match="Cannot convert volume to mass"):
         convert_unit(1, "cup", "g")
+
+
+@pytest.mark.parametrize(
+    "value,source,target,expected",
+    [
+        (1, "hectare", "m2", 10000),
+        (1, "acre", "ft2", 43560),
+        (1, "square yard", "ft2", 9),
+        (1, "square inch", "cm2", 6.4516),
+        (1, "guntha", "ft2", 1089),
+        (1, "kanal", "ft2", 5445),
+        (1, "marla", "ft2", 272.25),
+        (1, "cent", "ft2", 435.6),
+        (1, "decimal", "ft2", 435.6),
+        (1, "bigha", "ft2", 27225),
+        (1, "bigha", "acre", 0.625),
+        (1, "biswa", "bigha", 0.05),
+        (1, "katha", "ft2", 1361.25),
+        (1, "dhur", "ft2", 68.0625),
+    ],
+)
+def test_extended_area_and_indian_land_conversions(value, source, target, expected):
+    assert convert_unit(value, source, target) == pytest.approx(expected)
+
+
+@pytest.mark.parametrize("unit", ["bigha", "biswa", "katha", "dhur", "kanal"])
+def test_land_units_are_area_units(unit):
+    assert convert_unit(1, unit, "m2") > 0
+    with pytest.raises(ValueError, match="Cannot convert area to length"):
+        convert_unit(1, unit, "m")
