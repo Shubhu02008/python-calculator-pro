@@ -20,13 +20,13 @@ def test_solves_quadratic_with_repeated_root():
 
 
 def test_quadratic_solver_avoids_catastrophic_cancellation():
-    roots = solve_equation("x^2 + 1e16x + 1 = 0")
+    roots = solve_equation("x^2 + 10000000000000000x + 1 = 0")
     assert roots[0] == pytest.approx(-1e16)
     assert roots[1] == pytest.approx(-1e-16, rel=1e-12, abs=0.0)
 
 
 def test_quadratic_solver_preserves_distinct_small_roots():
-    roots = solve_equation("x^2 + 1e-7x = 0")
+    roots = solve_equation("x^2 + 0.0000001x = 0")
     assert roots == pytest.approx([-1e-7, 0.0], abs=1e-20)
 
 
