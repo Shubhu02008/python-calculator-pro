@@ -45,6 +45,7 @@ New integrations should import from `engine.py`, rather than depending on CLI co
 ```python
 from engine import (
     CalculatorError,
+    approximate_expression,
     calculate_operation,
     evaluate_expression,
     expand_binomial,
@@ -53,6 +54,8 @@ from engine import (
 
 print(evaluate_expression("10 ÷ 2"))
 print(evaluate_expression("sin(pi / 2) + √25"))
+print(approximate_expression("sqrt(2)"))  # Decimal rounded to 15 significant digits
+print(approximate_expression("1 / 3", significant_digits=6))
 print(calculate_operation("multiply", [2, 3, 4]))
 print(solve_equation("x^2 - 5x + 6 = 0"))
 print(expand_binomial("(x + 2)^3"))
@@ -65,7 +68,8 @@ except CalculatorError as error:
 
 ### Public API
 
-- `evaluate_expression(expression)` — evaluate an arithmetic/scientific expression.
+- `evaluate_expression(expression)` — evaluate an arithmetic/scientific expression. Integer-only arithmetic can preserve exact integer results; decimal and scientific-function calculations may use floating-point arithmetic.
+- `approximate_expression(expression, significant_digits=15)` — return a `Decimal` rounded to 1–100 significant digits (default 15). This rounds the parser's result; it does **not** increase the internal precision used by the existing floating-point expression parser.
 - `calculate_operation(operation, numbers)` — run `add`, `subtract`, `multiply`, or `divide`.
 - `solve_equation(equation)` — solve supported polynomial equations in `x`.
 - `expand_binomial(expression)` — expand supported binomial expressions.
