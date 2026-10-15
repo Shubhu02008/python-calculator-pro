@@ -273,12 +273,13 @@ def solve_equation(equation):
     right = _parse_polynomial(_tokenize_polynomial(right_text))
     constant, linear, quadratic, cubic = _add(left, right, -1)
 
-    if math.isclose(cubic, 0.0, abs_tol=1e-12):
-        if math.isclose(quadratic, 0.0, abs_tol=1e-12):
-            if math.isclose(linear, 0.0, abs_tol=1e-12):
-                return "Infinite solutions" if math.isclose(
-                    constant, 0.0, abs_tol=1e-12
-                ) else "No solution"
+    # Polynomial degree is determined by whether a coefficient is zero,
+    # not by its absolute magnitude. A small but nonzero leading coefficient
+    # can still produce valid roots (for example, 1e-13*x^3 = 1).
+    if cubic == 0.0:
+        if quadratic == 0.0:
+            if linear == 0.0:
+                return "Infinite solutions" if constant == 0.0 else "No solution"
             return [-constant / linear]
 
         discriminant = linear * linear - 4 * quadratic * constant
