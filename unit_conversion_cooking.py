@@ -25,7 +25,7 @@ EXTRA_ALIASES = {
     "uk quart": "imperial_quart", "imperial quarts": "imperial_quart",
     "uk pint": "imperial_pint", "imperial pints": "imperial_pint",
     "imperial fluid ounce": "imperial_floz", "imperial fluid ounces": "imperial_floz",
-    "uk fl oz": "imperial_floz",
+    "uk fl oz": "imperial_floz", "imperial fl oz": "imperial_floz",
 }
 EXTRA_SYMBOL_ALIASES = {
     "tsp": "teaspoon", "tbsp": "tablespoon", "cup": "cup",
