@@ -137,3 +137,34 @@ def test_public_unit_conversion(value, source, target, expected):
 def test_public_unit_conversion_errors_use_calculator_error(value, source, target):
     with pytest.raises(CalculatorError):
         convert_unit(value, source, target)
+
+
+def test_public_graph_function_evaluation():
+    from engine import evaluate_function
+
+    assert evaluate_function("x^2 - 4", 3) == pytest.approx(5)
+    assert evaluate_function("sin(x)", math.pi / 2) == pytest.approx(1)
+
+
+def test_public_graph_sampling_returns_coordinate_pairs_and_gaps():
+    from engine import sample_function
+
+    assert sample_function("x^2", -1, 1, points=3) == pytest.approx(
+        [(-1, 1), (0, 0), (1, 1)]
+    )
+    samples = sample_function("1/x", -1, 1, points=3)
+    assert samples[1] == (0.0, None)
+
+
+@pytest.mark.parametrize(
+    "call",
+    [
+        lambda: __import__("engine").evaluate_function("x^2", math.inf),
+        lambda: __import__("engine").sample_function("x^2", 1, -1),
+        lambda: __import__("engine").sample_function("x^2", -1, 1, points=1),
+        lambda: __import__("engine").evaluate_function("unknown(x)", 1),
+    ],
+)
+def test_public_graph_errors_use_calculator_error(call):
+    with pytest.raises(CalculatorError):
+        call()
