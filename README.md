@@ -22,7 +22,7 @@ A Python calculator engine for arithmetic, scientific functions, polynomial equa
 
 Equation solving supports polynomial equations up to degree 3. The binomial expansion tool accepts simple numeric or single-letter terms and non-negative integer exponents up to 100.
 
-## Run
+## Run the command-line interface
 
 ```bash
 python main.py
@@ -38,21 +38,44 @@ x^3 - 6x^2 + 11x - 6 = 0
 
 Choose **7** to expand a binomial, for example `(x + 2)^3`.
 
+## Use the public engine API
+
+New integrations should import from `engine.py`, rather than depending on CLI code or parser internals. All public operations raise `CalculatorError` (a `ValueError` subclass) for invalid inputs and unsupported calculations.
+
+```python
+from engine import (
+    CalculatorError,
+    calculate_operation,
+    evaluate_expression,
+    expand_binomial,
+    solve_equation,
+)
+
+print(evaluate_expression("10 ÷ 2"))
+print(evaluate_expression("sin(pi / 2) + √25"))
+print(calculate_operation("multiply", [2, 3, 4]))
+print(solve_equation("x^2 - 5x + 6 = 0"))
+print(expand_binomial("(x + 2)^3"))
+
+try:
+    evaluate_expression("10 / 0")
+except CalculatorError as error:
+    print("Calculation error:", error)
+```
+
+### Public API
+
+- `evaluate_expression(expression)` — evaluate an arithmetic/scientific expression.
+- `calculate_operation(operation, numbers)` — run `add`, `subtract`, `multiply`, or `divide`.
+- `solve_equation(equation)` — solve supported polynomial equations in `x`.
+- `expand_binomial(expression)` — expand supported binomial expressions.
+- `CalculatorError` — consistent exception type for interface code to catch.
+
 ## Tests
 
 ```bash
 python -m pip install pytest
 python -m pytest
-```
-
-## Use from Python
-
-```python
-from calculator import calculate
-
-print(calculate("10 ÷ 2"))
-print(calculate("sin(pi / 2) + √25"))
-print(calculate("2^10 + 5!"))
 ```
 
 ## Author
