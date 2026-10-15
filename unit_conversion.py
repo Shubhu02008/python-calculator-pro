@@ -87,11 +87,21 @@ _ALIASES = {
 }
 
 
+from unit_conversion_physics import EXTRA_UNITS as _PHYSICS_UNITS
+from unit_conversion_physics import EXTRA_ALIASES as _PHYSICS_ALIASES
+from unit_conversion_physics import EXTRA_SYMBOL_ALIASES as _PHYSICS_SYMBOL_ALIASES
+
+_UNITS.update(_PHYSICS_UNITS)
+_ALIASES.update(_PHYSICS_ALIASES)
+_SYMBOL_ALIASES = dict(_PHYSICS_SYMBOL_ALIASES)
+
+
 def _normalize_unit(unit):
     """Return the canonical unit symbol or raise a helpful ValueError."""
     if not isinstance(unit, str) or not unit.strip():
         raise ValueError("Unit names must be non-empty text.")
-    key = unit.strip().lower()
+    raw = unit.strip()
+    key = _SYMBOL_ALIASES.get(raw, raw.lower())
     key = _ALIASES.get(key, key)
     if key not in _UNITS:
         raise ValueError(f"Unsupported unit: {unit!r}.")
