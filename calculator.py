@@ -27,6 +27,9 @@ def _is_finite_number(value):
     """Return whether value is a finite real number supported by the engine."""
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         return False
+    # Python integers have arbitrary precision and are always finite.
+    if isinstance(value, int):
+        return True
     try:
         return math.isfinite(value)
     except OverflowError:
@@ -45,6 +48,7 @@ def calculate(operation, numbers=None):
 
     When numbers is None, operation is treated as an expression string.
     Named operations accept a non-empty list of finite real numeric values.
+    Integer-only operations preserve Python's exact arbitrary-precision results.
     """
     if numbers is None:
         return evaluate_tokens(tokenize(operation))
