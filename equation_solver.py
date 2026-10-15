@@ -32,7 +32,10 @@ def _tokenize_polynomial(expression):
             # operator (for example, "1.2.3" or "2 3"), not multiplication.
             if tokens and isinstance(tokens[-1], (int, float)):
                 raise ValueError("Invalid number or missing operator in equation.")
-            tokens.append(float(token))
+            number = float(token)
+            if not math.isfinite(number):
+                raise ValueError("Equation number exceeds the supported numerical range.")
+            tokens.append(number)
         position = match.end()
 
     if not tokens:
@@ -271,7 +274,11 @@ def solve_equation(equation):
     left_text, right_text = equation.split("=")
     left = _parse_polynomial(_tokenize_polynomial(left_text))
     right = _parse_polynomial(_tokenize_polynomial(right_text))
+    if not all(math.isfinite(value) for value in (*left, *right)):
+        raise ValueError("Equation coefficients exceed the supported numerical range.")
     constant, linear, quadratic, cubic = _add(left, right, -1)
+    if not all(math.isfinite(value) for value in (constant, linear, quadratic, cubic)):
+        raise ValueError("Equation coefficients exceed the supported numerical range.")
 
     # Polynomial degree is determined by whether a coefficient is zero,
     # not by its absolute magnitude. A small but nonzero leading coefficient
@@ -280,32 +287,45 @@ def solve_equation(equation):
         if quadratic == 0.0:
             if linear == 0.0:
                 return "Infinite solutions" if constant == 0.0 else "No solution"
-            return [-constant / linear]
+            root = -constant / linear
+            if not math.isfinite(root):
+                raise OverflowError("A linear root is outside the supported numerical range.")
+            return [root]
 
         discriminant = linear * linear - 4 * quadratic * constant
+        if not math.isfinite(discriminant):
+            raise OverflowError("Quadratic calculation exceeds the supported numerical range.")
         if discriminant >= 0:
             root = math.sqrt(discriminant)
             if root == 0:
-                return [-linear / (2 * quadratic)]
+                root = (-linear / quadratic) / 2
+                if not math.isfinite(root):
+                    raise OverflowError("A quadratic root is outside the supported numerical range.")
+                return [root]
 
             # Avoid catastrophic cancellation when the linear term and square
             # root are nearly equal. Compute one root with the stable q formula,
             # then recover the other from the product of roots (c / a).
-            q = -0.5 * (linear + math.copysign(root, linear))
+            q = -0.5 * linear - math.copysign(0.5 * root, linear)
             if q == 0:
                 roots = [
-                    (-linear - root) / (2 * quadratic),
-                    (-linear + root) / (2 * quadratic),
+                    ((-linear / 2) - (root / 2)) / quadratic,
+                    ((-linear / 2) + (root / 2)) / quadratic,
                 ]
             else:
                 roots = [q / quadratic, constant / q]
             roots.sort()
+            if not all(math.isfinite(value) for value in roots):
+                raise OverflowError("A quadratic root is outside the supported numerical range.")
             return roots
 
         root = cmath.sqrt(discriminant)
-        return [
-            (-linear - root) / (2 * quadratic),
-            (-linear + root) / (2 * quadratic),
+        roots = [
+            ((-linear / 2) - (root / 2)) / quadratic,
+            ((-linear / 2) + (root / 2)) / quadratic,
         ]
+        if not all(math.isfinite(value.real) and math.isfinite(value.imag) for value in roots):
+            raise OverflowError("A quadratic root is outside the supported numerical range.")
+        return roots
 
     return _solve_cubic(constant, linear, quadratic, cubic)
