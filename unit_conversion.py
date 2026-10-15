@@ -42,6 +42,7 @@ _UNITS = {
     "cm2": ("area", 0.0001, 0.0),
     "ft2": ("area", 0.09290304, 0.0),
     "acre": ("area", 4_046.8564224, 0.0),
+    "mi2": ("area", 2_589_988.110336, 0.0),
     # Speed, with metres per second as the canonical base.
     "m/s": ("speed", 1.0, 0.0),
     "km/h": ("speed", 1.0 / 3.6, 0.0),
