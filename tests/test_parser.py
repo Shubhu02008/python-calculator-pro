@@ -39,6 +39,12 @@ def test_negative_numbers_and_unary_minus():
     assert evaluate("-(2 + 3)") == -5
 
 
+def test_reports_excessively_nested_unary_operators_as_input_errors():
+    expression = "-" * 1_200 + "1"
+    with pytest.raises(ValueError, match="too deeply nested"):
+        evaluate(expression)
+
+
 def test_multiplication_symbols():
     assert evaluate("3 × 4") == 12
     assert evaluate("3 · 4") == 12
@@ -161,8 +167,3 @@ def test_reports_deeply_nested_expressions_as_input_errors():
     with pytest.raises(ValueError, match="too deeply nested"):
         evaluate(expression)
 
-
-def test_reports_excessively_nested_unary_operators_as_input_errors():
-    expression = "-" * 1_200 + "1"
-    with pytest.raises(ValueError, match="too deeply nested"):
-        evaluate(expression)
