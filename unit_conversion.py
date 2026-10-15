@@ -216,9 +216,9 @@ _SYMBOL_ALIASES = {
     "Gib": "gibit", "GiB": "gibyte", "Tib": "tebit", "TiB": "tebyte",
     "Pa": "pa", "kPa": "kpa", "MPa": "mpa", "mPa": "mpa",
     "Hz": "hz", "kHz": "khz", "MHz": "mhz", "GHz": "ghz",
-    "V": "v", "mV": "mv", "kV": "kv", "A": "a", "mA": "ma", "kA": "ka",
+    "V": "v", "mV": "mv", "kV": "kv", "MW": "megawatt", "A": "a", "mA": "ma", "kA": "ka",
     "uA": "ua", "μA": "ua", "Ω": "ohm", "kΩ": "kohm", "MΩ": "mohm",
-    "F": "farad", "uF": "ufarad", "μF": "ufarad", "nF": "nfarad", "pF": "pfarad",
+    "uF": "ufarad", "μF": "ufarad", "nF": "nfarad", "pF": "pfarad",
     "H": "henry", "mH": "mhenry", "uH": "uhenry", "μH": "uhenry",
     "S": "siemens", "mS": "msiemens",
 }
