@@ -244,7 +244,7 @@ def evaluate_tokens(tokens):
             elif value == "log" and len(args) == 2:
                 try:
                     result = math.log(args[0], args[1])
-                except ValueError as exc:
+                except (ValueError, ZeroDivisionError) as exc:
                     raise ValueError(
                         f"Invalid mathematical domain for {value}."
                     ) from exc
