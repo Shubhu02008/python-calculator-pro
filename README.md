@@ -40,6 +40,51 @@ x^3 - 6x^2 + 11x - 6 = 0
 
 Choose **7** to expand a binomial, for example `(x + 2)^3`.
 
+## Run the HTTP API
+
+The HTTP API is an optional adapter for websites and other clients. It calls the same public calculation engine used by the terminal interface.
+
+Install the API dependencies and start the development server:
+
+```bash
+python -m pip install -r requirements-api.txt
+uvicorn api:app --reload
+```
+
+The local server listens at `http://127.0.0.1:8000`. Interactive API documentation is available at `/docs`, and the machine-readable OpenAPI schema is at `/openapi.json`.
+
+### API endpoints
+
+| Method and path | Purpose |
+| --- | --- |
+| `GET /healthz` | Health check for the hosting platform |
+| `GET /api/v1/capabilities` | Available operations, features, and canonical unit identifiers |
+| `POST /api/v1/calculate` | Evaluate an arithmetic/scientific expression |
+| `POST /api/v1/operations` | Run add, subtract, multiply, or divide |
+| `POST /api/v1/units/convert` | Convert compatible measurement units |
+| `POST /api/v1/equations/solve` | Solve a supported polynomial equation |
+| `POST /api/v1/binomials/expand` | Expand a supported binomial |
+| `POST /api/v1/graph/evaluate` | Evaluate a function at one x-coordinate |
+| `POST /api/v1/graph/sample` | Generate bounded graph samples |
+
+Example request:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/calculate \
+  -H "Content-Type: application/json" \
+  -d '{"expression":"sin(pi / 2) + sqrt(25)"}'
+```
+
+Expected response:
+
+```json
+{"result": 6.0}
+```
+
+Invalid requests and calculation errors return HTTP 422 with an `error` object containing a stable `code` and human-readable `message`. Graph samples represent undefined y-values as JSON `null`. Equation roots are returned as objects with `real` and `imaginary` fields so complex roots remain valid JSON.
+
+Browser origins are controlled by the `CALCULATOR_CORS_ORIGINS` environment variable. The default permits common local development origins only. Set it to the exact production website origin(s) before deployment; see [Deployment and source protection](docs/DEPLOYMENT.md) and the [frontend integration guide](docs/FRONTEND_INTEGRATION.md).
+
 ## Use the public engine API
 
 New integrations should import from `engine.py`, rather than depending on CLI code or parser internals. All public operations raise `CalculatorError` (a `ValueError` subclass) for invalid inputs and unsupported calculations.
@@ -89,6 +134,11 @@ except CalculatorError as error:
 - `solve_equation(equation)` — solve supported polynomial equations in `x`.
 - `expand_binomial(expression)` — expand supported binomial expressions.
 - `CalculatorError` — consistent exception type for interface code to catch.
+
+## Project documentation
+
+- [Frontend integration guide](docs/FRONTEND_INTEGRATION.md)
+- [Deployment and source protection](docs/DEPLOYMENT.md)
 
 ## Tests
 
