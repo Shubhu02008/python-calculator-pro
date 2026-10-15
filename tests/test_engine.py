@@ -68,3 +68,9 @@ def test_public_functions_reject_wrong_input_types(function, value):
 def test_solver_non_finite_roots_are_rejected():
     with pytest.raises(CalculatorError):
         solve_equation("1e308x^2 + x + 1 = 0")
+
+
+
+def test_public_api_rejects_integer_beyond_supported_float_range():
+    with pytest.raises(CalculatorError, match="finite"):
+        calculate_operation("add", [10**1000, 1])
