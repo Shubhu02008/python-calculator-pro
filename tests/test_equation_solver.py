@@ -160,3 +160,16 @@ def test_rejects_quadratic_discriminant_overflow():
     large = "99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999"
     with pytest.raises(OverflowError, match="Quadratic calculation exceeds"):
         solve_equation(f"{large}x^2 - {large} = 0")
+
+
+def test_rejects_equations_that_exceed_the_length_limit():
+    equation = "x" * 10_001 + " = 0"
+    with pytest.raises(ValueError, match="too long"):
+        solve_equation(equation)
+
+
+def test_reports_excessively_nested_equations_as_input_errors():
+    depth = 1_200
+    equation = "(" * depth + "x" + ")" * depth + " = 0"
+    with pytest.raises(ValueError, match="too deeply nested"):
+        solve_equation(equation)

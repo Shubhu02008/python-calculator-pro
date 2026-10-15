@@ -6,6 +6,7 @@ import re
 
 
 _TOKEN_PATTERN = re.compile(r"(?:\d+(?:\.\d*)?|\.\d+)|[xX()+\-*/^]")
+_MAX_EQUATION_LENGTH = 10_000
 
 
 def _tokenize_polynomial(expression):
@@ -268,12 +269,19 @@ def solve_equation(equation):
     """
     if not isinstance(equation, str):
         raise ValueError("Equation must be text.")
+    if len(equation) > _MAX_EQUATION_LENGTH:
+        raise ValueError(
+            f"Equation is too long (maximum {_MAX_EQUATION_LENGTH} characters)."
+        )
     if equation.count("=") != 1:
         raise ValueError("Enter an equation with exactly one '=' sign.")
 
     left_text, right_text = equation.split("=")
-    left = _parse_polynomial(_tokenize_polynomial(left_text))
-    right = _parse_polynomial(_tokenize_polynomial(right_text))
+    try:
+        left = _parse_polynomial(_tokenize_polynomial(left_text))
+        right = _parse_polynomial(_tokenize_polynomial(right_text))
+    except RecursionError as exc:
+        raise ValueError("Equation is too deeply nested to parse safely.") from exc
     if not all(math.isfinite(value) for value in (*left, *right)):
         raise ValueError("Equation coefficients exceed the supported numerical range.")
     constant, linear, quadratic, cubic = _add(left, right, -1)
