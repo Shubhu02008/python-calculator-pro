@@ -137,3 +137,26 @@ def test_rejects_incompatible_technical_dimensions():
         convert_unit(1, "GB", "GHz")
     with pytest.raises(ValueError, match="Cannot convert voltage to current"):
         convert_unit(1, "V", "A")
+
+
+@pytest.mark.parametrize(
+    "value,source,target,expected",
+    [
+        (1, "cup", "ml", 236.5882365),
+        (1, "tsp", "ml", 4.92892159375),
+        (1, "tbsp", "tsp", 3),
+        (1, "US gallon", "L", 3.785411784),
+        (1, "imperial gallon", "L", 4.54609),
+        (1, "pt", "cup", 2),
+        (1, "qt", "pt", 2),
+        (1, "imperial pint", "imperial fl oz", 20),
+    ],
+)
+def test_cooking_and_additional_volume_conversions(value, source, target, expected):
+    assert convert_unit(value, source, target) == pytest.approx(expected)
+
+
+def test_cooking_volume_units_remain_volume_dimension():
+    assert convert_unit(1, "cup", "l") == pytest.approx(0.2365882365)
+    with pytest.raises(ValueError, match="Cannot convert volume to mass"):
+        convert_unit(1, "cup", "g")
