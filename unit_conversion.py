@@ -54,6 +54,84 @@ _UNITS = {
     "min": ("time", 60.0, 0.0),
     "h": ("time", 3_600.0, 0.0),
     "day": ("time", 86_400.0, 0.0),
+    # Pressure, with pascal as the canonical base.
+    "pa": ("pressure", 1.0, 0.0),
+    "kpa": ("pressure", 1_000.0, 0.0),
+    "mpa": ("pressure", 1_000_000.0, 0.0),
+    "bar": ("pressure", 100_000.0, 0.0),
+    "atm": ("pressure", 101_325.0, 0.0),
+    "psi": ("pressure", 6_894.757293168, 0.0),
+    "mmhg": ("pressure", 133.322387415, 0.0),
+    # Energy, with joule as the canonical base.
+    "j": ("energy", 1.0, 0.0),
+    "kj": ("energy", 1_000.0, 0.0),
+    "mj": ("energy", 1_000_000.0, 0.0),
+    "cal": ("energy", 4.184, 0.0),
+    "kcal": ("energy", 4_184.0, 0.0),
+    "wh": ("energy", 3_600.0, 0.0),
+    "kwh": ("energy", 3_600_000.0, 0.0),
+    "ev": ("energy", 1.602176634e-19, 0.0),
+    # Power, with watt as the canonical base.
+    "w": ("power", 1.0, 0.0),
+    "mw": ("power", 0.001, 0.0),
+    "kw": ("power", 1_000.0, 0.0),
+    "megawatt": ("power", 1_000_000.0, 0.0),
+    "hp": ("power", 745.6998715822702, 0.0),
+    # Force, with newton as the canonical base.
+    "n": ("force", 1.0, 0.0),
+    "kn": ("force", 1_000.0, 0.0),
+    "lbf": ("force", 4.4482216152605, 0.0),
+    "kgf": ("force", 9.80665, 0.0),
+    # Frequency, with hertz as the canonical base.
+    "hz": ("frequency", 1.0, 0.0),
+    "khz": ("frequency", 1_000.0, 0.0),
+    "mhz": ("frequency", 1_000_000.0, 0.0),
+    "ghz": ("frequency", 1_000_000_000.0, 0.0),
+    "rpm": ("frequency", 1.0 / 60.0, 0.0),
+    # Electrical quantities.
+    "v": ("voltage", 1.0, 0.0),
+    "mv": ("voltage", 0.001, 0.0),
+    "kv": ("voltage", 1_000.0, 0.0),
+    "a": ("current", 1.0, 0.0),
+    "ma": ("current", 0.001, 0.0),
+    "ka": ("current", 1_000.0, 0.0),
+    "ua": ("current", 0.000001, 0.0),
+    "ohm": ("resistance", 1.0, 0.0),
+    "kohm": ("resistance", 1_000.0, 0.0),
+    "mohm": ("resistance", 1_000_000.0, 0.0),
+    "coulomb": ("charge", 1.0, 0.0),
+    "millicoulomb": ("charge", 0.001, 0.0),
+    "ah": ("charge", 3_600.0, 0.0),
+    "mah": ("charge", 3.6, 0.0),
+    "farad": ("capacitance", 1.0, 0.0),
+    "ufarad": ("capacitance", 0.000001, 0.0),
+    "nfarad": ("capacitance", 0.000000001, 0.0),
+    "pfarad": ("capacitance", 0.000000000001, 0.0),
+    "henry": ("inductance", 1.0, 0.0),
+    "mhenry": ("inductance", 0.001, 0.0),
+    "uhenry": ("inductance", 0.000001, 0.0),
+    "siemens": ("conductance", 1.0, 0.0),
+    "msiemens": ("conductance", 0.001, 0.0),
+    # Digital storage uses decimal SI units and binary IEC units separately.
+    # The canonical base is byte; bit values are scaled by 1/8.
+    "bit": ("data", 0.125, 0.0),
+    "byte": ("data", 1.0, 0.0),
+    "kbit": ("data", 125.0, 0.0),
+    "mbit": ("data", 125_000.0, 0.0),
+    "gbit": ("data", 125_000_000.0, 0.0),
+    "tbit": ("data", 125_000_000_000.0, 0.0),
+    "kbyte": ("data", 1_000.0, 0.0),
+    "mbyte": ("data", 1_000_000.0, 0.0),
+    "gbyte": ("data", 1_000_000_000.0, 0.0),
+    "tbyte": ("data", 1_000_000_000_000.0, 0.0),
+    "kibit": ("data", 128.0, 0.0),
+    "mibit": ("data", 131_072.0, 0.0),
+    "gibit": ("data", 134_217_728.0, 0.0),
+    "tebit": ("data", 137_438_953_472.0, 0.0),
+    "kibyte": ("data", 1_024.0, 0.0),
+    "mibyte": ("data", 1_048_576.0, 0.0),
+    "gibyte": ("data", 1_073_741_824.0, 0.0),
+    "tebyte": ("data", 1_099_511_627_776.0, 0.0),
 }
 
 _ALIASES = {
@@ -84,6 +162,65 @@ _ALIASES = {
     "second": "s", "seconds": "s", "millisecond": "ms", "milliseconds": "ms",
     "minute": "min", "minutes": "min", "hour": "h", "hours": "h",
     "days": "day",
+    # Pressure.
+    "pascal": "pa", "pascals": "pa", "kilopascal": "kpa", "kilopascals": "kpa",
+    "megapascal": "mpa", "megapascals": "mpa", "atmosphere": "atm", "atmospheres": "atm",
+    "pounds per square inch": "psi", "millimeter of mercury": "mmhg",
+    "millimeters of mercury": "mmhg", "torr": "mmhg",
+    # Energy and power.
+    "joule": "j", "joules": "j", "kilojoule": "kj", "kilojoules": "kj",
+    "megajoule": "mj", "megajoules": "mj", "calorie": "cal", "calories": "cal",
+    "kilocalorie": "kcal", "kilocalories": "kcal", "food calorie": "kcal",
+    "watt hour": "wh", "watt-hours": "wh", "kilowatt hour": "kwh", "kilowatt-hours": "kwh",
+    "electronvolt": "ev", "electron volts": "ev", "watt": "w", "watts": "w",
+    "kilowatt": "kw", "kilowatts": "kw", "horsepower": "hp",
+    # Force and frequency.
+    "newton": "n", "newtons": "n", "kilonewton": "kn", "kilonewtons": "kn",
+    "pound force": "lbf", "pound-force": "lbf", "kilogram force": "kgf",
+    "hertz": "hz", "kilohertz": "khz", "megahertz": "mhz", "gigahertz": "ghz",
+    "revolutions per minute": "rpm",
+    # Electrical units.
+    "volt": "v", "volts": "v", "millivolt": "mv", "millivolts": "mv",
+    "kilovolt": "kv", "kilovolts": "kv", "ampere": "a", "amperes": "a",
+    "amp": "a", "amps": "a", "milliamp": "ma", "milliamps": "ma",
+    "kiloampere": "ka", "microamp": "ua", "microamps": "ua",
+    "ohms": "ohm", "ohm": "ohm", "kiloohm": "kohm", "kilohm": "kohm",
+    "megaohm": "mohm", "megohm": "mohm", "coulombs": "coulomb",
+    "millicoulombs": "millicoulomb", "ampere hour": "ah", "amp-hours": "ah",
+    "milliampere hour": "mah", "milliamp-hours": "mah",
+    "farads": "farad", "microfarad": "ufarad", "microfarads": "ufarad",
+    "nanofarad": "nfarad", "nanofarads": "nfarad", "picofarad": "pfarad",
+    "picofarads": "pfarad", "henries": "henry", "millihenry": "mhenry",
+    "millihenries": "mhenry", "microhenry": "uhenry", "microhenries": "uhenry",
+    "siemen": "siemens", "millisiemens": "msiemens",
+    # Digital storage words. Symbols are handled separately to distinguish b from B.
+    "bits": "bit", "bytes": "byte", "kilobit": "kbit", "kilobits": "kbit",
+    "megabit": "mbit", "megabits": "mbit", "gigabit": "gbit", "gigabits": "gbit",
+    "terabit": "tbit", "terabits": "tbit", "kilobyte": "kbyte", "kilobytes": "kbyte",
+    "megabyte": "mbyte", "megabytes": "mbyte", "gigabyte": "gbyte", "gigabytes": "gbyte",
+    "terabyte": "tbyte", "terabytes": "tbyte", "kibibit": "kibit", "kibibits": "kibit",
+    "mebibit": "mibit", "mebibits": "mibit", "gibibit": "gibit", "gibibits": "gibit",
+    "tebibit": "tebit", "tebibits": "tebit", "kibibyte": "kibyte", "kibibytes": "kibyte",
+    "mebibyte": "mibyte", "mebibytes": "mibyte", "gibibyte": "gibyte", "gibibytes": "gibyte",
+    "tebibyte": "tebyte", "tebibytes": "tebyte",
+}
+
+# Exact symbols are checked before case-insensitive word aliases. This preserves
+# the standard distinction between bit (b) and byte (B), and between SI and IEC
+# storage prefixes such as kB and KiB.
+_SYMBOL_ALIASES = {
+    "b": "bit", "B": "byte",
+    "kb": "kbit", "kB": "kbyte", "Mb": "mbit", "MB": "mbyte",
+    "Gb": "gbit", "GB": "gbyte", "Tb": "tbit", "TB": "tbyte",
+    "Kib": "kibit", "KiB": "kibyte", "Mib": "mibit", "MiB": "mibyte",
+    "Gib": "gibit", "GiB": "gibyte", "Tib": "tebit", "TiB": "tebyte",
+    "Pa": "pa", "kPa": "kpa", "MPa": "mpa", "mPa": "mpa",
+    "Hz": "hz", "kHz": "khz", "MHz": "mhz", "GHz": "ghz",
+    "V": "v", "mV": "mv", "kV": "kv", "A": "a", "mA": "ma", "kA": "ka",
+    "uA": "ua", "μA": "ua", "Ω": "ohm", "kΩ": "kohm", "MΩ": "mohm",
+    "F": "farad", "uF": "ufarad", "μF": "ufarad", "nF": "nfarad", "pF": "pfarad",
+    "H": "henry", "mH": "mhenry", "uH": "uhenry", "μH": "uhenry",
+    "S": "siemens", "mS": "msiemens",
 }
 
 
@@ -91,7 +228,10 @@ def _normalize_unit(unit):
     """Return the canonical unit symbol or raise a helpful ValueError."""
     if not isinstance(unit, str) or not unit.strip():
         raise ValueError("Unit names must be non-empty text.")
-    key = unit.strip().lower()
+    raw = unit.strip()
+    if raw in _SYMBOL_ALIASES:
+        return _SYMBOL_ALIASES[raw]
+    key = raw.lower()
     key = _ALIASES.get(key, key)
     if key not in _UNITS:
         raise ValueError(f"Unsupported unit: {unit!r}.")
@@ -101,8 +241,9 @@ def _normalize_unit(unit):
 def convert_unit(value, from_unit, to_unit):
     """Convert a finite real value between compatible supported units.
 
-    Supported dimensions include length, mass, volume, temperature, area, speed,
-    and time. Unit names are case-insensitive; common full-word aliases work too.
+    Supported dimensions include common physical measurements, electrical units,
+    frequency, and digital storage. Full-word aliases are case-insensitive; data
+    symbols preserve standard case where b means bit and B means byte.
     The result is a float. Incompatible dimensions and unsupported units are
     rejected rather than silently producing a misleading result.
     """
