@@ -27,6 +27,17 @@ def test_zero_power():
     assert expand_binomial("(x + 2)^0") == "1"
 
 
+def test_rejects_non_finite_binomial_coefficient():
+    huge_coefficient = "9" * 400
+    with pytest.raises(ValueError, match="coefficients must be finite"):
+        expand_binomial(f"({huge_coefficient}x + 1)^2")
+
+
+def test_rejects_binomial_expansion_overflow():
+    with pytest.raises(ValueError, match="outside the supported range"):
+        expand_binomial("(10000000000x + 1)^100")
+
+
 @pytest.mark.parametrize(
     "expression",
     ["x + 2", "(x + 2)^101", "(x +)^3", "(x + 2)^-1", "hello"],
