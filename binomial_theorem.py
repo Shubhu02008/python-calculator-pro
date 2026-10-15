@@ -71,7 +71,12 @@ def expand_binomial(expression):
         raise ValueError("Enter a binomial like (x + 2)^3 or (a - b)^4.")
 
     first_text, sign, second_text, exponent_text = match.groups()
-    exponent = int(exponent_text)
+    # Strip leading zeroes and bound the remaining decimal length before int()
+    # so huge exponent strings cannot trigger Python's integer-string limit.
+    normalized_exponent = exponent_text.lstrip("0") or "0"
+    if len(normalized_exponent) > 3:
+        raise ValueError("For readability, the exponent must be 100 or less.")
+    exponent = int(normalized_exponent)
     if exponent > 100:
         raise ValueError("For readability, the exponent must be 100 or less.")
 
