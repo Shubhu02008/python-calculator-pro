@@ -117,4 +117,4 @@ def test_solver_preserves_small_nonzero_linear_coefficient():
 
 def test_solver_preserves_small_nonzero_cubic_coefficient():
     roots = solve_equation("0.0000000000001x^3 = 1")
-    assert roots[0] == pytest.approx(1e(13 / 3), rel=1e-12)
+    assert roots[0] == pytest.approx(10 ** (13 / 3), rel=1e-12)
