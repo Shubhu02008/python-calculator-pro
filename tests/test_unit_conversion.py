@@ -165,7 +165,7 @@ def test_cooking_volume_units_remain_volume_dimension():
 @pytest.mark.parametrize(
     "value,source,target,expected",
     [
-        (1, "bigha", "sq ft", 27000),
+        (1, "bigha", "ft2", 27000),
         (1, "bigha", "biswa", 20),
         (20, "biswas", "bigha", 1),
         (1, "bigha", "m2", 2508.38208),
