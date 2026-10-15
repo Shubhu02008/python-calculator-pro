@@ -162,6 +162,12 @@ def test_reports_deeply_nested_expressions_as_input_errors():
         evaluate(expression)
 
 
+def test_reports_excessively_nested_unary_operators_as_input_errors():
+    expression = "-" * 1_200 + "1"
+    with pytest.raises(ValueError, match="too deeply nested"):
+        evaluate(expression)
+
+
 def test_exact_integer_power_guard_handles_large_intermediate_without_string_conversion():
     # The intermediate product exceeds Python's default int-to-string digit
     # limit; the power guard should reject it cleanly using bit-length math.
