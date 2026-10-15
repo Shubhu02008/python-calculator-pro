@@ -20,6 +20,9 @@ def _parse_term(term):
     else:
         coefficient = float(coefficient_text)
 
+    if not math.isfinite(coefficient):
+        raise ValueError("Binomial coefficients must be finite.")
+
     return coefficient, variable
 
 
@@ -73,11 +76,20 @@ def expand_binomial(expression):
 
     combined = {}
     for power in range(exponent, -1, -1):
-        coefficient = (
-            math.comb(exponent, power)
-            * first_coefficient**power
-            * second_coefficient ** (exponent - power)
-        )
+        try:
+            coefficient = (
+                math.comb(exponent, power)
+                * first_coefficient**power
+                * second_coefficient ** (exponent - power)
+            )
+        except OverflowError as exc:
+            raise ValueError(
+                "The expanded coefficients are outside the supported range."
+            ) from exc
+        if not math.isfinite(coefficient):
+            raise ValueError(
+                "The expanded coefficients are outside the supported range."
+            )
         variables = {}
         if first_variable:
             variables[first_variable] = variables.get(first_variable, 0) + power
