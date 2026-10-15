@@ -94,7 +94,7 @@ EXTRA_SYMBOL_ALIASES = {
     "Ω": "ohm", "mΩ": "milliohm", "kΩ": "kohm", "MΩ": "megaohm",
     "F": "farad", "mF": "millifarad", "uF": "microfarad", "μF": "microfarad",
     "nF": "nanofarad", "pF": "picofarad",
-    "C": "coulomb", "mC": "millicoulomb",
+    "mC": "millicoulomb",
     "Ah": "ampere_hour", "mAh": "milliampere_hour",
     "H": "henry", "mH": "millihenry", "uH": "microhenry", "μH": "microhenry",
 }
