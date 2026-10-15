@@ -67,9 +67,20 @@ def sample_function(expression, x_min, x_max, points=101):
         raise ValueError("points must be an integer from 2 to 2000.")
 
     low, high = float(x_min), float(x_max)
-    # Validate the expression once so malformed input doesn't silently become
-    # an array of undefined points.
-    evaluate_function(expression, low * 0.5 + high * 0.5)
+    # Validate syntax once so malformed input doesn't silently become an
+    # array of undefined points. A domain error at the midpoint is acceptable:
+    # it is exactly the kind of gap this sampler is designed to represent.
+    try:
+        evaluate_function(expression, low * 0.5 + high * 0.5)
+    except ValueError as exc:
+        message = str(exc).lower()
+        if not any(marker in message for marker in (
+            "invalid mathematical domain",
+            "cannot divide by zero",
+            "complex result",
+            "outside the supported range",
+        )):
+            raise
     samples = []
     for index in range(points):
         fraction = index / (points - 1)
