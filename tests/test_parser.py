@@ -131,3 +131,16 @@ def test_unsupported_character_is_rejected_by_tokenizer():
 def test_non_finite_numbers_and_results_are_rejected(expression):
     with pytest.raises(ValueError, match="supported range"):
         evaluate(expression)
+
+
+def test_rejects_expressions_that_exceed_the_length_limit():
+    expression = "1+" * 5_001 + "1"
+    with pytest.raises(ValueError, match="too long"):
+        tokenize(expression)
+
+
+def test_reports_deeply_nested_expressions_as_input_errors():
+    depth = 1_200
+    expression = "(" * depth + "1" + ")" * depth
+    with pytest.raises(ValueError, match="too deeply nested"):
+        evaluate(expression)
