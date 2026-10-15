@@ -39,12 +39,6 @@ def test_negative_numbers_and_unary_minus():
     assert evaluate("-(2 + 3)") == -5
 
 
-def test_reports_excessively_nested_unary_operators_as_input_errors():
-    expression = "-" * 1_200 + "1"
-    with pytest.raises(ValueError, match="too deeply nested"):
-        evaluate(expression)
-
-
 def test_multiplication_symbols():
     assert evaluate("3 × 4") == 12
     assert evaluate("3 · 4") == 12
@@ -167,3 +161,21 @@ def test_reports_deeply_nested_expressions_as_input_errors():
     with pytest.raises(ValueError, match="too deeply nested"):
         evaluate(expression)
 
+
+def test_reports_excessively_nested_unary_operators_as_input_errors():
+    expression = "-" * 1_200 + "1"
+    with pytest.raises(ValueError, match="too deeply nested"):
+        evaluate(expression)
+
+
+def test_exact_integer_power_guard_handles_large_intermediate_without_string_conversion():
+    # The intermediate product exceeds Python's default int-to-string digit
+    # limit; the power guard should reject it cleanly using bit-length math.
+    literal = "9" * 1_000
+    expression = "(" + " * ".join([literal] * 5) + ")^2"
+    with pytest.raises(ValueError, match="Exact integer power result is too large"):
+        evaluate(expression)
+
+
+def test_exact_integer_power_guard_allows_large_but_supported_results():
+    assert evaluate("2^10000") == 2**10000
