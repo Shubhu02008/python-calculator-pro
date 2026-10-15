@@ -1,6 +1,12 @@
-from calculator import calculate
-from equation_solver import solve_equation
-from binomial_theorem import expand_binomial
+"""Interactive command-line interface for Python Calculator Pro."""
+
+from engine import (
+    CalculatorError,
+    calculate_operation,
+    evaluate_expression,
+    expand_binomial,
+    solve_equation,
+)
 
 
 def main():
@@ -27,8 +33,8 @@ def main():
         if choice == "5":
             expression = input("Enter an expression: ")
             try:
-                print("Result:", calculate(expression))
-            except (ValueError, TypeError, IndexError, ZeroDivisionError) as error:
+                print("Result:", evaluate_expression(expression))
+            except CalculatorError as error:
                 print("Error:", error)
             continue
 
@@ -45,7 +51,7 @@ def main():
                     print("Solutions:")
                     for index, solution in enumerate(solutions, start=1):
                         print(f"x{index} = {solution}")
-            except (ValueError, TypeError, IndexError, ZeroDivisionError) as error:
+            except CalculatorError as error:
                 print("Error:", error)
             continue
 
@@ -55,7 +61,7 @@ def main():
             )
             try:
                 print("Expansion:", expand_binomial(expression))
-            except (ValueError, TypeError, IndexError, ZeroDivisionError) as error:
+            except CalculatorError as error:
                 print("Error:", error)
             continue
 
@@ -81,15 +87,18 @@ def main():
 
         try:
             numbers = [float(value) for value in raw_numbers]
-            if operation in {"subtract", "divide"} and len(numbers) < 2:
-                print("Error: Please enter at least two numbers.")
-                continue
-
-            result = calculate(operation, numbers)
-            print("Result:", result)
         except ValueError:
             print("Error: Please enter valid numbers.")
-        except (TypeError, IndexError, ZeroDivisionError) as error:
+            continue
+
+        if operation in {"subtract", "divide"} and len(numbers) < 2:
+            print("Error: Please enter at least two numbers.")
+            continue
+
+        try:
+            result = calculate_operation(operation, numbers)
+            print("Result:", result)
+        except CalculatorError as error:
             print("Error:", error)
 
 
