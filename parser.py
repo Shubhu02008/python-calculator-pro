@@ -242,12 +242,21 @@ def evaluate_tokens(tokens):
                     raise ValueError("Factorial is too large to calculate.")
                 result = math.factorial(int(number))
             elif value == "log" and len(args) == 2:
-                result = math.log(args[0], args[1])
+                try:
+                    result = math.log(args[0], args[1])
+                except ValueError as exc:
+                    raise ValueError(
+                        f"Invalid mathematical domain for {value}."
+                    ) from exc
             else:
                 try:
                     result = function(*args)
                 except TypeError as exc:
                     raise ValueError(f"Invalid arguments for {value}.") from exc
+                except ValueError as exc:
+                    raise ValueError(
+                        f"Invalid mathematical domain for {value}."
+                    ) from exc
             if isinstance(result, complex):
                 raise ValueError("This expression has a complex result.")
             return result
