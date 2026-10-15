@@ -169,3 +169,7 @@ def test_exact_integer_power_guard_handles_large_intermediate_without_string_con
     expression = "(" + " * ".join([literal] * 5) + ")^2"
     with pytest.raises(ValueError, match="Exact integer power result is too large"):
         evaluate(expression)
+
+
+def test_exact_integer_power_guard_allows_large_but_supported_results():
+    assert evaluate("2^10000") == 2**10000
