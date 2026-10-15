@@ -216,11 +216,23 @@ def solve_equation(equation):
         discriminant = linear * linear - 4 * quadratic * constant
         if discriminant >= 0:
             root = math.sqrt(discriminant)
-            roots = [
-                (-linear - root) / (2 * quadratic),
-                (-linear + root) / (2 * quadratic),
-            ]
-            return [roots[0]] if math.isclose(roots[0], roots[1], abs_tol=1e-12) else roots
+            if root == 0:
+                return [-linear / (2 * quadratic)]
+
+            # Avoid catastrophic cancellation when the linear term and square
+            # root are nearly equal. Compute one root with the stable q formula,
+            # then recover the other from the product of roots (c / a).
+            q = -0.5 * (linear + math.copysign(root, linear))
+            if q == 0:
+                roots = [
+                    (-linear - root) / (2 * quadratic),
+                    (-linear + root) / (2 * quadratic),
+                ]
+            else:
+                roots = [q / quadratic, constant / q]
+            roots.sort()
+            return roots
+
         root = cmath.sqrt(discriminant)
         return [
             (-linear - root) / (2 * quadratic),
