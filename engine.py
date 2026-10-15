@@ -13,6 +13,8 @@ from binomial_theorem import expand_binomial as _expand_binomial
 from calculator import calculate as _calculate
 from equation_solver import solve_equation as _solve_equation
 from unit_conversion import convert_unit as _convert_unit
+from graphing import evaluate_function as _evaluate_function
+from graphing import sample_function as _sample_function
 
 
 _DEFAULT_APPROXIMATION_PRECISION = 15
@@ -126,6 +128,23 @@ def convert_unit(value, from_unit, to_unit):
     return _run(lambda: _convert_unit(checked_value, from_unit, to_unit))
 
 
+def evaluate_function(expression, x_value):
+    """Evaluate a supported function expression at one real x-coordinate."""
+    if not isinstance(expression, str):
+        raise CalculatorError("Function expression must be text.")
+    checked_x = _finite_number(x_value, label="x value")
+    return _run(lambda: _evaluate_function(expression, checked_x))
+
+
+def sample_function(expression, x_min, x_max, points=101):
+    """Return graph-ready (x, y) samples; undefined y values are None."""
+    if not isinstance(expression, str):
+        raise CalculatorError("Function expression must be text.")
+    checked_min = _finite_number(x_min, label="x_min")
+    checked_max = _finite_number(x_max, label="x_max")
+    return _run(lambda: _sample_function(expression, checked_min, checked_max, points))
+
+
 def solve_equation(equation):
     """Solve a linear, quadratic, or cubic equation in x."""
     if not isinstance(equation, str):
@@ -147,5 +166,7 @@ __all__ = [
     "convert_unit",
     "evaluate_expression",
     "expand_binomial",
+    "evaluate_function",
+    "sample_function",
     "solve_equation",
 ]

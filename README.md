@@ -19,6 +19,7 @@ A Python calculator engine for arithmetic, scientific functions, polynomial equa
 - Linear, quadratic, and cubic equation solving in `x`
 - Binomial theorem expansion
 - Unit conversion for length, mass, volume, temperature, area, speed, and time
+- Backend graphing support to evaluate functions and generate bounded coordinate samples
 - Clear errors for malformed expressions and common mathematical domain errors
 
 Equation solving supports polynomial equations up to degree 3. The binomial expansion tool accepts simple numeric or single-letter terms and non-negative integer exponents up to 100.
@@ -51,6 +52,8 @@ from engine import (
     convert_unit,
     evaluate_expression,
     expand_binomial,
+    evaluate_function,
+    sample_function,
     solve_equation,
 )
 
@@ -61,6 +64,8 @@ print(approximate_expression("1 / 3", significant_digits=6))
 print(calculate_operation("multiply", [2, 3, 4]))
 print(convert_unit(5, "km", "m"))  # 5000.0
 print(convert_unit(20, "C", "F"))  # 68.0
+print(evaluate_function("x^2 - 4", 3))  # 5
+print(sample_function("x^2", -1, 1, points=3))  # [(-1.0, 1), (0.0, 0), (1.0, 1)]
 print(solve_equation("x^2 - 5x + 6 = 0"))
 print(expand_binomial("(x + 2)^3"))
 
@@ -76,6 +81,8 @@ except CalculatorError as error:
 - `approximate_expression(expression, significant_digits=15)` — return a `Decimal` rounded to 1–100 significant digits (default 15). This rounds the parser's result; it does **not** increase the internal precision used by the existing floating-point expression parser.
 - `calculate_operation(operation, numbers)` — run `add`, `subtract`, `multiply`, or `divide`.
 - `convert_unit(value, from_unit, to_unit)` — convert between supported compatible units. Examples include `km`/`m`, `kg`/`lb`, `C`/`F`/`K`, `km/h`/`m/s`, and `min`/`s`. Unknown units and cross-dimension conversions raise `CalculatorError`.
+- `evaluate_function(expression, x_value)` — evaluate a supported expression at one x-coordinate, for example `evaluate_function("x^2", 3)`.
+- `sample_function(expression, x_min, x_max, points=101)` — generate evenly spaced `(x, y)` samples for graphing. Undefined values are returned as `(x, None)` so a future plotting interface can leave a gap. Sampling is limited to 2,000 points.
 - `solve_equation(equation)` — solve supported polynomial equations in `x`.
 - `expand_binomial(expression)` — expand supported binomial expressions.
 - `CalculatorError` — consistent exception type for interface code to catch.
