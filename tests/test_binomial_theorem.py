@@ -45,3 +45,10 @@ def test_rejects_binomial_expansion_overflow():
 def test_rejects_invalid_binomials(expression):
     with pytest.raises(ValueError):
         expand_binomial(expression)
+
+
+
+def test_rejects_binomial_expressions_that_exceed_length_limit():
+    expression = "(" + "x" * 10_001 + " + 1)^2"
+    with pytest.raises(ValueError, match="too long"):
+        expand_binomial(expression)
