@@ -149,9 +149,9 @@ def test_public_graph_function_evaluation():
 def test_public_graph_sampling_returns_coordinate_pairs_and_gaps():
     from engine import sample_function
 
-    assert sample_function("x^2", -1, 1, points=3) == pytest.approx(
-        [(-1, 1), (0, 0), (1, 1)]
-    )
+    polynomial_samples = sample_function("x^2", -1, 1, points=3)
+    assert [point[0] for point in polynomial_samples] == pytest.approx([-1, 0, 1])
+    assert [point[1] for point in polynomial_samples] == pytest.approx([1, 0, 1])
     samples = sample_function("1/x", -1, 1, points=3)
     assert samples[1] == (0.0, None)
 
