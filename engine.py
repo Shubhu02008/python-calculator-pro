@@ -20,7 +20,11 @@ class CalculatorError(ValueError):
 def _finite_number(value, *, label="value"):
     if isinstance(value, bool) or not isinstance(value, Real):
         raise CalculatorError(f"{label.capitalize()} must be a real number.")
-    if not math.isfinite(value):
+    try:
+        finite = math.isfinite(value)
+    except OverflowError:
+        finite = False
+    if not finite:
         raise CalculatorError(f"{label.capitalize()} must be finite.")
     return value
 
