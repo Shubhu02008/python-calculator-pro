@@ -1,5 +1,3 @@
-import math
-
 from fastapi.testclient import TestClient
 
 from api import app
@@ -139,3 +137,19 @@ def test_unknown_request_fields_are_rejected():
 
     assert response.status_code == 422
     assert response.json()["error"]["code"] == "invalid_request"
+
+
+
+def test_cors_allows_local_development_origin_without_credentials():
+    response = client.options(
+        "/api/v1/calculate",
+        headers={
+            "Origin": "http://localhost:5173",
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "content-type",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == "http://localhost:5173"
+    assert "access-control-allow-credentials" not in response.headers
