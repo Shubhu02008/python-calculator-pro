@@ -144,3 +144,29 @@ def test_case_sensitive_symbols_do_not_confuse_fahrenheit_with_farads():
     assert convert_unit(32, "F", "C") == pytest.approx(0)
     assert convert_unit(1, "MW", "W") == pytest.approx(1_000_000)
     assert convert_unit(1, "mW", "W") == pytest.approx(0.001)
+
+
+@pytest.mark.parametrize(
+    "value,source,target,expected",
+    [
+        (1, "cup", "ml", 236.5882365),
+        (1, "tsp", "ml", 4.92892159375),
+        (1, "tbsp", "tsp", 3),
+        (1, "fl oz", "ml", 29.5735295625),
+        (1, "pt", "cup", 2),
+        (1, "qt", "cup", 4),
+        (1, "metric cup", "ml", 250),
+        (1, "metric teaspoon", "ml", 5),
+        (1, "metric tablespoon", "ml", 15),
+        (1, "imperial fluid ounce", "ml", 28.4130625),
+        (1, "imperial pint", "ml", 568.26125),
+        (1, "imperial gallon", "l", 4.54609),
+    ],
+)
+def test_cooking_and_customary_volume_conversions(value, source, target, expected):
+    assert convert_unit(value, source, target) == pytest.approx(expected)
+
+
+def test_cooking_volume_units_remain_volume_units():
+    with pytest.raises(ValueError, match="Cannot convert volume to mass"):
+        convert_unit(1, "cup", "g")
