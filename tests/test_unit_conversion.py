@@ -81,3 +81,61 @@ def test_rejects_temperature_to_non_temperature_conversion():
 def test_temperature_round_trip():
     fahrenheit = convert_unit(23, "C", "F")
     assert convert_unit(fahrenheit, "F", "C") == pytest.approx(23)
+
+
+@pytest.mark.parametrize(
+    "value,source,target,expected",
+    [
+        (1, "bar", "Pa", 100000),
+        (1, "atm", "kPa", 101.325),
+        (1, "psi", "kPa", 6.894757293168),
+        (1, "kcal", "J", 4184),
+        (1, "kWh", "MJ", 3.6),
+        (1, "hp", "W", 745.6998715822702),
+        (1, "lbf", "N", 4.4482216152605),
+        (1, "km/h", "m/s", 1 / 3.6),
+        (1, "MHz", "Hz", 1_000_000),
+        (1, "rpm", "Hz", 1 / 60),
+        (1, "kV", "V", 1000),
+        (1, "mA", "A", 0.001),
+        (1, "kΩ", "ohm", 1000),
+        (1, "mAh", "coulomb", 3.6),
+        (1, "μF", "farad", 1e-6),
+        (1, "mH", "henry", 0.001),
+        (1, "mS", "siemens", 0.001),
+        (1, "kB", "byte", 1000),
+        (1, "kb", "bit", 1000),
+        (1, "KiB", "byte", 1024),
+        (1, "MiB", "KiB", 1024),
+        (8, "bit", "byte", 1),
+    ],
+)
+def test_technical_and_digital_conversions(value, source, target, expected):
+    assert convert_unit(value, source, target) == pytest.approx(expected)
+
+
+def test_digital_symbols_distinguish_bits_and_bytes():
+    assert convert_unit(1, "MB", "Mb") == pytest.approx(8)
+    assert convert_unit(1, "MiB", "Mib") == pytest.approx(8)
+
+
+@pytest.mark.parametrize(
+    "source,target",
+    [
+        ("Pa", "J"),
+        ("W", "N"),
+        ("Hz", "V"),
+        ("V", "A"),
+        ("ohm", "farad"),
+        ("byte", "joule"),
+    ],
+)
+def test_technical_units_reject_incompatible_dimensions(source, target):
+    with pytest.raises(ValueError, match="Cannot convert"):
+        convert_unit(1, source, target)
+
+
+def test_technical_word_aliases_are_case_insensitive():
+    assert convert_unit(1, "KILOPASCALS", "Pa") == pytest.approx(1000)
+    assert convert_unit(1, "Gigahertz", "MHz") == pytest.approx(1000)
+    assert convert_unit(1, "Kilobytes", "byte") == pytest.approx(1000)
