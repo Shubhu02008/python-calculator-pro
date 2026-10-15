@@ -152,42 +152,110 @@ def _real_cuberoot(value):
 
 
 def _solve_cubic(constant, linear, quadratic, cubic):
-    """Return all three roots of a real-coefficient cubic, including repeats."""
-    a = quadratic / cubic
-    b = linear / cubic
-    c = constant / cubic
+    """Return all three roots of a real-coefficient cubic, including repeats.
+
+    Rescale the independent variable before applying Cardano's formula. This
+    keeps the normalized coefficients and intermediate powers in a useful
+    floating-point range even when the roots are extremely large or small.
+    """
+    coefficients = (constant, linear, quadratic, cubic)
+    if not all(math.isfinite(value) for value in coefficients):
+        raise ValueError("Equation coefficients exceed the supported numerical range.")
+    if cubic == 0:
+        raise ValueError("A cubic equation requires a non-zero cubic coefficient.")
+
+    log_leading = math.log(abs(cubic))
+    scale_candidates = [
+        (math.log(abs(value)) - log_leading) / (3 - degree)
+        for degree, value in enumerate(coefficients[:3])
+        if value != 0
+    ]
+    log_scale = max(scale_candidates, default=0.0)
+    try:
+        scale = math.exp(log_scale)
+    except OverflowError as exc:
+        raise OverflowError("Cubic roots exceed the supported numerical range.") from exc
+    if not math.isfinite(scale) or scale == 0:
+        raise OverflowError("Cubic roots exceed the supported numerical range.")
+
+    def scaled_coefficient(value, degree):
+        if value == 0:
+            return 0.0
+        exponent = (
+            math.log(abs(value))
+            - log_leading
+            - (3 - degree) * log_scale
+        )
+        # The chosen scale makes this magnitude at most one; clamp tiny
+        # positive round-off in the logarithmic calculation.
+        magnitude = math.exp(min(0.0, exponent))
+        sign = math.copysign(1.0, value) * math.copysign(1.0, cubic)
+        return math.copysign(magnitude, sign)
+
+    a = scaled_coefficient(quadratic, 2)
+    b = scaled_coefficient(linear, 1)
+    c = scaled_coefficient(constant, 0)
 
     p = b - a * a / 3
     q = 2 * a**3 / 27 - a * b / 3 + c
-    discriminant = (q / 2) ** 2 + (p / 3) ** 3
+    positive_term = (q / 2) ** 2
+    negative_term = (p / 3) ** 3
+    discriminant = positive_term + negative_term
+    # The discriminant is dimensionless after rescaling. Estimate its
+    # round-off from the magnitudes of the two terms instead of using a fixed
+    # absolute tolerance that behaves differently at different scales.
+    tolerance = 32 * math.ulp(1.0) * (
+        abs(positive_term) + abs(negative_term)
+    )
     shift = a / 3
-    tolerance = 1e-12
 
     if discriminant > tolerance:
         root_disc = math.sqrt(discriminant)
-        u = _real_cuberoot(-q / 2 + root_disc)
-        v = _real_cuberoot(-q / 2 - root_disc)
-        real_root = u + v - shift
-        real_part = -(u + v) / 2 - shift
-        imaginary_part = math.sqrt(3) * (u - v) / 2
-        return [real_root, complex(real_part, imaginary_part), complex(real_part, -imaginary_part)]
-
-    if abs(discriminant) <= tolerance:
+        # Choose the larger-magnitude Cardano radicand, then recover the
+        # second cube root from u*v = -p/3 to reduce cancellation.
+        q_half = -q / 2
+        radicand = q_half - math.copysign(root_disc, q if q != 0 else 1.0)
+        u = _real_cuberoot(radicand)
+        v = -p / (3 * u) if u != 0 else _real_cuberoot(
+            q_half + math.copysign(root_disc, q if q != 0 else 1.0)
+        )
+        pair_real = -(u + v) / 2 - shift
+        pair_imaginary = math.sqrt(3) * abs(u - v) / 2
+        roots = [
+            u + v - shift,
+            complex(pair_real, pair_imaginary),
+            complex(pair_real, -pair_imaginary),
+        ]
+    elif discriminant < -tolerance:
+        radius = 2 * math.sqrt(-p / 3)
+        cosine = (3 * q / (2 * p)) * (math.sqrt(3) / math.sqrt(-p))
+        cosine = max(-1.0, min(1.0, cosine))
+        angle = math.acos(cosine) / 3
+        roots = [
+            radius * math.cos(angle - 2 * math.pi * k / 3) - shift
+            for k in range(3)
+        ]
+    else:
         u = _real_cuberoot(-q / 2)
         roots = [2 * u - shift, -u - shift, -u - shift]
-        if math.isclose(roots[0], roots[1], abs_tol=1e-10):
-            return [roots[0]] * 3
-        return roots
 
-    radius = 2 * math.sqrt(-p / 3)
-    cosine = (3 * q / (2 * p)) * math.sqrt(-3 / p)
-    cosine = max(-1.0, min(1.0, cosine))
-    angle = math.acos(cosine) / 3
-    return [
-        radius * math.cos(angle - 2 * math.pi * k / 3) - shift
-        for k in range(3)
-    ]
-
+    scaled_roots = []
+    for root in roots:
+        if isinstance(root, complex):
+            scaled = complex(root.real * scale, root.imag * scale)
+            finite = math.isfinite(scaled.real) and math.isfinite(scaled.imag)
+            underflowed = (
+                (root.real != 0 and scaled.real == 0)
+                or (root.imag != 0 and scaled.imag == 0)
+            )
+        else:
+            scaled = root * scale
+            finite = math.isfinite(scaled)
+            underflowed = root != 0 and scaled == 0
+        if not finite or underflowed:
+            raise OverflowError("A cubic root is outside the supported numerical range.")
+        scaled_roots.append(scaled)
+    return scaled_roots
 
 def solve_equation(equation):
     """Solve a linear, quadratic, or cubic polynomial equation in x.
