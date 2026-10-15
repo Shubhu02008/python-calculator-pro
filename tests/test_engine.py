@@ -90,3 +90,20 @@ def test_public_functions_reject_wrong_input_types(function, value):
 def test_solver_non_finite_roots_are_rejected():
     with pytest.raises(CalculatorError):
         solve_equation("1e308x^2 + x + 1 = 0")
+
+@pytest.mark.parametrize(
+    "operation",
+    [
+        lambda: evaluate_expression("9" * 1_001),
+        lambda: evaluate_expression("2^10001"),
+        lambda: solve_equation("(" * 1_200 + "x" + ")" * 1_200 + " = 0"),
+        lambda: expand_binomial("(x + 2)^101"),
+    ],
+)
+def test_public_api_normalizes_backend_validation_errors(operation):
+    with pytest.raises(CalculatorError):
+        operation()
+
+
+def test_public_api_preserves_exact_integer_expression_result():
+    assert evaluate_expression("9007199254740993 + 1") == 9007199254740994
