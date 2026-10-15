@@ -63,6 +63,7 @@ def test_rejects_unknown_or_invalid_units(unit):
         (32, "°F", "c", 0),
         (1, "km2", "m2", 1_000_000),
         (1, "ft²", "m2", 0.09290304),
+        (1, "square mile", "km2", 2.589988110336),
         (36, "km/h", "m/s", 10),
         (60, "minutes", "seconds", 3600),
         (2, "hours", "min", 120),
