@@ -38,6 +38,32 @@ def test_divide_by_zero():
 def test_invalid_operation():
     assert calculate("unknown", [5, 3]) == "Invalid operation"
 
+@pytest.mark.parametrize("numbers", [[float("nan")], [float("inf")], [float("-inf")], ["5"], [True]])
+def test_named_operations_reject_invalid_or_non_finite_inputs(numbers):
+    with pytest.raises(ValueError, match="finite real numeric values"):
+        calculate("add", numbers)
+
+
+@pytest.mark.parametrize(
+    "operation,numbers",
+    [
+        ("add", [1e308, 1e308]),
+        ("multiply", [1e308, 1e308]),
+    ],
+)
+def test_named_operations_reject_non_finite_results(operation, numbers):
+    with pytest.raises(ValueError, match="outside the supported range"):
+        calculate(operation, numbers)
+
+
+def test_named_operation_rejects_integer_beyond_supported_float_range():
+    with pytest.raises(ValueError, match="finite real numeric values"):
+        calculate("add", [10**1000])
+
+
+def test_invalid_operation_remains_compatible():
+    assert calculate("unknown", ["not a number"]) == "Invalid operation"
+
 
 def test_expression_calculation():
     assert calculate("5 + 10 * 3") == 35
