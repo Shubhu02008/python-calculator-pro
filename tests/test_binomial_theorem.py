@@ -52,3 +52,14 @@ def test_rejects_binomial_expressions_that_exceed_length_limit():
     expression = "(" + "x" * 10_001 + " + 1)^2"
     with pytest.raises(ValueError, match="too long"):
         expand_binomial(expression)
+
+
+def test_rejects_extremely_long_binomial_exponent_cleanly():
+    expression = "(x + 2)^" + "9" * 5_000
+    with pytest.raises(ValueError, match="exponent must be 100 or less"):
+        expand_binomial(expression)
+
+
+def test_binomial_exponent_with_many_leading_zeroes_is_supported():
+    expression = "(x + 2)^" + "0" * 5_000 + "3"
+    assert expand_binomial(expression) == "x^3 + 6x^2 + 12x + 8"
