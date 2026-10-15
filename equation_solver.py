@@ -49,7 +49,7 @@ def _multiply(left, right):
     for i, a in enumerate(left):
         for j, b in enumerate(right):
             product = a * b
-            if i + j > 3 and not math.isclose(product, 0.0, abs_tol=1e-12):
+            if i + j > 3 and product != 0.0:
                 raise ValueError("Only linear, quadratic, and cubic equations are supported.")
             if i + j <= 3:
                 result[i + j] += product
@@ -80,9 +80,9 @@ def _parse_polynomial(tokens):
                 if token == "*":
                     result = _multiply(result, right)
                 else:
-                    if any(not math.isclose(right[i], 0.0, abs_tol=1e-12) for i in (1, 2, 3)):
+                    if any(right[i] != 0.0 for i in (1, 2, 3)):
                         raise ValueError("Division by an expression containing x is unsupported.")
-                    if math.isclose(right[0], 0.0, abs_tol=1e-12):
+                    if right[0] == 0.0:
                         raise ValueError("Cannot divide by zero.")
                     result = tuple(value / right[0] for value in result)
             elif token == "x" or token == "(" or isinstance(token, (int, float)):

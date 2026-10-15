@@ -118,3 +118,22 @@ def test_solver_preserves_small_nonzero_linear_coefficient():
 def test_solver_preserves_small_nonzero_cubic_coefficient():
     roots = solve_equation("0.0000000000001x^3 = 1")
     assert roots[0] == pytest.approx(10 ** (13 / 3), rel=1e-12)
+
+@pytest.mark.parametrize(
+    "equation",
+    [
+        "0.0000000000001x / 0.0000000000001 = 1",
+        "0.0000000000001*x*x*x*x = 1",
+        "x / (0.0000000000001x + 1) = 2",
+    ],
+)
+def test_small_coefficients_do_not_bypass_structural_validation(equation):
+    if equation == "0.0000000000001x / 0.0000000000001 = 1":
+        assert solve_equation(equation) == pytest.approx([1.0])
+    else:
+        with pytest.raises(ValueError):
+            solve_equation(equation)
+
+
+def test_division_by_small_nonzero_constant_is_allowed():
+    assert solve_equation("x / 0.0000000000001 = 1") == pytest.approx([1e-13])
