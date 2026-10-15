@@ -81,3 +81,31 @@ def test_rejects_temperature_to_non_temperature_conversion():
 def test_temperature_round_trip():
     fahrenheit = convert_unit(23, "C", "F")
     assert convert_unit(fahrenheit, "F", "C") == pytest.approx(23)
+
+
+@pytest.mark.parametrize(
+    "value,source,target,expected",
+    [
+        (1, "bar", "kPa", 100),
+        (1, "atm", "Pa", 101325),
+        (14.6959487755, "psi", "atm", 1),
+        (1, "kWh", "J", 3_600_000),
+        (1, "kcal", "kJ", 4.184),
+        (1, "eV", "J", 1.602176634e-19),
+        (1, "hp", "W", 745.6998715822702),
+        (1, "lbf", "N", 4.4482216152605),
+        (1, "kgf", "N", 9.80665),
+        (1, "MPa", "kPa", 1000),
+        (1, "mW", "W", 0.001),
+        (1, "MW", "kW", 1000),
+    ],
+)
+def test_pressure_energy_power_and_force_conversions(value, source, target, expected):
+    assert convert_unit(value, source, target) == pytest.approx(expected)
+
+
+def test_rejects_incompatible_physics_dimensions():
+    with pytest.raises(ValueError, match="Cannot convert pressure to energy"):
+        convert_unit(1, "bar", "J")
+    with pytest.raises(ValueError, match="Cannot convert force to power"):
+        convert_unit(1, "N", "W")
