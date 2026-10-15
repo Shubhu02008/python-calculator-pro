@@ -109,3 +109,31 @@ def test_rejects_incompatible_physics_dimensions():
         convert_unit(1, "bar", "J")
     with pytest.raises(ValueError, match="Cannot convert force to power"):
         convert_unit(1, "N", "W")
+
+
+@pytest.mark.parametrize(
+    "value,source,target,expected",
+    [
+        (1, "KB", "byte", 1000),
+        (1, "KiB", "byte", 1024),
+        (1, "MB", "KB", 1000),
+        (1, "Mb", "kb", 1000),
+        (1, "GHz", "MHz", 1000),
+        (120, "rpm", "Hz", 2),
+        (1, "kV", "V", 1000),
+        (1, "mA", "A", 0.001),
+        (1, "kΩ", "ohm", 1000),
+        (1, "uF", "farad", 1e-6),
+        (1, "mAh", "coulomb", 3.6),
+        (1, "mH", "henry", 0.001),
+    ],
+)
+def test_data_frequency_and_electrical_conversions(value, source, target, expected):
+    assert convert_unit(value, source, target) == pytest.approx(expected)
+
+
+def test_rejects_incompatible_technical_dimensions():
+    with pytest.raises(ValueError, match="Cannot convert data_size to frequency"):
+        convert_unit(1, "GB", "GHz")
+    with pytest.raises(ValueError, match="Cannot convert voltage to current"):
+        convert_unit(1, "V", "A")
