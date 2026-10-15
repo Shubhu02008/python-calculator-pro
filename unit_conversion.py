@@ -96,16 +96,22 @@ from unit_conversion_technical import EXTRA_SYMBOL_ALIASES as _TECHNICAL_SYMBOL_
 from unit_conversion_cooking import EXTRA_UNITS as _COOKING_UNITS
 from unit_conversion_cooking import EXTRA_ALIASES as _COOKING_ALIASES
 from unit_conversion_cooking import EXTRA_SYMBOL_ALIASES as _COOKING_SYMBOL_ALIASES
+from unit_conversion_land import EXTRA_UNITS as _LAND_UNITS
+from unit_conversion_land import EXTRA_ALIASES as _LAND_ALIASES
+from unit_conversion_land import EXTRA_SYMBOL_ALIASES as _LAND_SYMBOL_ALIASES
 
 _UNITS.update(_PHYSICS_UNITS)
 _UNITS.update(_TECHNICAL_UNITS)
 _UNITS.update(_COOKING_UNITS)
+_UNITS.update(_LAND_UNITS)
 _ALIASES.update(_PHYSICS_ALIASES)
 _ALIASES.update(_TECHNICAL_ALIASES)
 _ALIASES.update(_COOKING_ALIASES)
+_ALIASES.update(_LAND_ALIASES)
 _SYMBOL_ALIASES = dict(_PHYSICS_SYMBOL_ALIASES)
 _SYMBOL_ALIASES.update(_TECHNICAL_SYMBOL_ALIASES)
 _SYMBOL_ALIASES.update(_COOKING_SYMBOL_ALIASES)
+_SYMBOL_ALIASES.update(_LAND_SYMBOL_ALIASES)
 
 
 def _normalize_unit(unit):

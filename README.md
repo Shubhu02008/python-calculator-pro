@@ -18,7 +18,7 @@ A Python calculator engine for arithmetic, scientific functions, polynomial equa
 - Percentages with postfix `%`, factorials with `!`, and implicit multiplication such as `2pi` and `3(4+5)`
 - Linear, quadratic, and cubic equation solving in `x`
 - Binomial theorem expansion
-- Unit conversion for length, mass, volume, temperature, area, speed, time, pressure, energy, power, force, digital storage, frequency, electrical measurements, and cooking/US/Imperial volume units
+- Unit conversion for length, mass, volume, temperature, area, speed, time, pressure, energy, power, force, digital storage, frequency, electrical measurements, and cooking/US/Imperial volume units, and Indian land-area units
 - Backend graphing support to evaluate functions and generate bounded coordinate samples
 - Clear errors for malformed expressions and common mathematical domain errors
 
@@ -80,7 +80,7 @@ except CalculatorError as error:
 - `evaluate_expression(expression)` — evaluate an arithmetic/scientific expression. Integer-only arithmetic can preserve exact integer results; decimal and scientific-function calculations may use floating-point arithmetic.
 - `approximate_expression(expression, significant_digits=15)` — return a `Decimal` rounded to 1–100 significant digits (default 15). This rounds the parser's result; it does **not** increase the internal precision used by the existing floating-point expression parser.
 - `calculate_operation(operation, numbers)` — run `add`, `subtract`, `multiply`, or `divide`.
-- `convert_unit(value, from_unit, to_unit)` — convert between supported compatible units. Examples include `km`/`m`, `kg`/`lb`, `C`/`F`/`K`, `km/h`/`m/s`, `min`/`s`, `bar`/`Pa`, `kWh`/`J`, `hp`/`W`, `lbf`/`N`, decimal/binary storage units, `GHz`/`MHz`, electrical units such as `kV`/`V` and `mA`/`A`, and cooking measures such as cups, teaspoons, tablespoons, US fluid ounces, and separate Imperial volume units. Unknown units and cross-dimension conversions raise `CalculatorError`.
+- `convert_unit(value, from_unit, to_unit)` — convert between supported compatible units. Examples include `km`/`m`, `kg`/`lb`, `C`/`F`/`K`, `km/h`/`m/s`, `min`/`s`, `bar`/`Pa`, `kWh`/`J`, `hp`/`W`, `lbf`/`N`, decimal/binary storage units, `GHz`/`MHz`, electrical units such as `kV`/`V` and `mA`/`A`, and cooking measures such as cups, teaspoons, tablespoons, US fluid ounces, and separate Imperial volume units, plus bigha and biswa. The land-area conversions use a fixed pucca-bigha convention of 27,000 square feet per bigha and 20 biswa per bigha. Unknown units and cross-dimension conversions raise `CalculatorError`.
 - `evaluate_function(expression, x_value)` — evaluate a supported expression at one x-coordinate, for example `evaluate_function("x^2", 3)`.
 - `sample_function(expression, x_min, x_max, points=101)` — generate evenly spaced `(x, y)` samples for graphing. Undefined values are returned as `(x, None)` so a future plotting interface can leave a gap. Sampling is limited to 2,000 points.
 - `solve_equation(equation)` — solve supported polynomial equations in `x`.
