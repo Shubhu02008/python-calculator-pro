@@ -7,7 +7,7 @@ from numbers import Real
 from calculator import calculate
 
 
-_VARIABLE_X = re.compile(r"(?<![A-Za-z0-9_])x(?![A-Za-z0-9_])", re.IGNORECASE)
+_VARIABLE_X = re.compile(r"(?<![A-Za-z_])x(?![A-Za-z0-9_])", re.IGNORECASE)
 
 
 def evaluate_function(expression, x_value):
