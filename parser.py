@@ -189,14 +189,18 @@ def evaluate_tokens(tokens):
         if peek("^"):
             position += 1
             exponent = parse_unary()
-            if (
-                isinstance(value, int)
-                and isinstance(exponent, int)
-                and abs(exponent) > _MAX_EXACT_INTEGER_EXPONENT
-            ):
-                raise ValueError(
-                    f"Integer exponent exceeds the supported limit of {_MAX_EXACT_INTEGER_EXPONENT}."
-                )
+            if isinstance(value, int) and isinstance(exponent, int):
+                if abs(exponent) > _MAX_EXACT_INTEGER_EXPONENT:
+                    raise ValueError(
+                        f"Integer exponent exceeds the supported limit of {_MAX_EXACT_INTEGER_EXPONENT}."
+                    )
+                # Bound exact-power output size before constructing potentially
+                # enormous integers. This conservative estimate avoids large
+                # allocations and outputs that Python cannot safely stringify.
+                if exponent > 0 and abs(value) > 1:
+                    estimated_digits = len(str(abs(value))) * exponent
+                    if estimated_digits > 4_000:
+                        raise ValueError("Exact integer power result is too large.")
             value = value ** exponent
             if isinstance(value, complex):
                 raise ValueError("This expression has a complex result.")
