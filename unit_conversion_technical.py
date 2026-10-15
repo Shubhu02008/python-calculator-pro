@@ -92,7 +92,7 @@ EXTRA_SYMBOL_ALIASES = {
     "V": "v", "mV": "mv", "kV": "kv", "MV": "megavolt",
     "A": "a", "mA": "ma", "kA": "ka", "MA": "megaampere",
     "Ω": "ohm", "mΩ": "milliohm", "kΩ": "kohm", "MΩ": "megaohm",
-    "F": "farad", "mF": "millifarad", "uF": "microfarad", "μF": "microfarad",
+    "mF": "millifarad", "uF": "microfarad", "μF": "microfarad",
     "nF": "nanofarad", "pF": "picofarad",
     "mC": "millicoulomb",
     "Ah": "ampere_hour", "mAh": "milliampere_hour",
