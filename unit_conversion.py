@@ -201,7 +201,7 @@ _ALIASES = {
     "in^2": "in2", "in²": "in2", "square inch": "in2", "square inches": "in2",
     "yd^2": "yd2", "yd²": "yd2", "square yard": "yd2", "square yards": "yd2",
     "hectare": "ha", "hectares": "ha", "ha": "ha", "ares": "are",
-    "gunta": "guntha", "gunthas": "guntha", "gunthas": "guntha",
+    "gunta": "guntha", "gunthas": "guntha",
     "kanals": "kanal", "marla": "marla", "marlas": "marla",
     "cents": "cent", "decimal land": "decimal", "decimals": "decimal",
     "bighas": "bigha", "biswas": "biswa", "kathas": "katha", "dhurs": "dhur",
