@@ -198,8 +198,13 @@ def evaluate_tokens(tokens):
                 # enormous integers. This conservative estimate avoids large
                 # allocations and outputs that Python cannot safely stringify.
                 if exponent > 0 and abs(value) > 1:
-                    estimated_digits = (abs(value).bit_length() * math.log10(2) + 1) * exponent
-                    if estimated_digits > 4_000:
+                    magnitude = abs(value)
+                    shift = max(0, magnitude.bit_length() - 53)
+                    leading_bits = magnitude >> shift
+                    estimated_log10 = (
+                        math.log10(leading_bits) + shift * math.log10(2)
+                    ) * exponent
+                    if estimated_log10 >= 4_000:
                         raise ValueError("Exact integer power result is too large.")
             value = value ** exponent
             if isinstance(value, complex):
