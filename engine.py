@@ -59,6 +59,8 @@ def evaluate_expression(expression):
 
 def calculate_operation(operation, numbers):
     """Run a named basic operation ('add', 'subtract', 'multiply', or 'divide')."""
+    if not isinstance(operation, str):
+        raise CalculatorError("Operation name must be text.")
     if operation not in {"add", "subtract", "multiply", "divide"}:
         raise CalculatorError(f"Unknown operation: {operation!r}.")
     if not isinstance(numbers, (list, tuple)) or not numbers:
