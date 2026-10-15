@@ -160,3 +160,17 @@ def test_cooking_volume_units_remain_volume_dimension():
     assert convert_unit(1, "cup", "l") == pytest.approx(0.2365882365)
     with pytest.raises(ValueError, match="Cannot convert volume to mass"):
         convert_unit(1, "cup", "g")
+
+
+@pytest.mark.parametrize(
+    "value,source,target,expected",
+    [
+        (1, "bigha", "sq ft", 27000),
+        (1, "bigha", "biswa", 20),
+        (20, "biswas", "bigha", 1),
+        (1, "bigha", "m2", 2508.38208),
+        (1, "biswa", "m2", 125.419104),
+    ],
+)
+def test_indian_land_unit_conversions(value, source, target, expected):
+    assert convert_unit(value, source, target) == pytest.approx(expected)
