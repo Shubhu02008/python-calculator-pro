@@ -57,6 +57,32 @@ def test_solves_cubic_with_repeated_roots():
     assert roots == pytest.approx([-2.0, 1.0, 1.0])
 
 
+def test_cubic_solver_handles_very_large_roots():
+    equation = (
+        f"x^3 - {6 * 10**100}x^2 + "
+        f"{11 * 10**200}x - {6 * 10**300} = 0"
+    )
+    roots = sorted(solve_equation(equation))
+    assert roots == pytest.approx([1e100, 2e100, 3e100], rel=1e-12)
+
+
+def test_cubic_solver_handles_very_small_roots():
+    # Use fixed-point decimals because the polynomial tokenizer intentionally
+    # does not accept scientific notation.
+    c2 = format(6e-100, ".110f")
+    c1 = format(11e-200, ".210f")
+    c0 = format(6e-300, ".310f")
+    roots = sorted(solve_equation(f"x^3 - {c2}x^2 + {c1}x - {c0} = 0"))
+    assert [root / 1e-100 for root in roots] == pytest.approx(
+        [1.0, 2.0, 3.0], rel=1e-12
+    )
+
+
+def test_cubic_solver_handles_near_zero_discriminant():
+    roots = sorted(solve_equation("x^3 - 3x + 2.0000000000000004 = 0"))
+    assert roots == pytest.approx([-2.0, 1.0, 1.0], abs=1e-7)
+
+
 def test_supports_cubic_notation_and_superscript():
     assert solve_equation("x³ - 1 = 0")[0] == pytest.approx(1.0)
 
