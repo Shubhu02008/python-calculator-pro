@@ -21,9 +21,9 @@ EXTRA_ALIASES = {
     "us fluid ounce": "floz", "us fl oz": "floz",
     "pints": "pint", "us pint": "pint", "us pints": "pint",
     "quarts": "quart", "us quart": "quart", "us quarts": "quart",
-    "uk gallon": "imperial_gallon", "imperial gallons": "imperial_gallon",
-    "uk quart": "imperial_quart", "imperial quarts": "imperial_quart",
-    "uk pint": "imperial_pint", "imperial pints": "imperial_pint",
+    "uk gallon": "imperial_gallon", "imperial gallon": "imperial_gallon", "imperial gallons": "imperial_gallon",
+    "uk quart": "imperial_quart", "imperial quart": "imperial_quart", "imperial quarts": "imperial_quart",
+    "uk pint": "imperial_pint", "imperial pint": "imperial_pint", "imperial pints": "imperial_pint",
     "imperial fluid ounce": "imperial_floz", "imperial fluid ounces": "imperial_floz",
     "uk fl oz": "imperial_floz", "imperial fl oz": "imperial_floz",
 }
