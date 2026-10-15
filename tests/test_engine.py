@@ -7,6 +7,7 @@ from engine import (
     CalculatorError,
     approximate_expression,
     calculate_operation,
+    convert_unit,
     evaluate_expression,
     expand_binomial,
     solve_equation,
@@ -107,3 +108,32 @@ def test_public_api_normalizes_backend_validation_errors(operation):
 
 def test_public_api_preserves_exact_integer_expression_result():
     assert evaluate_expression("9007199254740993 + 1") == 9007199254740994
+
+
+@pytest.mark.parametrize(
+    "value,source,target,expected",
+    [
+        (1, "km", "m", 1000),
+        (0, "C", "F", 32),
+        (36, "km/h", "m/s", 10),
+        (1, "acre", "m2", 4046.8564224),
+        (60, "min", "s", 3600),
+    ],
+)
+def test_public_unit_conversion(value, source, target, expected):
+    assert convert_unit(value, source, target) == pytest.approx(expected)
+
+
+@pytest.mark.parametrize(
+    "value,source,target",
+    [
+        (True, "m", "km"),
+        (math.inf, "m", "km"),
+        (1, "m", "kg"),
+        (1, "parsec", "m"),
+        (1, None, "m"),
+    ],
+)
+def test_public_unit_conversion_errors_use_calculator_error(value, source, target):
+    with pytest.raises(CalculatorError):
+        convert_unit(value, source, target)

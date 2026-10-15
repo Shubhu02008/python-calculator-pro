@@ -12,6 +12,7 @@ from numbers import Real
 from binomial_theorem import expand_binomial as _expand_binomial
 from calculator import calculate as _calculate
 from equation_solver import solve_equation as _solve_equation
+from unit_conversion import convert_unit as _convert_unit
 
 
 _DEFAULT_APPROXIMATION_PRECISION = 15
@@ -117,6 +118,14 @@ def calculate_operation(operation, numbers):
     return result
 
 
+def convert_unit(value, from_unit, to_unit):
+    """Convert a real value between compatible supported measurement units."""
+    checked_value = _finite_number(value, label="value")
+    if not isinstance(from_unit, str) or not isinstance(to_unit, str):
+        raise CalculatorError("Source and target units must be text.")
+    return _run(lambda: _convert_unit(checked_value, from_unit, to_unit))
+
+
 def solve_equation(equation):
     """Solve a linear, quadratic, or cubic equation in x."""
     if not isinstance(equation, str):
@@ -135,6 +144,7 @@ __all__ = [
     "CalculatorError",
     "approximate_expression",
     "calculate_operation",
+    "convert_unit",
     "evaluate_expression",
     "expand_binomial",
     "solve_equation",

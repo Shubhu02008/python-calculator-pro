@@ -18,6 +18,7 @@ A Python calculator engine for arithmetic, scientific functions, polynomial equa
 - Percentages with postfix `%`, factorials with `!`, and implicit multiplication such as `2pi` and `3(4+5)`
 - Linear, quadratic, and cubic equation solving in `x`
 - Binomial theorem expansion
+- Unit conversion for length, mass, volume, temperature, area, speed, and time
 - Clear errors for malformed expressions and common mathematical domain errors
 
 Equation solving supports polynomial equations up to degree 3. The binomial expansion tool accepts simple numeric or single-letter terms and non-negative integer exponents up to 100.
@@ -47,6 +48,7 @@ from engine import (
     CalculatorError,
     approximate_expression,
     calculate_operation,
+    convert_unit,
     evaluate_expression,
     expand_binomial,
     solve_equation,
@@ -57,6 +59,8 @@ print(evaluate_expression("sin(pi / 2) + √25"))
 print(approximate_expression("sqrt(2)"))  # Decimal rounded to 15 significant digits
 print(approximate_expression("1 / 3", significant_digits=6))
 print(calculate_operation("multiply", [2, 3, 4]))
+print(convert_unit(5, "km", "m"))  # 5000.0
+print(convert_unit(20, "C", "F"))  # 68.0
 print(solve_equation("x^2 - 5x + 6 = 0"))
 print(expand_binomial("(x + 2)^3"))
 
@@ -71,6 +75,7 @@ except CalculatorError as error:
 - `evaluate_expression(expression)` — evaluate an arithmetic/scientific expression. Integer-only arithmetic can preserve exact integer results; decimal and scientific-function calculations may use floating-point arithmetic.
 - `approximate_expression(expression, significant_digits=15)` — return a `Decimal` rounded to 1–100 significant digits (default 15). This rounds the parser's result; it does **not** increase the internal precision used by the existing floating-point expression parser.
 - `calculate_operation(operation, numbers)` — run `add`, `subtract`, `multiply`, or `divide`.
+- `convert_unit(value, from_unit, to_unit)` — convert between supported compatible units. Examples include `km`/`m`, `kg`/`lb`, `C`/`F`/`K`, `km/h`/`m/s`, and `min`/`s`. Unknown units and cross-dimension conversions raise `CalculatorError`.
 - `solve_equation(equation)` — solve supported polynomial equations in `x`.
 - `expand_binomial(expression)` — expand supported binomial expressions.
 - `CalculatorError` — consistent exception type for interface code to catch.
