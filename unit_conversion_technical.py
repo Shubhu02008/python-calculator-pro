@@ -83,7 +83,7 @@ EXTRA_ALIASES = {
 EXTRA_SYMBOL_ALIASES = {
     "b": "bit", "B": "byte",
     "kb": "kilobit", "Kb": "kilobit", "kB": "kilobyte", "KB": "kilobyte",
-    "mb": "megabit", "Mb": "megabit", "mB": "megabyte", "MB": "megabyte",
+    "mb": "megabit", "Mb": "megabit", "MB": "megabyte",
     "gb": "gigabit", "Gb": "gigabit", "gB": "gigabyte", "GB": "gigabyte",
     "tb": "terabit", "Tb": "terabit", "tB": "terabyte", "TB": "terabyte",
     "Kib": "kibibit", "KiB": "kibibyte", "Mib": "mebibit", "MiB": "mebibyte",
