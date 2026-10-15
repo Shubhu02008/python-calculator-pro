@@ -139,3 +139,8 @@ def test_technical_word_aliases_are_case_insensitive():
     assert convert_unit(1, "KILOPASCALS", "Pa") == pytest.approx(1000)
     assert convert_unit(1, "Gigahertz", "MHz") == pytest.approx(1000)
     assert convert_unit(1, "Kilobytes", "byte") == pytest.approx(1000)
+
+def test_case_sensitive_symbols_do_not_confuse_fahrenheit_with_farads():
+    assert convert_unit(32, "F", "C") == pytest.approx(0)
+    assert convert_unit(1, "MW", "W") == pytest.approx(1_000_000)
+    assert convert_unit(1, "mW", "W") == pytest.approx(0.001)
