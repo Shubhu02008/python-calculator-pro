@@ -52,6 +52,7 @@ from engine import (
     convert_unit,
     evaluate_expression,
     expand_binomial,
+    list_supported_units,
     evaluate_function,
     sample_function,
     solve_equation,
@@ -63,6 +64,7 @@ print(approximate_expression("sqrt(2)"))  # Decimal rounded to 15 significant di
 print(approximate_expression("1 / 3", significant_digits=6))
 print(calculate_operation("multiply", [2, 3, 4]))
 print(convert_unit(5, "km", "m"))  # 5000.0
+print(list_supported_units()["length"])  # canonical unit identifiers
 print(convert_unit(20, "C", "F"))  # 68.0
 print(evaluate_function("x^2 - 4", 3))  # 5
 print(sample_function("x^2", -1, 1, points=3))  # [(-1.0, 1), (0.0, 0), (1.0, 1)]
@@ -80,6 +82,7 @@ except CalculatorError as error:
 - `evaluate_expression(expression)` — evaluate an arithmetic/scientific expression. Integer-only arithmetic can preserve exact integer results; decimal and scientific-function calculations may use floating-point arithmetic.
 - `approximate_expression(expression, significant_digits=15)` — return a `Decimal` rounded to 1–100 significant digits (default 15). This rounds the parser's result; it does **not** increase the internal precision used by the existing floating-point expression parser.
 - `calculate_operation(operation, numbers)` — run `add`, `subtract`, `multiply`, or `divide`.
+- `list_supported_units()` — return a stable catalog of canonical unit identifiers grouped by measurement dimension. Use these identifiers as the `from_unit` and `to_unit` values when building dynamic conversion controls.
 - `convert_unit(value, from_unit, to_unit)` — convert between supported compatible units. Examples include `km`/`m`, `kg`/`lb`, `C`/`F`/`K`, `km/h`/`m/s`, `min`/`s`, `bar`/`Pa`, `kWh`/`J`, `hp`/`W`, `lbf`/`N`, decimal/binary storage units, `GHz`/`MHz`, electrical units such as `kV`/`V` and `mA`/`A`, and cooking measures such as cups, teaspoons, tablespoons, US fluid ounces, and separate Imperial volume units, plus bigha and biswa. The land-area conversions use a fixed pucca-bigha convention of 27,000 square feet per bigha and 20 biswa per bigha. Unknown units and cross-dimension conversions raise `CalculatorError`.
 - `evaluate_function(expression, x_value)` — evaluate a supported expression at one x-coordinate, for example `evaluate_function("x^2", 3)`.
 - `sample_function(expression, x_min, x_max, points=101)` — generate evenly spaced `(x, y)` samples for graphing. Undefined values are returned as `(x, None)` so a future plotting interface can leave a gap. Sampling is limited to 2,000 points.

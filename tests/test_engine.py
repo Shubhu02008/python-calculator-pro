@@ -10,6 +10,7 @@ from engine import (
     convert_unit,
     evaluate_expression,
     expand_binomial,
+    list_supported_units,
     solve_equation,
 )
 
@@ -168,3 +169,29 @@ def test_public_graph_sampling_returns_coordinate_pairs_and_gaps():
 def test_public_graph_errors_use_calculator_error(call):
     with pytest.raises(CalculatorError):
         call()
+
+
+
+def test_list_supported_units_exposes_all_current_dimensions():
+    units = list_supported_units()
+
+    assert "length" in units
+    assert "temperature" in units
+    assert "pressure" in units
+    assert "data_size" in units
+    assert "voltage" in units
+    assert "area" in units
+    assert "km" in units["length"]
+    assert "c" in units["temperature"]
+    assert "bigha" in units["area"]
+    assert "megabyte" in units["data_size"]
+
+
+def test_list_supported_units_returns_detached_sorted_catalog():
+    units = list_supported_units()
+
+    assert isinstance(units["length"], tuple)
+    assert units["length"] == tuple(sorted(units["length"]))
+    units["length"] = ("not-a-real-unit",)
+
+    assert "not-a-real-unit" not in list_supported_units()["length"]
