@@ -114,6 +114,22 @@ _SYMBOL_ALIASES.update(_COOKING_SYMBOL_ALIASES)
 _SYMBOL_ALIASES.update(_LAND_SYMBOL_ALIASES)
 
 
+def list_supported_units():
+    """Return supported unit identifiers grouped by measurement dimension.
+
+    The returned mapping and tuples are newly created, so callers can inspect
+    the unit catalog without mutating the converter's internal registry.
+    Identifiers are the canonical values accepted by convert_unit().
+    """
+    grouped = {}
+    for unit, (dimension, _scale, _offset) in _UNITS.items():
+        grouped.setdefault(dimension, []).append(unit)
+    return {
+        dimension: tuple(sorted(units))
+        for dimension, units in sorted(grouped.items())
+    }
+
+
 def _normalize_unit(unit):
     """Return the canonical unit symbol or raise a helpful ValueError."""
     if not isinstance(unit, str) or not unit.strip():
@@ -162,4 +178,4 @@ def convert_unit(value, from_unit, to_unit):
     return result
 
 
-__all__ = ["convert_unit"]
+__all__ = ["convert_unit", "list_supported_units"]

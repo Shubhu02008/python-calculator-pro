@@ -13,6 +13,7 @@ from binomial_theorem import expand_binomial as _expand_binomial
 from calculator import calculate as _calculate
 from equation_solver import solve_equation as _solve_equation
 from unit_conversion import convert_unit as _convert_unit
+from unit_conversion import list_supported_units as _list_supported_units
 from graphing import evaluate_function as _evaluate_function
 from graphing import sample_function as _sample_function
 
@@ -159,6 +160,15 @@ def expand_binomial(expression):
     return _run(lambda: _expand_binomial(expression))
 
 
+def list_supported_units():
+    """Return supported unit identifiers grouped by measurement dimension.
+
+    Unit identifiers are canonical strings accepted by convert_unit(). Each
+    dimension maps to a tuple of identifiers, sorted for stable presentation.
+    """
+    return _run(_list_supported_units)
+
+
 __all__ = [
     "CalculatorError",
     "approximate_expression",
@@ -167,6 +177,7 @@ __all__ = [
     "evaluate_expression",
     "expand_binomial",
     "evaluate_function",
+    "list_supported_units",
     "sample_function",
     "solve_equation",
 ]
