@@ -5,6 +5,8 @@ import re
 
 
 _MAX_EXPRESSION_LENGTH = 10_000
+_MAX_INTEGER_DIGITS = 1_000
+_MAX_EXACT_INTEGER_EXPONENT = 10_000
 
 _NUMBER = re.compile(r"(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?")
 _IDENTIFIER = re.compile(r"[A-Za-z_][A-Za-z_0-9]*")
@@ -54,9 +56,17 @@ def tokenize(expression):
             continue
         number = _NUMBER.match(expression, position)
         if number:
-            value = float(number.group())
-            if not math.isfinite(value):
-                raise ValueError("Number is outside the supported range.")
+            literal = number.group()
+            if "." not in literal and "e" not in literal.lower():
+                if len(literal) > _MAX_INTEGER_DIGITS:
+                    raise ValueError(
+                        f"Integer literal is too long (maximum {_MAX_INTEGER_DIGITS} digits)."
+                    )
+                value = int(literal)
+            else:
+                value = float(literal)
+                if not math.isfinite(value):
+                    raise ValueError("Number is outside the supported range.")
             tokens.append(("NUMBER", value))
             position = number.end()
             continue
@@ -121,7 +131,7 @@ def evaluate_tokens(tokens):
         if isinstance(token, tuple) and len(token) == 2:
             normalized.append(token)
         elif isinstance(token, (int, float)) and not isinstance(token, bool):
-            normalized.append(("NUMBER", float(token)))
+            normalized.append(("NUMBER", token if isinstance(token, int) else float(token)))
         elif isinstance(token, str):
             if token in {"+", "-", "*", "/", "^", "(", ")", ","}:
                 normalized.append((token, token))
@@ -178,7 +188,20 @@ def evaluate_tokens(tokens):
         value = parse_postfix()
         if peek("^"):
             position += 1
-            value = value ** parse_unary()
+            exponent = parse_unary()
+            if isinstance(value, int) and isinstance(exponent, int):
+                if abs(exponent) > _MAX_EXACT_INTEGER_EXPONENT:
+                    raise ValueError(
+                        f"Integer exponent exceeds the supported limit of {_MAX_EXACT_INTEGER_EXPONENT}."
+                    )
+                # Bound exact-power output size before constructing potentially
+                # enormous integers. This conservative estimate avoids large
+                # allocations and outputs that Python cannot safely stringify.
+                if exponent > 0 and abs(value) > 1:
+                    estimated_digits = len(str(abs(value))) * exponent
+                    if estimated_digits > 4_000:
+                        raise ValueError("Exact integer power result is too large.")
+            value = value ** exponent
             if isinstance(value, complex):
                 raise ValueError("This expression has a complex result.")
         return value
@@ -192,7 +215,7 @@ def evaluate_tokens(tokens):
             if operator == "%":
                 value /= 100
             else:
-                if value < 0 or not float(value).is_integer():
+                if value < 0 or (not isinstance(value, int) and not float(value).is_integer()):
                     raise ValueError("Factorial requires a non-negative integer.")
                 if value > 170:
                     raise ValueError("Factorial is too large to calculate.")
@@ -242,7 +265,7 @@ def evaluate_tokens(tokens):
                 raise ValueError(f"Function {value} needs parentheses.")
             if value == "factorial" and len(args) == 1:
                 number = args[0]
-                if number < 0 or not float(number).is_integer():
+                if number < 0 or (not isinstance(number, int) and not float(number).is_integer()):
                     raise ValueError("Factorial requires a non-negative integer.")
                 if number > 170:
                     raise ValueError("Factorial is too large to calculate.")
@@ -285,6 +308,6 @@ def evaluate_tokens(tokens):
         if token[0] == ")":
             raise ValueError("Unexpected closing parenthesis.")
         raise ValueError(f"Unexpected token: {token[1]!r}.")
-    if not math.isfinite(result):
+    if not isinstance(result, int) and not math.isfinite(result):
         raise ValueError("The result is outside the supported range.")
     return result

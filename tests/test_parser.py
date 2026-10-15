@@ -86,6 +86,22 @@ def test_scientific_notation():
     assert evaluate("1.2e3 + 2") == 1202
 
 
+def test_large_integer_expressions_preserve_exactness():
+    assert evaluate("9007199254740993 + 1") == 9007199254740994
+    assert evaluate("12345678901234567890 * 9") == 111111110111111111010
+    assert evaluate("10^100") == 10**100
+
+
+def test_integer_literals_over_digit_limit_are_rejected():
+    with pytest.raises(ValueError, match="Integer literal is too long"):
+        evaluate("9" * 1_001)
+
+
+def test_exact_integer_power_has_exponent_limit():
+    with pytest.raises(ValueError, match="exponent exceeds"):
+        evaluate("2^10001")
+
+
 def test_division_by_zero_is_reported():
     with pytest.raises(ValueError, match="divide by zero"):
         evaluate("10 / 0")
