@@ -38,6 +38,7 @@ def test_divide_by_zero():
 def test_invalid_operation():
     assert calculate("unknown", [5, 3]) == "Invalid operation"
 
+
 @pytest.mark.parametrize("numbers", [[float("nan")], [float("inf")], [float("-inf")], ["5"], [True]])
 def test_named_operations_reject_invalid_or_non_finite_inputs(numbers):
     with pytest.raises(ValueError, match="finite real numeric values"):
@@ -56,9 +57,9 @@ def test_named_operations_reject_non_finite_results(operation, numbers):
         calculate(operation, numbers)
 
 
-def test_named_operation_rejects_integer_beyond_supported_float_range():
-    with pytest.raises(ValueError, match="finite real numeric values"):
-        calculate("add", [10**1000])
+def test_named_operation_preserves_arbitrary_precision_integers():
+    large = 10**1000
+    assert calculate("add", [large, 1]) == large + 1
 
 
 def test_invalid_operation_remains_compatible():
