@@ -45,4 +45,50 @@ def evaluate_function(expression, x_value):
     return result
 
 
-__all__ = ["evaluate_function"]
+def sample_function(expression, x_min, x_max, points=101):
+    """Return evenly spaced (x, y) samples for a function.
+
+    Undefined or out-of-range y values are represented by None, allowing a
+    future plotting layer to break a curve instead of joining across a gap.
+    Sampling is bounded to keep accidental workloads reasonable.
+    """
+    for label, value in (("x_min", x_min), ("x_max", x_max)):
+        if isinstance(value, bool) or not isinstance(value, Real):
+            raise ValueError(f"{label} must be a real number.")
+        try:
+            finite = math.isfinite(value)
+        except OverflowError:
+            finite = False
+        if not finite:
+            raise ValueError(f"{label} must be finite.")
+    if x_min >= x_max:
+        raise ValueError("x_min must be less than x_max.")
+    if isinstance(points, bool) or not isinstance(points, int) or not 2 <= points <= 2000:
+        raise ValueError("points must be an integer from 2 to 2000.")
+
+    low, high = float(x_min), float(x_max)
+    # Validate the expression once so malformed input doesn't silently become
+    # an array of undefined points.
+    evaluate_function(expression, low * 0.5 + high * 0.5)
+    samples = []
+    for index in range(points):
+        fraction = index / (points - 1)
+        x_value = low * (1.0 - fraction) + high * fraction
+        try:
+            y_value = evaluate_function(expression, x_value)
+        except ValueError as exc:
+            message = str(exc).lower()
+            if any(marker in message for marker in (
+                "invalid mathematical domain",
+                "cannot divide by zero",
+                "complex result",
+                "outside the supported range",
+            )):
+                y_value = None
+            else:
+                raise
+        samples.append((x_value, y_value))
+    return samples
+
+
+__all__ = ["evaluate_function", "sample_function"]
