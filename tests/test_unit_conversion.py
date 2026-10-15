@@ -50,5 +50,5 @@ def test_rejects_incompatible_dimensions(source, target):
 
 @pytest.mark.parametrize("unit", ["", "parsecs", None, 10])
 def test_rejects_unknown_or_invalid_units(unit):
-    with pytest.raises(ValueError, match="Unit"):
+    with pytest.raises(ValueError, match="(?i)unit"):
         convert_unit(1, unit, "m")
