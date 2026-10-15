@@ -6,11 +6,16 @@ for invalid input and unsupported numerical results.
 """
 
 import math
+from decimal import Decimal, InvalidOperation, localcontext
 from numbers import Real
 
 from binomial_theorem import expand_binomial as _expand_binomial
 from calculator import calculate as _calculate
 from equation_solver import solve_equation as _solve_equation
+
+
+_DEFAULT_APPROXIMATION_PRECISION = 15
+_MAX_APPROXIMATION_PRECISION = 100
 
 
 class CalculatorError(ValueError):
@@ -20,6 +25,9 @@ class CalculatorError(ValueError):
 def _finite_number(value, *, label="value"):
     if isinstance(value, bool) or not isinstance(value, Real):
         raise CalculatorError(f"{label.capitalize()} must be a real number.")
+    # Python integers have arbitrary precision and are always finite.
+    if isinstance(value, int):
+        return value
     try:
         finite = math.isfinite(value)
     except OverflowError:
@@ -31,7 +39,7 @@ def _finite_number(value, *, label="value"):
 
 def _check_result(value):
     """Reject non-finite numerical outputs without restricting status messages."""
-    if isinstance(value, bool):
+    if isinstance(value, bool) or isinstance(value, int):
         return value
     if isinstance(value, Real):
         if not math.isfinite(value):
@@ -55,10 +63,39 @@ def _run(operation):
 
 
 def evaluate_expression(expression):
-    """Evaluate an arithmetic/scientific expression and return its numeric result."""
+    """Evaluate an arithmetic/scientific expression and return its numeric result.
+
+    The existing expression parser uses floating-point arithmetic, so results
+    involving scientific functions or decimal literals may be approximate.
+    """
     if not isinstance(expression, str):
         raise CalculatorError("Expression must be text.")
     return _run(lambda: _calculate(expression))
+
+
+def approximate_expression(expression, significant_digits=_DEFAULT_APPROXIMATION_PRECISION):
+    """Evaluate an expression and round its result to significant decimal digits.
+
+    This controls the returned decimal precision; it does not increase the
+    precision used internally by the existing floating-point expression parser.
+    """
+    if (
+        isinstance(significant_digits, bool)
+        or not isinstance(significant_digits, int)
+        or not 1 <= significant_digits <= _MAX_APPROXIMATION_PRECISION
+    ):
+        raise CalculatorError(
+            f"Approximation precision must be an integer from 1 to "
+            f"{_MAX_APPROXIMATION_PRECISION}."
+        )
+    result = evaluate_expression(expression)
+    try:
+        decimal_result = Decimal(str(result))
+        with localcontext() as context:
+            context.prec = significant_digits
+            return +decimal_result
+    except (InvalidOperation, ValueError, TypeError) as exc:
+        raise CalculatorError("Could not format the approximate result.") from exc
 
 
 def calculate_operation(operation, numbers):
@@ -96,6 +133,7 @@ def expand_binomial(expression):
 
 __all__ = [
     "CalculatorError",
+    "approximate_expression",
     "calculate_operation",
     "evaluate_expression",
     "expand_binomial",
