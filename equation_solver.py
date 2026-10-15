@@ -216,7 +216,7 @@ def solve_equation(equation):
         discriminant = linear * linear - 4 * quadratic * constant
         if discriminant >= 0:
             root = math.sqrt(discriminant)
-            if math.isclose(discriminant, 0.0, abs_tol=1e-12):
+            if root == 0:
                 return [-linear / (2 * quadratic)]
 
             # Avoid catastrophic cancellation when the linear term and square
