@@ -108,6 +108,20 @@ def test_malformed_or_invalid_expressions_are_rejected(expression):
         evaluate(expression)
 
 
+@pytest.mark.parametrize(
+    "expression,function_name",
+    [
+        ("sqrt(-1)", "sqrt"),
+        ("ln(0)", "ln"),
+        ("asin(2)", "asin"),
+        ("log(8, 1)", "log"),
+    ],
+)
+def test_scientific_function_domain_errors_are_clear(expression, function_name):
+    with pytest.raises(ValueError, match=f"Invalid mathematical domain for {function_name}"):
+        evaluate(expression)
+
+
 def test_unsupported_character_is_rejected_by_tokenizer():
     with pytest.raises(ValueError, match="Unsupported character"):
         tokenize("2 @ 3")
