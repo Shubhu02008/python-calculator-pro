@@ -4,6 +4,8 @@ import math
 import re
 
 
+_MAX_EXPRESSION_LENGTH = 10_000
+
 _NUMBER = re.compile(r"(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?")
 _IDENTIFIER = re.compile(r"[A-Za-z_][A-Za-z_0-9]*")
 
@@ -32,6 +34,10 @@ def tokenize(expression):
     """Convert expression text to tokens; supports scientific symbols and notation."""
     if not isinstance(expression, str):
         raise ValueError("Expression must be text.")
+    if len(expression) > _MAX_EXPRESSION_LENGTH:
+        raise ValueError(
+            f"Expression is too long (maximum {_MAX_EXPRESSION_LENGTH} characters)."
+        )
 
     expression = (
         expression.replace("×", "*").replace("·", "*").replace("÷", "/")
@@ -265,6 +271,8 @@ def evaluate_tokens(tokens):
 
     try:
         result = parse_expression()
+    except RecursionError as exc:
+        raise ValueError("Expression is too deeply nested to evaluate safely.") from exc
     except (OverflowError, ZeroDivisionError) as exc:
         raise ValueError("The result is outside the supported range.") from exc
     except ValueError:
