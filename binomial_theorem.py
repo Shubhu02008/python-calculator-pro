@@ -5,6 +5,7 @@ import re
 
 
 _TERM = re.compile(r"^\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+)?)\s*([A-Za-z]?)\s*$")
+_MAX_BINOMIAL_EXPRESSION_LENGTH = 10_000
 
 
 def _parse_term(term):
@@ -56,6 +57,11 @@ def expand_binomial(expression):
     """
     if not isinstance(expression, str):
         raise ValueError("Binomial expression must be text.")
+    if len(expression) > _MAX_BINOMIAL_EXPRESSION_LENGTH:
+        raise ValueError(
+            f"Binomial expression is too long (maximum "
+            f"{_MAX_BINOMIAL_EXPRESSION_LENGTH} characters)."
+        )
 
     match = re.fullmatch(
         r"\s*\(?\s*(.*?)\s*([+-])\s*(.*?)\s*\)?\s*\^\s*(\d+)\s*",
