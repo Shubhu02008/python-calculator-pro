@@ -157,5 +157,6 @@ def test_rejects_non_finite_coefficients_created_during_parsing():
 
 
 def test_rejects_quadratic_discriminant_overflow():
+    large = "99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999"
     with pytest.raises(OverflowError, match="Quadratic calculation exceeds"):
-        solve_equation("1e999x^2 = 1")
+        solve_equation(f"{large}x^2 - {large} = 0")
