@@ -29,6 +29,15 @@ from engine import (
     list_supported_units,
     sample_function,
     solve_equation,
+    calculate_bmi,
+    calculate_compound_interest,
+    calculate_date,
+    calculate_discount,
+    calculate_emi,
+    calculate_gst,
+    calculate_simple_interest,
+    convert_currency,
+    convert_number_base,
 )
 
 
@@ -149,7 +158,88 @@ class GraphSampleRequest(RequestModel):
         return _validate_finite_number(value, "Graph bound")
 
 
-class NumericResult(BaseModel):
+
+class CurrencyConversionRequest(RequestModel):
+    amount: Number
+    from_currency: str = Field(min_length=3, max_length=3)
+    to_currency: str = Field(min_length=3, max_length=3)
+
+    @field_validator("amount")
+    @classmethod
+    def amount_must_be_finite(cls, value):
+        return _validate_finite_number(value, "Amount")
+
+
+class DiscountRequest(RequestModel):
+    price: Number
+    discount_percent: Number
+
+    @field_validator("price", "discount_percent")
+    @classmethod
+    def values_must_be_finite(cls, value):
+        return _validate_finite_number(value, "Value")
+
+
+class GSTRequest(RequestModel):
+    amount: Number
+    gst_rate: Number
+    inclusive: bool = False
+
+    @field_validator("amount", "gst_rate")
+    @classmethod
+    def values_must_be_finite(cls, value):
+        return _validate_finite_number(value, "Value")
+
+
+class SimpleInterestRequest(RequestModel):
+    principal: Number
+    annual_rate: Number
+    years: Number
+
+    @field_validator("principal", "annual_rate", "years")
+    @classmethod
+    def values_must_be_finite(cls, value):
+        return _validate_finite_number(value, "Value")
+
+
+class CompoundInterestRequest(SimpleInterestRequest):
+    compounding_per_year: StrictInt = Field(default=1, ge=1, le=365)
+
+
+class EMIRequest(RequestModel):
+    principal: Number
+    annual_rate: Number
+    tenure_months: StrictInt = Field(ge=1, le=1200)
+
+    @field_validator("principal", "annual_rate")
+    @classmethod
+    def values_must_be_finite(cls, value):
+        return _validate_finite_number(value, "Value")
+
+
+class NumberBaseRequest(RequestModel):
+    value: str = Field(min_length=1, max_length=10_000)
+    from_base: StrictInt = Field(ge=2, le=36)
+    to_base: StrictInt = Field(ge=2, le=36)
+
+
+class BMIRequest(RequestModel):
+    weight_kg: Number
+    height_m: Number
+
+    @field_validator("weight_kg", "height_m")
+    @classmethod
+    def values_must_be_finite(cls, value):
+        return _validate_finite_number(value, "Value")
+
+
+class DateCalculationRequest(RequestModel):
+    operation: Literal["add_days", "subtract_days", "difference"]
+    date: str = Field(min_length=1, max_length=10)
+    days: StrictInt = 0
+    other_date: str | None = Field(default=None, max_length=10)
+
+\nclass NumericResult(BaseModel):
     result: int | float
     exact_fraction: str | None = None
     approximation: str | None = None
@@ -288,6 +378,15 @@ def capabilities():
             "binomial_expansion",
             "function_evaluation",
             "function_sampling",
+            "currency_conversion",
+            "discount_calculator",
+            "gst_calculator",
+            "simple_interest",
+            "compound_interest",
+            "loan_emi",
+            "number_base_conversion",
+            "bmi_calculator",
+            "date_calculations",
         ],
         "unit_dimensions": [
             {"id": dimension, "units": list(unit_ids)}
@@ -374,3 +473,60 @@ def sample_graph_function(request: GraphSampleRequest):
     return {
         "points": [{"x": x_value, "y": y_value} for x_value, y_value in points]
     }
+
+@app.post("/api/v1/currency/convert")
+def currency_convert(request: CurrencyConversionRequest):
+    """Convert currencies using the latest available provider rates."""
+    return convert_currency(request.amount, request.from_currency, request.to_currency)
+
+
+@app.post("/api/v1/discount/calculate")
+def discount_calculate(request: DiscountRequest):
+    """Calculate a discount amount and the resulting price."""
+    return calculate_discount(request.price, request.discount_percent)
+
+
+@app.post("/api/v1/gst/calculate")
+def gst_calculate(request: GSTRequest):
+    """Calculate GST or extract the GST component from a tax-inclusive amount."""
+    return calculate_gst(request.amount, request.gst_rate, inclusive=request.inclusive)
+
+
+@app.post("/api/v1/finance/simple-interest")
+def simple_interest(request: SimpleInterestRequest):
+    """Calculate simple interest and maturity amount."""
+    return calculate_simple_interest(request.principal, request.annual_rate, request.years)
+
+
+@app.post("/api/v1/finance/compound-interest")
+def compound_interest(request: CompoundInterestRequest):
+    """Calculate compound interest and maturity amount."""
+    return calculate_compound_interest(
+        request.principal, request.annual_rate, request.years, request.compounding_per_year
+    )
+
+
+@app.post("/api/v1/finance/emi")
+def loan_emi(request: EMIRequest):
+    """Calculate a fixed monthly loan EMI and total repayment."""
+    return calculate_emi(request.principal, request.annual_rate, request.tenure_months)
+
+
+@app.post("/api/v1/numbers/convert-base")
+def number_base_convert(request: NumberBaseRequest):
+    """Convert an integer literal between bases 2 and 36."""
+    return convert_number_base(request.value, request.from_base, request.to_base)
+
+
+@app.post("/api/v1/health/bmi")
+def bmi_calculate(request: BMIRequest):
+    """Calculate BMI from kilograms and metres; category labels are adult ranges."""
+    return calculate_bmi(request.weight_kg, request.height_m)
+
+
+@app.post("/api/v1/dates/calculate")
+def date_calculate(request: DateCalculationRequest):
+    """Add/subtract days from an ISO date or calculate the signed day difference."""
+    return calculate_date(
+        request.operation, request.date, days=request.days, other_date=request.other_date
+    )
