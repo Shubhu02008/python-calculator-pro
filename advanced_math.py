@@ -141,7 +141,7 @@ def _median(values):
     middle = len(ordered) // 2
     if len(ordered) % 2:
         return float(ordered[middle])
-    return (ordered[middle - 1] + ordered[middle]) / 2
+    return ordered[middle - 1] / 2 + ordered[middle] / 2
 
 
 def calculate_statistics(operation, values):
@@ -160,7 +160,7 @@ def calculate_statistics(operation, values):
             raise ValueError("Every data value must be a finite real number.")
         checked.append(float(value))
     if operation == "mean":
-        result = sum(checked) / len(checked)
+        result = math.fsum(value / len(checked) for value in checked)
     elif operation == "median":
         result = _median(checked)
     elif operation == "mode":
@@ -175,14 +175,21 @@ def calculate_statistics(operation, values):
         result = min(checked)
     elif operation == "maximum":
         result = max(checked)
-    elif operation in {"variance", "standard_deviation"}:
-        if len(checked) < 2:
+    elif operation in {"variance", "standard_deviation", "population_variance", "population_standard_deviation"}:
+        if operation in {"variance", "standard_deviation"} and len(checked) < 2:
             raise ValueError("Sample variance and standard deviation require at least two values.")
-        variance = sum((x - sum(checked) / len(checked)) ** 2 for x in checked) / (len(checked) - 1)
-        result = variance if operation == "variance" else math.sqrt(variance)
-    elif operation in {"population_variance", "population_standard_deviation"}:
-        variance = sum((x - sum(checked) / len(checked)) ** 2 for x in checked) / len(checked)
-        result = variance if operation == "population_variance" else math.sqrt(variance)
+        # Compute the mean once. Dividing each term first avoids overflowing the
+        # intermediate sum for many large, same-sign finite observations.
+        mean = math.fsum(value / len(checked) for value in checked)
+        divisor = len(checked) - 1 if operation in {"variance", "standard_deviation"} else len(checked)
+        try:
+            squared_deviations = [(value - mean) ** 2 for value in checked]
+            variance = math.fsum(squared_deviations) / divisor
+        except (OverflowError, ValueError) as exc:
+            raise ValueError("Data values are too large to calculate variance safely.") from exc
+        if not math.isfinite(variance):
+            raise ValueError("Data values are too large to calculate variance safely.")
+        result = variance if operation in {"variance", "population_variance"} else math.sqrt(variance)
     else:
         ordered = sorted(checked)
         median = _median(ordered)
@@ -192,6 +199,14 @@ def calculate_statistics(operation, values):
         result = {"q1": _median(lower_half) if lower_half else None,
                   "q2": median,
                   "q3": _median(upper_half) if upper_half else None}
+    numeric_results = result.values() if isinstance(result, dict) else (
+        result if isinstance(result, list) else [result]
+    )
+    if any(
+        isinstance(value, (int, float)) and not math.isfinite(value)
+        for value in numeric_results
+    ):
+        raise ValueError("The requested statistic is outside the supported numeric range.")
     return {"operation": operation, "count": len(checked), "result": result}
 
 
@@ -228,6 +243,15 @@ def calculate_probability(operation, *, favorable=None, total=None, event_a=None
         result = math.comb(n, k) * probability**k * (1 - probability)**(n-k)
     else:
         raise ValueError("Unsupported probability operation.")
+    # JSON consumers commonly use IEEE-754 numbers, which cannot exactly
+    # represent integers above 2**53 - 1. Return large exact counts as decimal
+    # strings, and reject values too large for Python's safe decimal conversion.
+    if isinstance(result, int) and not isinstance(result, bool):
+        decimal_digits = int((result.bit_length() - 1) * math.log10(2)) + 1 if result else 1
+        if decimal_digits > 4000:
+            raise ValueError("Result is too large to return safely; reduce n or r.")
+        if abs(result) > (2**53 - 1):
+            result = str(result)
     return {"operation": operation, "result": result}
 
 

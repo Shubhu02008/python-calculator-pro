@@ -281,3 +281,21 @@ def test_utility_endpoint_validation_errors_are_normalized():
     )
     assert response.status_code == 422
     assert response.json()["error"]["code"] == "invalid_request"
+
+
+
+def test_root_describes_api_service():
+    response = client.get("/")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["name"] == "Python Calculator Pro API"
+    assert body["docs"] == "/docs"
+
+
+def test_graph_evaluate_endpoint():
+    response = client.post(
+        "/api/v1/graph/evaluate",
+        json={"expression": "x^2 + 1", "x_value": 3},
+    )
+    assert response.status_code == 200
+    assert response.json() == {"x": 3.0, "y": 10.0}
