@@ -23,6 +23,8 @@ def test_capabilities_include_supported_unit_catalog():
     assert "km" in dimensions["length"]
     assert "bigha" in dimensions["area"]
     assert "megabyte" in dimensions["data_size"]
+    assert "currency_conversion" in body["features"]
+    assert "gst_calculator" in body["features"]
 
 
 def test_expression_endpoint_returns_structured_result():
@@ -173,3 +175,109 @@ def test_calculate_endpoint_leaves_fraction_fields_empty_for_irrational_result()
     assert response.status_code == 200
     assert response.json()["exact_fraction"] is None
     assert response.json()["approximation"] is None
+
+
+
+def test_discount_endpoint():
+    response = client.post(
+        "/api/v1/discount/calculate",
+        json={"price": 1000, "discount_percent": 10},
+    )
+    assert response.status_code == 200
+    assert response.json()["final_price"] == 900
+
+
+def test_gst_endpoint():
+    response = client.post(
+        "/api/v1/gst/calculate",
+        json={"amount": 1000, "gst_rate": 18},
+    )
+    assert response.status_code == 200
+    assert response.json()["gst_amount"] == 180
+    assert response.json()["total_amount"] == 1180
+
+
+def test_simple_interest_endpoint():
+    response = client.post(
+        "/api/v1/finance/simple-interest",
+        json={"principal": 1000, "annual_rate": 10, "years": 2},
+    )
+    assert response.status_code == 200
+    assert response.json()["interest"] == 200
+    assert response.json()["total_amount"] == 1200
+
+
+def test_compound_interest_endpoint():
+    response = client.post(
+        "/api/v1/finance/compound-interest",
+        json={"principal": 1000, "annual_rate": 10, "years": 2},
+    )
+    assert response.status_code == 200
+    assert response.json()["total_amount"] == 1210
+
+
+def test_emi_endpoint():
+    response = client.post(
+        "/api/v1/finance/emi",
+        json={"principal": 12000, "annual_rate": 0, "tenure_months": 12},
+    )
+    assert response.status_code == 200
+    assert response.json()["monthly_emi"] == 1000
+
+
+def test_number_base_endpoint():
+    response = client.post(
+        "/api/v1/numbers/convert-base",
+        json={"value": "FF", "from_base": 16, "to_base": 2},
+    )
+    assert response.status_code == 200
+    assert response.json()["converted_value"] == "11111111"
+
+
+def test_bmi_endpoint():
+    response = client.post(
+        "/api/v1/health/bmi",
+        json={"weight_kg": 70, "height_m": 1.75},
+    )
+    assert response.status_code == 200
+    assert response.json()["bmi"] == 22.86
+    assert response.json()["category"] == "normal"
+
+
+def test_date_calculator_endpoint():
+    response = client.post(
+        "/api/v1/dates/calculate",
+        json={"operation": "add_days", "date": "2024-02-28", "days": 2},
+    )
+    assert response.status_code == 200
+    assert response.json()["result_date"] == "2024-03-01"
+
+
+def test_currency_endpoint_uses_calculator_without_network(monkeypatch):
+    monkeypatch.setattr(
+        "api.convert_currency",
+        lambda amount, source, target: {
+            "amount": float(amount),
+            "from_currency": source.upper(),
+            "to_currency": target.upper(),
+            "exchange_rate": 83.0,
+            "converted_amount": 83.0 * float(amount),
+            "rate_date": "test-date",
+            "source": "test",
+        },
+    )
+    response = client.post(
+        "/api/v1/currency/convert",
+        json={"amount": 1, "from_currency": "usd", "to_currency": "inr"},
+    )
+    assert response.status_code == 200
+    assert response.json()["converted_amount"] == 83.0
+
+
+def test_utility_endpoint_validation_errors_are_normalized():
+    response = client.post(
+        "/api/v1/gst/calculate",
+        json={"amount": 100, "gst_rate": 18, "extra": True},
+    )
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "invalid_request"
