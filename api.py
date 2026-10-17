@@ -18,6 +18,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, field_validator
 
+from matrix_engine import calculate_matrix, interpret_matrix_instruction
+from matrix_learning import generate_matrix_practice, check_matrix_answer
+
 from engine import (
     CalculatorError,
     calculate_operation,
@@ -240,6 +243,46 @@ class DateCalculationRequest(RequestModel):
     other_date: str | None = Field(default=None, max_length=10)
 
 
+
+class MatrixRequest(RequestModel):
+    operation: Literal[
+        "add", "subtract", "multiply", "scalar_multiply", "transpose", "power",
+        "trace", "identity", "zero", "equals", "determinant", "minor", "cofactor",
+        "adjoint", "inverse", "rank", "rref", "solve", "cramer", "lu", "eigen",
+        "characteristic_polynomial", "linear_independence"
+    ]
+    matrix: list[list[str | int | float]] | None = Field(default=None, max_length=8)
+    matrix_b: list[list[str | int | float]] | None = Field(default=None, max_length=8)
+    vector: list[str | int | float] | None = Field(default=None, max_length=8)
+    scalar: str | int | float | None = None
+    size: StrictInt | None = Field(default=None, ge=1, le=8)
+    power: StrictInt | None = Field(default=None, ge=-10, le=10)
+    row: StrictInt | None = Field(default=None, ge=1, le=8)
+    column: StrictInt | None = Field(default=None, ge=1, le=8)
+    method: Literal["adjoint", "gauss_jordan"] | None = None
+    steps: bool = False
+
+
+class MatrixInstructionRequest(RequestModel):
+    instruction: str = Field(min_length=1, max_length=500)
+
+    @field_validator("instruction")
+    @classmethod
+    def instruction_must_not_be_blank(cls, value):
+        return _nonblank_text(value, "Instruction")
+
+
+class MatrixPracticeRequest(RequestModel):
+    topic: Literal["determinant", "inverse", "rank", "matrix_multiplication"] = "determinant"
+    difficulty: Literal["easy", "medium", "hard"] = "medium"
+    count: StrictInt = Field(default=1, ge=1, le=10)
+    seed: StrictInt | None = None
+
+
+class MatrixAnswerRequest(RequestModel):
+    expected: object
+    submitted: object
+
 class NumericResult(BaseModel):
     result: int | float
     exact_fraction: str | None = None
@@ -388,6 +431,13 @@ def capabilities():
             "number_base_conversion",
             "bmi_calculator",
             "date_calculations",
+            "matrix_operations",
+            "symbolic_matrix_algebra",
+            "matrix_step_by_step",
+            "matrix_linear_algebra",
+            "matrix_eigenvalues",
+            "jee_matrix_practice",
+            "matrix_instruction_interpreter",
         ],
         "unit_dimensions": [
             {"id": dimension, "units": list(unit_ids)}
@@ -531,3 +581,38 @@ def date_calculate(request: DateCalculationRequest):
     return calculate_date(
         request.operation, request.date, days=request.days, other_date=request.other_date
     )
+
+
+@app.post("/api/v1/matrices/operations")
+def matrix_operation(request: MatrixRequest):
+    """Run a numeric or symbolic matrix operation, optionally with working."""
+    try:
+        return calculate_matrix(request.model_dump(exclude_none=True))
+    except ValueError as exc:
+        raise CalculatorError(str(exc)) from exc
+
+
+@app.post("/api/v1/matrices/instructions")
+def matrix_instruction(request: MatrixInstructionRequest):
+    """Map common natural-language matrix instructions to a supported operation."""
+    try:
+        return interpret_matrix_instruction(request.instruction)
+    except ValueError as exc:
+        raise CalculatorError(str(exc)) from exc
+
+
+@app.post("/api/v1/matrices/practice")
+def matrix_practice(request: MatrixPracticeRequest):
+    """Generate a small set of JEE-style matrix practice questions with answer keys."""
+    return generate_matrix_practice(
+        topic=request.topic,
+        difficulty=request.difficulty,
+        count=request.count,
+        seed=request.seed,
+    )
+
+
+@app.post("/api/v1/matrices/check-answer")
+def matrix_check_answer(request: MatrixAnswerRequest):
+    """Check a submitted answer against an expected answer."""
+    return {"correct": check_matrix_answer(request.expected, request.submitted)}
