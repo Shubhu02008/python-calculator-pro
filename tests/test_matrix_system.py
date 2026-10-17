@@ -52,3 +52,19 @@ def test_practice_api():
     response = client.post("/api/v1/matrices/practice", json={"topic":"rank","difficulty":"easy","count":2,"seed":10})
     assert response.status_code == 200
     assert len(response.json()["questions"]) == 2
+
+
+
+def test_matrix_check_answer_api():
+    correct = client.post(
+        "/api/v1/matrices/check-answer",
+        json={"expected": [["1", "2"], ["3", "4"]], "submitted": [[1, 2], [3, 4]]},
+    )
+    incorrect = client.post(
+        "/api/v1/matrices/check-answer",
+        json={"expected": [["1", "2"], ["3", "4"]], "submitted": [[1, 2], [3, 5]]},
+    )
+    assert correct.status_code == 200
+    assert correct.json() == {"correct": True}
+    assert incorrect.status_code == 200
+    assert incorrect.json() == {"correct": False}
