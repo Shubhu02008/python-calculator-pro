@@ -23,6 +23,7 @@ from engine import (
     calculate_operation,
     convert_unit,
     evaluate_expression,
+    fraction_form,
     evaluate_function,
     expand_binomial,
     list_supported_units,
@@ -150,6 +151,8 @@ class GraphSampleRequest(RequestModel):
 
 class NumericResult(BaseModel):
     result: int | float
+    exact_fraction: str | None = None
+    approximation: str | None = None
 
 
 class UnitConversionResult(BaseModel):
@@ -295,8 +298,14 @@ def capabilities():
 
 @app.post("/api/v1/calculate", response_model=NumericResult)
 def calculate(request: ExpressionRequest):
-    """Evaluate an arithmetic or scientific expression."""
-    return {"result": evaluate_expression(request.expression)}
+    """Evaluate an expression and include an exact fraction when applicable."""
+    result = evaluate_expression(request.expression)
+    fraction = fraction_form(request.expression)
+    return {
+        "result": result,
+        "exact_fraction": fraction["exact_fraction"] if fraction else None,
+        "approximation": fraction["approximation"] if fraction else None,
+    }
 
 
 @app.post("/api/v1/operations", response_model=NumericResult)
