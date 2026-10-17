@@ -26,6 +26,8 @@ A Python calculator engine for arithmetic, scientific functions, polynomial equa
 - Integer number-system conversion between bases 2 and 36
 - BMI calculation from weight in kilograms and height in metres (adult category ranges)
 - ISO date arithmetic: add/subtract days and calculate the signed difference between dates
+- Numeric and symbolic matrix operations, determinants, adjoint/inverse, rank, RREF, systems, LU decomposition, and eigen calculations
+- Optional step-by-step matrix working, common natural-language instruction mapping, and JEE-style matrix practice
 - Clear errors for malformed expressions and common mathematical domain errors
 
 Equation solving supports polynomial equations up to degree 3. The binomial expansion tool accepts simple numeric or single-letter terms and non-negative integer exponents up to 100.
@@ -81,6 +83,10 @@ The local server listens at `http://127.0.0.1:8000`. Interactive API documentati
 | `POST /api/v1/numbers/convert-base` | Convert integer literals between bases 2 and 36 |
 | `POST /api/v1/health/bmi` | Calculate BMI from kilograms and metres |
 | `POST /api/v1/dates/calculate` | Add/subtract days or calculate date differences |
+| `POST /api/v1/matrices/operations` | Matrix operations, symbolic expressions, and optional working |
+| `POST /api/v1/matrices/instructions` | Map common matrix instructions to supported operations |
+| `POST /api/v1/matrices/practice` | Generate JEE-style matrix practice questions |
+| `POST /api/v1/matrices/check-answer` | Check a practice answer |
 
 Example request:
 
@@ -174,3 +180,22 @@ python -m pytest
 ## Author
 
 Shubhankar
+
+
+### Matrix and determinant API
+
+Matrix entries may be numbers or restricted symbolic expressions such as `x`, `2*x+1`, `sin(theta)`, `sqrt(2)`, and `pi`. Use explicit multiplication. Expressions are parsed using a restricted syntax tree; arbitrary Python code is not evaluated. Matrices are limited to 8 rows and 8 columns.
+
+Example request:
+
+```json
+{
+  "operation": "determinant",
+  "matrix": [["x", "2"], ["3", "sin(theta)"]],
+  "steps": true
+}
+```
+
+Supported operations include `add`, `subtract`, `multiply`, `scalar_multiply`, `transpose`, `power`, `trace`, `identity`, `zero`, `equals`, `determinant`, `minor`, `cofactor`, `adjoint`, `inverse`, `rank`, `rref`, `solve`, `cramer`, `lu`, `eigen`, `characteristic_polynomial`, and `linear_independence`. Set `steps: true` to request structured working. Inverse methods are `adjoint` and `gauss_jordan`.
+
+Natural-language instruction support currently maps common phrases to known operations; it is not yet a general-purpose AI language model. Practice generation currently supports determinant, inverse, rank, and matrix multiplication.
