@@ -141,7 +141,7 @@ def _median(values):
     middle = len(ordered) // 2
     if len(ordered) % 2:
         return float(ordered[middle])
-    return (ordered[middle - 1] + ordered[middle]) / 2
+    return ordered[middle - 1] / 2 + ordered[middle] / 2
 
 
 def calculate_statistics(operation, values):
@@ -160,7 +160,7 @@ def calculate_statistics(operation, values):
             raise ValueError("Every data value must be a finite real number.")
         checked.append(float(value))
     if operation == "mean":
-        result = sum(checked) / len(checked)
+        result = math.fsum(value / len(checked) for value in checked)
     elif operation == "median":
         result = _median(checked)
     elif operation == "mode":
