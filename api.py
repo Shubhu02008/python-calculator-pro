@@ -239,7 +239,8 @@ class DateCalculationRequest(RequestModel):
     days: StrictInt = 0
     other_date: str | None = Field(default=None, max_length=10)
 
-\nclass NumericResult(BaseModel):
+
+class NumericResult(BaseModel):
     result: int | float
     exact_fraction: str | None = None
     approximation: str | None = None
