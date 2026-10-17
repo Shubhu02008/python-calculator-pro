@@ -91,3 +91,26 @@ def test_probability_rejects_invalid_inputs():
         calculate_probability("simple", favorable=6, total=5)
     with pytest.raises(ValueError):
         calculate_probability("conditional", intersection=0.3, event_b=0)
+
+
+
+def test_probability_large_exact_counts_are_returned_as_strings():
+    result = calculate_probability("combination", n=10000, r=5000)["result"]
+    assert isinstance(result, str)
+    assert result.startswith("159")
+    assert len(result) == 3009
+
+
+def test_probability_rejects_counts_too_large_for_safe_json_output():
+    with pytest.raises(ValueError, match="too large to return safely"):
+        calculate_probability("permutation", n=10000, r=10000)
+
+
+def test_statistics_large_values_do_not_overflow_the_mean():
+    result = calculate_statistics("mean", [1e308, 1e308])
+    assert result["result"] == pytest.approx(1e308)
+
+
+def test_statistics_rejects_variance_that_overflows():
+    with pytest.raises(ValueError, match="too large to calculate variance"):
+        calculate_statistics("population_variance", [-1e308, 1e308])
