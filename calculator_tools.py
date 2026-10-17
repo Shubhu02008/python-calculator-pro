@@ -9,6 +9,7 @@ from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 import json
 import math
 import re
+from numbers import Real
 from urllib.error import URLError, HTTPError
 from urllib.request import Request, urlopen
 
@@ -20,7 +21,7 @@ _DIGITS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 def _decimal(value, label, *, minimum=None, maximum=None):
     """Convert a finite real-like input to Decimal without accepting booleans."""
-    if isinstance(value, bool) or value is None:
+    if isinstance(value, bool) or not isinstance(value, (Real, Decimal)):
         raise ValueError(f"{label} must be a finite number.")
     try:
         number = Decimal(str(value))
@@ -50,7 +51,7 @@ def _fetch_currency_rates(base_currency):
             payload = json.loads(response.read().decode("utf-8"))
     except (HTTPError, URLError, TimeoutError, OSError, ValueError) as exc:
         raise ValueError("Live currency rates are temporarily unavailable.") from exc
-    if payload.get("result") != "success" or not isinstance(payload.get("rates"), dict):
+    if not isinstance(payload, dict) or payload.get("result") != "success" or not isinstance(payload.get("rates"), dict):
         raise ValueError("The currency-rate provider returned an invalid response.")
     return payload
 
