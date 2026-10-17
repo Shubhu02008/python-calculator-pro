@@ -12,6 +12,12 @@ from numbers import Real
 
 from parser import tokenize
 
+from advanced_math import (
+    calculate_calculus as _calculate_calculus,
+    calculate_statistics as _calculate_statistics,
+    calculate_probability as _calculate_probability,
+)
+
 from binomial_theorem import expand_binomial as _expand_binomial
 from calculator import calculate as _calculate
 from equation_solver import solve_equation as _solve_equation
@@ -300,6 +306,25 @@ def expand_binomial(expression):
     return _run(lambda: _expand_binomial(expression))
 
 
+
+def calculate_calculus(operation, expression, *, variable="x", order=1, lower=None, upper=None, point="0", direction="both"):
+    """Differentiate, integrate, or evaluate a symbolic limit safely."""
+    return _run(lambda: _calculate_calculus(
+        operation, expression, variable=variable, order=order,
+        lower=lower, upper=upper, point=point, direction=direction
+    ))
+
+
+def calculate_statistics(operation, values):
+    """Calculate descriptive statistics for a list of real values."""
+    return _run(lambda: _calculate_statistics(operation, values))
+
+
+def calculate_probability(operation, **kwargs):
+    """Calculate elementary probabilities, combinations, permutations, or binomial probabilities."""
+    return _run(lambda: _calculate_probability(operation, **kwargs))
+
+
 def list_supported_units():
     """Return supported unit identifiers grouped by measurement dimension.
 
@@ -376,4 +401,7 @@ __all__ = [
     "calculate_simple_interest",
     "convert_currency",
     "convert_number_base",
+    "calculate_calculus",
+    "calculate_statistics",
+    "calculate_probability",
 ]

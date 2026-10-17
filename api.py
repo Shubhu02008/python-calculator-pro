@@ -41,6 +41,9 @@ from engine import (
     calculate_simple_interest,
     convert_currency,
     convert_number_base,
+    calculate_calculus,
+    calculate_statistics,
+    calculate_probability,
 )
 
 
@@ -244,6 +247,56 @@ class DateCalculationRequest(RequestModel):
 
 
 
+class CalculusRequest(RequestModel):
+    operation: Literal["derivative", "integral", "definite_integral", "limit"]
+    expression: str = Field(min_length=1, max_length=1000)
+    variable: Literal["x", "y", "z", "t"] = "x"
+    order: StrictInt = Field(default=1, ge=1, le=10)
+    lower: StrictInt | StrictFloat | str | None = None
+    upper: StrictInt | StrictFloat | str | None = None
+    point: StrictInt | StrictFloat | str = "0"
+    direction: Literal["both", "plus", "minus"] = "both"
+
+    @field_validator("expression")
+    @classmethod
+    def expression_must_not_be_blank(cls, value):
+        return _nonblank_text(value, "Expression")
+
+
+class StatisticsRequest(RequestModel):
+    operation: Literal[
+        "mean", "median", "mode", "range", "minimum", "maximum",
+        "variance", "population_variance", "standard_deviation",
+        "population_standard_deviation", "quartiles"
+    ]
+    values: list[Number] = Field(min_length=1, max_length=10000)
+
+    @field_validator("values")
+    @classmethod
+    def values_must_be_finite(cls, values):
+        return [_validate_finite_number(value, "Each data value") for value in values]
+
+
+class ProbabilityRequest(RequestModel):
+    operation: Literal["simple", "complement", "conditional", "union", "permutation", "combination", "binomial"]
+    favorable: StrictInt | None = Field(default=None, ge=0)
+    total: StrictInt | None = Field(default=None, ge=1)
+    event_a: Number | None = None
+    event_b: Number | None = None
+    intersection: Number | None = None
+    n: StrictInt | None = Field(default=None, ge=0, le=10000)
+    r: StrictInt | None = Field(default=None, ge=0, le=10000)
+    p: Number | None = None
+    k: StrictInt | None = Field(default=None, ge=0, le=10000)
+
+    @field_validator("event_a", "event_b", "intersection", "p")
+    @classmethod
+    def probabilities_must_be_finite(cls, value):
+        if value is not None:
+            return _validate_finite_number(value, "Probability")
+        return value
+
+
 class MatrixRequest(RequestModel):
     operation: Literal[
         "add", "subtract", "multiply", "scalar_multiply", "transpose", "power",
@@ -438,6 +491,9 @@ def capabilities():
             "matrix_eigenvalues",
             "jee_matrix_practice",
             "matrix_instruction_interpreter",
+            "symbolic_calculus",
+            "descriptive_statistics",
+            "elementary_probability",
         ],
         "unit_dimensions": [
             {"id": dimension, "units": list(unit_ids)}
@@ -581,6 +637,35 @@ def date_calculate(request: DateCalculationRequest):
     return calculate_date(
         request.operation, request.date, days=request.days, other_date=request.other_date
     )
+
+
+@app.post("/api/v1/calculus")
+def calculus(request: CalculusRequest):
+    """Differentiate, integrate, or calculate a symbolic limit."""
+    return calculate_calculus(
+        request.operation,
+        request.expression,
+        variable=request.variable,
+        order=request.order,
+        lower=request.lower,
+        upper=request.upper,
+        point=request.point,
+        direction=request.direction,
+    )
+
+
+@app.post("/api/v1/statistics")
+def statistics(request: StatisticsRequest):
+    """Calculate descriptive statistics for a list of observations."""
+    return calculate_statistics(request.operation, request.values)
+
+
+@app.post("/api/v1/probability")
+def probability(request: ProbabilityRequest):
+    """Calculate elementary event probabilities and counting quantities."""
+    values = request.model_dump(exclude_none=True)
+    operation = values.pop("operation")
+    return calculate_probability(operation, **values)
 
 
 @app.post("/api/v1/matrices/operations")
