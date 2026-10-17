@@ -296,7 +296,7 @@ def capabilities():
     }
 
 
-@app.post("/api/v1/calculate", response_model=NumericResult, response_model_exclude_none=True)
+@app.post("/api/v1/calculate", response_model=NumericResult)
 def calculate(request: ExpressionRequest):
     """Evaluate an expression and include an exact fraction when applicable."""
     result = evaluate_expression(request.expression)
