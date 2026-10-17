@@ -153,3 +153,23 @@ def test_cors_allows_local_development_origin_without_credentials():
     assert response.status_code == 200
     assert response.headers["access-control-allow-origin"] == "http://localhost:5173"
     assert "access-control-allow-credentials" not in response.headers
+
+
+
+def test_calculate_endpoint_includes_simplified_fraction_and_approximation():
+    response = client.post("/api/v1/calculate", json={"expression": "3 / 9"})
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "result": 1 / 3,
+        "exact_fraction": "1/3",
+        "approximation": "0.3333",
+    }
+
+
+def test_calculate_endpoint_leaves_fraction_fields_empty_for_irrational_result():
+    response = client.post("/api/v1/calculate", json={"expression": "sqrt(2)"})
+
+    assert response.status_code == 200
+    assert response.json()["exact_fraction"] is None
+    assert response.json()["approximation"] is None

@@ -195,3 +195,29 @@ def test_list_supported_units_returns_detached_sorted_catalog():
     units["length"] = ("not-a-real-unit",)
 
     assert "not-a-real-unit" not in list_supported_units()["length"]
+
+
+
+def test_fraction_form_simplifies_and_approximates_rational_expressions():
+    from engine import fraction_form
+
+    assert fraction_form("3 / 9") == {
+        "exact_fraction": "1/3",
+        "approximation": "0.3333",
+    }
+    assert fraction_form("(1 + 1) / 6") == {
+        "exact_fraction": "1/3",
+        "approximation": "0.3333",
+    }
+    assert fraction_form("1 / 8") == {
+        "exact_fraction": "1/8",
+        "approximation": "0.125",
+    }
+
+
+def test_fraction_form_skips_integers_and_non_rational_functions():
+    from engine import fraction_form
+
+    assert fraction_form("6 / 3") is None
+    assert fraction_form("sqrt(2)") is None
+    assert fraction_form("sin(pi / 2)") is None
