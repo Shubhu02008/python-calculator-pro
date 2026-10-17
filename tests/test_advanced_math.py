@@ -40,7 +40,7 @@ def test_one_sided_limit():
 
 
 def test_calculus_rejects_unknown_function_and_python_code():
-    with pytest.raises(ValueError, match="Unsupported"):
+    with pytest.raises(ValueError, match="unsupported"):
         calculate_calculus("derivative", "__import__('os').system('whoami')")
     with pytest.raises(ValueError, match="Unsupported"):
         calculate_calculus("derivative", "unknown(x)")
