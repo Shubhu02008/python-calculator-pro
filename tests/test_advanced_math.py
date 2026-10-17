@@ -114,3 +114,9 @@ def test_statistics_large_values_do_not_overflow_the_mean():
 def test_statistics_rejects_variance_that_overflows():
     with pytest.raises(ValueError, match="too large to calculate variance"):
         calculate_statistics("population_variance", [-1e308, 1e308])
+
+
+
+def test_statistics_rejects_non_finite_range_result():
+    with pytest.raises(ValueError, match="outside the supported numeric range"):
+        calculate_statistics("range", [-1e308, 1e308])
