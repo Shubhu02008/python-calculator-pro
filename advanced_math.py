@@ -199,6 +199,14 @@ def calculate_statistics(operation, values):
         result = {"q1": _median(lower_half) if lower_half else None,
                   "q2": median,
                   "q3": _median(upper_half) if upper_half else None}
+    numeric_results = result.values() if isinstance(result, dict) else (
+        result if isinstance(result, list) else [result]
+    )
+    if any(
+        isinstance(value, (int, float)) and not math.isfinite(value)
+        for value in numeric_results
+    ):
+        raise ValueError("The requested statistic is outside the supported numeric range.")
     return {"operation": operation, "count": len(checked), "result": result}
 
 
