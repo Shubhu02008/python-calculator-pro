@@ -20,6 +20,18 @@ from unit_conversion import list_supported_units as _list_supported_units
 from graphing import evaluate_function as _evaluate_function
 from graphing import sample_function as _sample_function
 
+from calculator_tools import (
+    calculate_bmi as _calculate_bmi,
+    calculate_compound_interest as _calculate_compound_interest,
+    calculate_date as _calculate_date,
+    calculate_discount as _calculate_discount,
+    calculate_emi as _calculate_emi,
+    calculate_gst as _calculate_gst,
+    calculate_simple_interest as _calculate_simple_interest,
+    convert_currency as _convert_currency,
+    convert_number_base as _convert_number_base,
+)
+
 
 _DEFAULT_APPROXIMATION_PRECISION = 15
 _MAX_APPROXIMATION_PRECISION = 100
@@ -297,6 +309,52 @@ def list_supported_units():
     return _run(_list_supported_units)
 
 
+
+def calculate_bmi(weight_kg, height_m):
+    """Calculate BMI from kilograms and metres."""
+    return _run(lambda: _calculate_bmi(weight_kg, height_m))
+
+
+def calculate_compound_interest(principal, annual_rate, years, compounding_per_year=1):
+    """Calculate compound interest and maturity amount."""
+    return _run(lambda: _calculate_compound_interest(principal, annual_rate, years, compounding_per_year))
+
+
+def calculate_date(operation, date_value, *, days=0, other_date=None):
+    """Perform ISO date arithmetic."""
+    return _run(lambda: _calculate_date(operation, date_value, days=days, other_date=other_date))
+
+
+def calculate_discount(price, discount_percent):
+    """Calculate discount amount and final price."""
+    return _run(lambda: _calculate_discount(price, discount_percent))
+
+
+def calculate_emi(principal, annual_rate, tenure_months):
+    """Calculate monthly loan EMI and total repayment."""
+    return _run(lambda: _calculate_emi(principal, annual_rate, tenure_months))
+
+
+def calculate_gst(amount, gst_rate, *, inclusive=False):
+    """Calculate GST on a pre-tax amount or extract tax from an inclusive total."""
+    return _run(lambda: _calculate_gst(amount, gst_rate, inclusive=inclusive))
+
+
+def calculate_simple_interest(principal, annual_rate, years):
+    """Calculate simple interest and maturity amount."""
+    return _run(lambda: _calculate_simple_interest(principal, annual_rate, years))
+
+
+def convert_currency(amount, from_currency, to_currency):
+    """Convert currencies using latest available reference rates."""
+    return _run(lambda: _convert_currency(amount, from_currency, to_currency))
+
+
+def convert_number_base(value, from_base, to_base):
+    """Convert an integer literal between bases 2 and 36."""
+    return _run(lambda: _convert_number_base(value, from_base, to_base))
+
+
 __all__ = [
     "CalculatorError",
     "approximate_expression",
@@ -309,4 +367,13 @@ __all__ = [
     "list_supported_units",
     "sample_function",
     "solve_equation",
+    "calculate_bmi",
+    "calculate_compound_interest",
+    "calculate_date",
+    "calculate_discount",
+    "calculate_emi",
+    "calculate_gst",
+    "calculate_simple_interest",
+    "convert_currency",
+    "convert_number_base",
 ]

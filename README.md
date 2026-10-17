@@ -20,6 +20,12 @@ A Python calculator engine for arithmetic, scientific functions, polynomial equa
 - Binomial theorem expansion
 - Unit conversion for length, mass, volume, temperature, area, speed, time, pressure, energy, power, force, digital storage, frequency, electrical measurements, and cooking/US/Imperial volume units, and Indian land-area units
 - Backend graphing support to evaluate functions and generate bounded coordinate samples
+- Currency conversion using the latest available rates from an external rate provider (requires network access)
+- Finance calculators: simple interest, compound interest, and monthly loan EMI
+- Discount and GST calculators, including extracting GST from a tax-inclusive amount
+- Integer number-system conversion between bases 2 and 36
+- BMI calculation from weight in kilograms and height in metres (adult category ranges)
+- ISO date arithmetic: add/subtract days and calculate the signed difference between dates
 - Clear errors for malformed expressions and common mathematical domain errors
 
 Equation solving supports polynomial equations up to degree 3. The binomial expansion tool accepts simple numeric or single-letter terms and non-negative integer exponents up to 100.
@@ -51,7 +57,7 @@ python -m pip install -r requirements-api.txt
 uvicorn api:app --reload
 ```
 
-The local server listens at `http://127.0.0.1:8000`. Interactive API documentation is available at `/docs`, and the machine-readable OpenAPI schema is at `/openapi.json`.
+The local server listens at `http://127.0.0.1:8000`. Interactive API documentation is available at `/docs`, and the machine-readable OpenAPI schema is at `/openapi.json`. Currency conversion requires outbound network access to the exchange-rate provider; other new calculators run locally. The BMI category is a general adult screening range, not a medical diagnosis.
 
 ### API endpoints
 
@@ -66,6 +72,15 @@ The local server listens at `http://127.0.0.1:8000`. Interactive API documentati
 | `POST /api/v1/binomials/expand` | Expand a supported binomial |
 | `POST /api/v1/graph/evaluate` | Evaluate a function at one x-coordinate |
 | `POST /api/v1/graph/sample` | Generate bounded graph samples |
+| `POST /api/v1/currency/convert` | Convert currencies using current provider rates |
+| `POST /api/v1/discount/calculate` | Calculate a discount and final price |
+| `POST /api/v1/gst/calculate` | Calculate GST, or extract it from a tax-inclusive amount |
+| `POST /api/v1/finance/simple-interest` | Calculate simple interest |
+| `POST /api/v1/finance/compound-interest` | Calculate compound interest |
+| `POST /api/v1/finance/emi` | Calculate monthly loan EMI and repayment |
+| `POST /api/v1/numbers/convert-base` | Convert integer literals between bases 2 and 36 |
+| `POST /api/v1/health/bmi` | Calculate BMI from kilograms and metres |
+| `POST /api/v1/dates/calculate` | Add/subtract days or calculate date differences |
 
 Example request:
 
@@ -94,6 +109,15 @@ from engine import (
     CalculatorError,
     approximate_expression,
     calculate_operation,
+    calculate_bmi,
+    calculate_compound_interest,
+    calculate_date,
+    calculate_discount,
+    calculate_emi,
+    calculate_gst,
+    calculate_simple_interest,
+    convert_currency,
+    convert_number_base,
     convert_unit,
     evaluate_expression,
     expand_binomial,
