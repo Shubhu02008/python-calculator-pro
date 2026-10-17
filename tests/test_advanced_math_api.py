@@ -103,9 +103,9 @@ def test_calculus_limit_endpoint_supports_direction(direction, expected):
         ({"operation": "minimum", "values": [2, 9]}, 2),
         ({"operation": "maximum", "values": [2, 9]}, 9),
         ({"operation": "variance", "values": [1, 2, 3]}, 1),
-        ({"operation": "population_variance", "values": [1, 2, 3]}, pytest.approx(2 / 3)),
+        ({"operation": "population_variance", "values": [1, 2, 3]}, 2 / 3),
         ({"operation": "standard_deviation", "values": [1, 2, 3]}, 1),
-        ({"operation": "population_standard_deviation", "values": [1, 2, 3]}, pytest.approx((2 / 3) ** 0.5)),
+        ({"operation": "population_standard_deviation", "values": [1, 2, 3]}, (2 / 3) ** 0.5),
         ({"operation": "quartiles", "values": [1, 2, 3, 4]}, {"q1": 1.5, "q2": 2.5, "q3": 3.5}),
     ],
 )
