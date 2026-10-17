@@ -51,7 +51,7 @@ python -m pip install -r requirements-api.txt
 uvicorn api:app --reload
 ```
 
-The local server listens at `http://127.0.0.1:8000`. Interactive API documentation is available at `/docs`, and the machine-readable OpenAPI schema is at `/openapi.json`.
+The local server listens at `http://127.0.0.1:8000`. Interactive API documentation is available at `/docs`, and the machine-readable OpenAPI schema is at `/openapi.json`. Currency conversion requires outbound network access to the exchange-rate provider; other new calculators run locally. The BMI category is a general adult screening range, not a medical diagnosis.
 
 ### API endpoints
 
