@@ -60,6 +60,17 @@ def test_expression_errors_use_public_exception(expression):
         evaluate_expression(expression)
 
 
+def test_unexpected_recursion_error_is_normalized(monkeypatch):
+    import engine
+
+    def trigger_recursion_error(_expression):
+        raise RecursionError("maximum recursion depth exceeded")
+
+    monkeypatch.setattr(engine, "_calculate", trigger_recursion_error)
+    with pytest.raises(CalculatorError, match="maximum recursion depth exceeded"):
+        evaluate_expression("1 + 1")
+
+
 @pytest.mark.parametrize(
     "operation,numbers",
     [
