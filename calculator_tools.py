@@ -37,7 +37,10 @@ def _decimal(value, label, *, minimum=None, maximum=None):
 
 
 def _money(value):
-    return float(value.quantize(_CENT, rounding=ROUND_HALF_UP))
+    try:
+        return float(value.quantize(_CENT, rounding=ROUND_HALF_UP))
+    except (InvalidOperation, OverflowError) as exc:
+        raise ValueError("Calculated amount is outside the supported range.") from exc
 
 
 def _fetch_currency_rates(base_currency):
