@@ -136,6 +136,14 @@ def _parse_bound(value):
     return result
 
 
+def _median(values):
+    ordered = sorted(values)
+    middle = len(ordered) // 2
+    if len(ordered) % 2:
+        return float(ordered[middle])
+    return (ordered[middle - 1] + ordered[middle]) / 2
+
+
 def calculate_statistics(operation, values):
     """Calculate descriptive statistics for a bounded list of finite real values."""
     if operation not in {
@@ -154,7 +162,7 @@ def calculate_statistics(operation, values):
     if operation == "mean":
         result = sum(checked) / len(checked)
     elif operation == "median":
-        result = float(sp.median(checked))
+        result = _median(checked)
     elif operation == "mode":
         counts = Counter(checked)
         highest = max(counts.values())
@@ -177,13 +185,13 @@ def calculate_statistics(operation, values):
         result = variance if operation == "population_variance" else math.sqrt(variance)
     else:
         ordered = sorted(checked)
-        median = float(sp.median(ordered))
+        median = _median(ordered)
         mid = len(ordered) // 2
         lower_half = ordered[:mid]
         upper_half = ordered[(mid + (len(ordered) % 2)):]
-        result = {"q1": float(sp.median(lower_half)) if lower_half else None,
+        result = {"q1": _median(lower_half) if lower_half else None,
                   "q2": median,
-                  "q3": float(sp.median(upper_half)) if upper_half else None}
+                  "q3": _median(upper_half) if upper_half else None}
     return {"operation": operation, "count": len(checked), "result": result}
 
 
