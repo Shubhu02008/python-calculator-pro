@@ -266,7 +266,7 @@ def calculate_matrix(request):
                 steps.append({"title": "Apply Cramer's rule", "values": values})
         else:
             try:
-                solution, parameters = a.gauss_jordan_solve(b, freevar=True)
+                solution, parameters, _free_variables = a.gauss_jordan_solve(b, freevar=True)
                 result = [str(simplify(v)) for v in solution]
                 if parameters.rows:
                     result = {"general_solution": result, "parameters": [str(v) for v in parameters]}
