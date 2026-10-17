@@ -296,7 +296,7 @@ def capabilities():
     }
 
 
-@app.post("/api/v1/calculate", response_model=NumericResult)
+@app.post("/api/v1/calculate", response_model=NumericResult, response_model_exclude_none=True)
 def calculate(request: ExpressionRequest):
     """Evaluate an expression and include an exact fraction when applicable."""
     result = evaluate_expression(request.expression)
@@ -308,7 +308,7 @@ def calculate(request: ExpressionRequest):
     }
 
 
-@app.post("/api/v1/operations", response_model=NumericResult)
+@app.post("/api/v1/operations", response_model=NumericResult, response_model_exclude_none=True)
 def operate(request: OperationRequest):
     """Run a named basic arithmetic operation."""
     return {
