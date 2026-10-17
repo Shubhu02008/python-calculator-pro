@@ -576,13 +576,13 @@ def date_calculate(request: DateCalculationRequest):
 @app.post("/api/v1/matrices/operations")
 def matrix_operation(request: MatrixRequest):
     """Run a numeric or symbolic matrix operation, optionally with working."""
-    return calculate_matrix(request.model_dump(exclude_none=True))
+    try:\n        return calculate_matrix(request.model_dump(exclude_none=True))\n    except ValueError as exc:\n        raise CalculatorError(str(exc)) from exc
 
 
 @app.post("/api/v1/matrices/instructions")
 def matrix_instruction(request: MatrixInstructionRequest):
     """Map common natural-language matrix instructions to a supported operation."""
-    return interpret_matrix_instruction(request.instruction)
+    try:\n        return interpret_matrix_instruction(request.instruction)\n    except ValueError as exc:\n        raise CalculatorError(str(exc)) from exc
 
 
 @app.post("/api/v1/matrices/practice")
