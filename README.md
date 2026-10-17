@@ -20,6 +20,9 @@ A Python calculator engine for arithmetic, scientific functions, polynomial equa
 - Binomial theorem expansion
 - Unit conversion for length, mass, volume, temperature, area, speed, time, pressure, energy, power, force, digital storage, frequency, electrical measurements, and cooking/US/Imperial volume units, and Indian land-area units
 - Backend graphing support to evaluate functions and generate bounded coordinate samples
+- Symbolic calculus: first and higher derivatives, indefinite/definite integrals, and two-sided or one-sided limits
+- Descriptive statistics: mean, median, mode, range, minimum/maximum, sample/population variance and standard deviation, and quartiles
+- Probability and counting: simple, complement, conditional and union probabilities, permutations, combinations, and binomial probabilities
 - Currency conversion using the latest available rates from an external rate provider (requires network access)
 - Finance calculators: simple interest, compound interest, and monthly loan EMI
 - Discount and GST calculators, including extracting GST from a tax-inclusive amount
@@ -47,6 +50,16 @@ x^3 - 6x^2 + 11x - 6 = 0
 ```
 
 Choose **7** to expand a binomial, for example `(x + 2)^3`.
+
+## Advanced mathematics API
+
+The following version-one endpoints are available through the HTTP API:
+
+- `POST /api/v1/calculus`: derivative, integral, definite integral, and limit operations. Expressions support a restricted symbolic syntax with variables `x`, `y`, `z`, and `t`, common trigonometric functions, logarithms, exponentials, and arithmetic.
+- `POST /api/v1/statistics`: descriptive statistics for a list of finite real values.
+- `POST /api/v1/probability`: elementary probability, conditional probability, event unions/complements, permutations, combinations, and binomial probability.
+
+The symbolic parser accepts only explicitly supported mathematical syntax; it does not execute arbitrary Python. Symbolic results can remain unevaluated for expressions SymPy cannot solve in closed form. These endpoints return computed results, not a full step-by-step proof.
 
 ## Run the HTTP API
 
