@@ -130,7 +130,11 @@ def test_statistics_endpoint_supports_each_operation(payload, expected):
 def test_probability_endpoint_supports_each_operation(payload, expected):
     response = client.post("/api/v1/probability", json=payload)
     assert response.status_code == 200
-    assert response.json()["result"] == pytest.approx(expected)
+    actual = response.json()["result"]
+    if isinstance(expected, (dict, list)):
+        assert actual == expected
+    else:
+        assert actual == pytest.approx(expected)
 
 
 def test_probability_endpoint_returns_large_exact_counts_as_strings():
