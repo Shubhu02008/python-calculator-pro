@@ -57,7 +57,7 @@ The following version-one endpoints are available through the HTTP API:
 
 - `POST /api/v1/calculus`: derivative, integral, definite integral, and limit operations. Expressions support a restricted symbolic syntax with variables `x`, `y`, `z`, and `t`, common trigonometric functions, logarithms, exponentials, and arithmetic.
 - `POST /api/v1/statistics`: descriptive statistics for a list of finite real values.
-- `POST /api/v1/probability`: elementary probability, conditional probability, event unions/complements, permutations, combinations, and binomial probability.
+- `POST /api/v1/probability`: elementary probability, conditional probability, event unions/complements, permutations, combinations, and binomial probability. Large exact integer counts beyond JavaScript's safe integer range are returned as decimal strings; results exceeding 4,000 decimal digits are rejected with a calculation error to keep JSON responses safe.
 
 The symbolic parser accepts only explicitly supported mathematical syntax; it does not execute arbitrary Python. Symbolic results can remain unevaluated for expressions SymPy cannot solve in closed form. These endpoints return computed results, not a full step-by-step proof.
 
