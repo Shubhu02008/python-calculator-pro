@@ -97,7 +97,7 @@ def test_number_base_conversion():
     assert convert_number_base("0", 10, 36)["converted_value"] == "0"
 
 
-@pytest.mark.parametrize("value,source,target", [("2", 2, 1), ("2", 2, 37), ("2", 2, 10), ("G", 16, 10)])
+@pytest.mark.parametrize("value,source,target", [("2", 2, 1), ("2", 2, 37), ("2", 1, 10), ("G", 16, 10)])
 def test_number_base_conversion_rejects_invalid_inputs(value, source, target):
     with pytest.raises(ValueError):
         convert_number_base(value, source, target)
