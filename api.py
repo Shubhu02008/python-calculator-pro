@@ -18,7 +18,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, field_validator
 
-from matrix_engine import calculate_matrix, interpret_matrix_instruction\nfrom matrix_learning import generate_matrix_practice, check_matrix_answer\n\nfrom engine import (
+from matrix_engine import calculate_matrix, interpret_matrix_instruction
+from matrix_learning import generate_matrix_practice, check_matrix_answer
+
+from engine import (
     CalculatorError,
     calculate_operation,
     convert_unit,
@@ -427,7 +430,14 @@ def capabilities():
             "loan_emi",
             "number_base_conversion",
             "bmi_calculator",
-            "date_calculations",\n            "matrix_operations",\n            "symbolic_matrix_algebra",\n            "matrix_step_by_step",\n            "matrix_linear_algebra",\n            "matrix_eigenvalues",\n            "jee_matrix_practice",\n            "matrix_instruction_interpreter",
+            "date_calculations",
+            "matrix_operations",
+            "symbolic_matrix_algebra",
+            "matrix_step_by_step",
+            "matrix_linear_algebra",
+            "matrix_eigenvalues",
+            "jee_matrix_practice",
+            "matrix_instruction_interpreter",
         ],
         "unit_dimensions": [
             {"id": dimension, "units": list(unit_ids)}
@@ -576,13 +586,19 @@ def date_calculate(request: DateCalculationRequest):
 @app.post("/api/v1/matrices/operations")
 def matrix_operation(request: MatrixRequest):
     """Run a numeric or symbolic matrix operation, optionally with working."""
-    try:\n        return calculate_matrix(request.model_dump(exclude_none=True))\n    except ValueError as exc:\n        raise CalculatorError(str(exc)) from exc
+    try:
+        return calculate_matrix(request.model_dump(exclude_none=True))
+    except ValueError as exc:
+        raise CalculatorError(str(exc)) from exc
 
 
 @app.post("/api/v1/matrices/instructions")
 def matrix_instruction(request: MatrixInstructionRequest):
     """Map common natural-language matrix instructions to a supported operation."""
-    try:\n        return interpret_matrix_instruction(request.instruction)\n    except ValueError as exc:\n        raise CalculatorError(str(exc)) from exc
+    try:
+        return interpret_matrix_instruction(request.instruction)
+    except ValueError as exc:
+        raise CalculatorError(str(exc)) from exc
 
 
 @app.post("/api/v1/matrices/practice")
