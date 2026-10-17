@@ -65,7 +65,7 @@ def _run(operation):
         return _check_result(operation())
     except CalculatorError:
         raise
-    except (ValueError, TypeError, IndexError, ZeroDivisionError, OverflowError) as exc:
+    except (ValueError, TypeError, IndexError, ZeroDivisionError, OverflowError, RecursionError) as exc:
         raise CalculatorError(str(exc) or "Invalid mathematical input.") from exc
 
 
