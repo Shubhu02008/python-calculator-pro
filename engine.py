@@ -7,7 +7,10 @@ for invalid input and unsupported numerical results.
 
 import math
 from decimal import Decimal, InvalidOperation, localcontext
+from fractions import Fraction
 from numbers import Real
+
+from parser import tokenize
 
 from binomial_theorem import expand_binomial as _expand_binomial
 from calculator import calculate as _calculate
@@ -102,6 +105,131 @@ def approximate_expression(expression, significant_digits=_DEFAULT_APPROXIMATION
         raise CalculatorError("Could not format the approximate result.") from exc
 
 
+
+def fraction_form(expression):
+    """Return a simplified exact fraction and a four-significant-digit approximation.
+
+    Only expressions made from rational numeric literals and arithmetic operators
+    are eligible. Scientific functions and constants are deliberately excluded so
+    irrational or inexact results are never presented as exact fractions.
+    Returns None for integer results or expressions without a safe exact fraction.
+    """
+    if not isinstance(expression, str):
+        return None
+
+    try:
+        tokens = tokenize(expression)
+        operators = {"+", "-", "*", "/", "^", "(", ")", "!", "%"}
+        if any(
+            isinstance(token, str) and token not in operators
+            for token in tokens
+        ):
+            return None
+
+        position = 0
+
+        def peek(operator=None):
+            if position >= len(tokens):
+                return False
+            return tokens[position] == operator if operator is not None else tokens[position]
+
+        def parse_expression():
+            nonlocal position
+            value = parse_term()
+            while peek("+") or peek("-"):
+                operator = tokens[position]
+                position += 1
+                right = parse_term()
+                value = value + right if operator == "+" else value - right
+            return value
+
+        def parse_term():
+            nonlocal position
+            value = parse_unary()
+            while peek("*") or peek("/"):
+                operator = tokens[position]
+                position += 1
+                right = parse_unary()
+                if operator == "*":
+                    value *= right
+                else:
+                    if right == 0:
+                        raise ValueError("Division by zero.")
+                    value /= right
+            return value
+
+        def parse_unary():
+            nonlocal position
+            if peek("+") or peek("-"):
+                operator = tokens[position]
+                position += 1
+                value = parse_unary()
+                return value if operator == "+" else -value
+            return parse_power()
+
+        def parse_power():
+            nonlocal position
+            value = parse_postfix()
+            if peek("^"):
+                position += 1
+                exponent = parse_unary()
+                if exponent.denominator != 1 or abs(exponent.numerator) > 100:
+                    raise ValueError("Exponent is outside exact fraction limits.")
+                value = value ** exponent.numerator
+            return value
+
+        def parse_postfix():
+            nonlocal position
+            value = parse_primary()
+            while peek("!") or peek("%"):
+                operator = tokens[position]
+                position += 1
+                if operator == "%":
+                    value /= 100
+                else:
+                    if value.denominator != 1 or value < 0 or value > 170:
+                        raise ValueError("Factorial is outside exact fraction limits.")
+                    import math
+                    value = Fraction(math.factorial(value.numerator), 1)
+            return value
+
+        def parse_primary():
+            nonlocal position
+            if position >= len(tokens):
+                raise ValueError("Unexpected end of expression.")
+            token = tokens[position]
+            if token == "(":
+                position += 1
+                value = parse_expression()
+                if not peek(")"):
+                    raise ValueError("Missing closing parenthesis.")
+                position += 1
+                return value
+            if token == ")" or isinstance(token, str):
+                raise ValueError("Not a rational arithmetic expression.")
+            position += 1
+            if isinstance(token, bool):
+                raise ValueError("Boolean values are not numeric literals.")
+            return Fraction(token) if isinstance(token, int) else Fraction(str(token))
+
+        result = parse_expression()
+        if position != len(tokens) or result.denominator == 1:
+            return None
+        # Avoid producing very large strings or spending excessive work formatting them.
+        if len(str(abs(result.numerator))) > 1000 or len(str(result.denominator)) > 1000:
+            return None
+        with localcontext() as context:
+            context.prec = 50
+            approximate = Decimal(result.numerator) / Decimal(result.denominator)
+            approximation = format(approximate, ".4g")
+        return {
+            "exact_fraction": f"{result.numerator}/{result.denominator}",
+            "approximation": approximation,
+        }
+    except (ArithmeticError, ValueError, TypeError, OverflowError, ZeroDivisionError):
+        return None
+
+
 def calculate_operation(operation, numbers):
     """Run a named basic operation ('add', 'subtract', 'multiply', or 'divide')."""
     if not isinstance(operation, str):
@@ -175,6 +303,7 @@ __all__ = [
     "calculate_operation",
     "convert_unit",
     "evaluate_expression",
+    "fraction_form",
     "expand_binomial",
     "evaluate_function",
     "list_supported_units",
