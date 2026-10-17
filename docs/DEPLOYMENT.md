@@ -10,14 +10,11 @@ The terminal calculator remains a separate interface and continues to call the s
 
 ## Important: repository visibility
 
-The GitHub repository `Shubhu02008/python-calculator-pro` is currently **public**. Running the backend on a server prevents the website from automatically downloading the backend source, but it does **not** hide code that is already available in a public GitHub repository.
+The GitHub repository `Shubhu02008/python-calculator-pro` is currently **private**. GitHub restricts source access to users with permission to the repository. Running the backend on a server also keeps the Python modules out of the browser-delivered frontend, but it does not hide the source from authorized repository collaborators.
 
-If the backend source must be private before launch, choose one of these approaches deliberately:
+If you later make the project repository public, assume its committed source code is publicly readable. If you need a public demo and a private backend source, keep the deployable backend in a separate private repository.
 
-- Change this repository to private, after considering the impact on public access and collaboration; or
-- Keep a public project/demo repository and move the deployable backend into a separate private repository.
-
-No repository visibility setting is changed by this project work. Do not assume that server-side deployment alone makes publicly hosted source code secret.
+No repository visibility setting is changed by this project work. Recheck repository access and deployment permissions before launch.
 
 ## Install and start
 
