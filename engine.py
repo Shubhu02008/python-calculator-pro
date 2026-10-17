@@ -20,6 +20,18 @@ from unit_conversion import list_supported_units as _list_supported_units
 from graphing import evaluate_function as _evaluate_function
 from graphing import sample_function as _sample_function
 
+from calculator_tools import (
+    calculate_bmi,
+    calculate_compound_interest,
+    calculate_date,
+    calculate_discount,
+    calculate_emi,
+    calculate_gst,
+    calculate_simple_interest,
+    convert_currency,
+    convert_number_base,
+)
+
 
 _DEFAULT_APPROXIMATION_PRECISION = 15
 _MAX_APPROXIMATION_PRECISION = 100
@@ -309,4 +321,13 @@ __all__ = [
     "list_supported_units",
     "sample_function",
     "solve_equation",
+    "calculate_bmi",
+    "calculate_compound_interest",
+    "calculate_date",
+    "calculate_discount",
+    "calculate_emi",
+    "calculate_gst",
+    "calculate_simple_interest",
+    "convert_currency",
+    "convert_number_base",
 ]
