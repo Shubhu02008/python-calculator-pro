@@ -181,11 +181,11 @@ def calculate_statistics(operation, values):
         # Compute the mean once. Dividing each term first avoids overflowing the
         # intermediate sum for many large, same-sign finite observations.
         mean = math.fsum(value / len(checked) for value in checked)
-        squared_deviations = [(value - mean) ** 2 for value in checked]
         divisor = len(checked) - 1 if operation in {"variance", "standard_deviation"} else len(checked)
         try:
+            squared_deviations = [(value - mean) ** 2 for value in checked]
             variance = math.fsum(squared_deviations) / divisor
-        except OverflowError as exc:
+        except (OverflowError, ValueError) as exc:
             raise ValueError("Data values are too large to calculate variance safely.") from exc
         if not math.isfinite(variance):
             raise ValueError("Data values are too large to calculate variance safely.")
