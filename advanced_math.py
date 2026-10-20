@@ -76,6 +76,40 @@ def _parse_expression(source):
         raise ValueError("Could not parse mathematical expression.") from exc
 
 
+def solve_equation_system(equations):
+    """Solve a small system of symbolic equations in supported variables x, y, z, and t."""
+    if not isinstance(equations, (list, tuple)) or not 2 <= len(equations) <= 8:
+        raise ValueError("Enter between 2 and 8 equations, one per line.")
+    expressions = []
+    for index, equation in enumerate(equations, start=1):
+        if not isinstance(equation, str) or not equation.strip():
+            raise ValueError(f"Equation {index} is blank.")
+        parts = equation.split("=")
+        if len(parts) > 2:
+            raise ValueError(f"Equation {index} must contain at most one equals sign.")
+        left = _parse_expression(parts[0])
+        right = _parse_expression(parts[1]) if len(parts) == 2 else sp.Integer(0)
+        expressions.append(sp.simplify(left - right))
+    symbols = sorted(set().union(*(expr.free_symbols for expr in expressions)), key=lambda item: item.name)
+    if not symbols:
+        if all(expr == 0 for expr in expressions):
+            return {"status": "infinite_solutions", "variables": [], "solutions": [], "message": "These equations are identities and do not determine unique variable values."}
+        return {"status": "no_solution", "variables": [], "solutions": [], "message": "The equations are inconsistent."}
+    if len(symbols) > 4:
+        raise ValueError("Systems may use at most four variables: x, y, z, and t.")
+    try:
+        solved = sp.solve(expressions, symbols, dict=True)
+    except (NotImplementedError, RecursionError, ValueError) as exc:
+        raise ValueError("This system is too complex for the current symbolic solver.") from exc
+    variables = [symbol.name for symbol in symbols]
+    if not solved:
+        return {"status": "no_solution", "variables": variables, "solutions": [], "message": "No solution was found for this system."}
+    solutions = []
+    for solution in solved[:20]:
+        solutions.append({symbol.name: sp.sstr(solution[symbol]) if symbol in solution else "free variable" for symbol in symbols})
+    return {"status": "solved", "variables": variables, "solutions": solutions, "message": None}
+
+
 def calculate_calculus(operation, expression, *, variable="x", order=1, lower=None, upper=None, point="0", direction="both"):
     """Differentiate, integrate, compute a definite integral, or evaluate a limit."""
     if variable not in _SYMBOLS or variable in {"pi", "e"}:
