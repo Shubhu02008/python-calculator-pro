@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: python-calculator-pro-api
+    runtime: python
+    plan: free
+    region: singapore
+    buildCommand: pip install -r requirements-api.txt
+    startCommand: uvicorn api:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /healthz
+    envVars:
+      - key: CALCULATOR_CORS_ORIGINS
+        fromService:
+          type: web
+          name: python-calculator-pro-site
+          envVarKey: RENDER_EXTERNAL_URL
+
+  - type: web
+    name: python-calculator-pro-site
+    runtime: static
+    buildCommand: sh frontend/build-config.sh
+    staticPublishPath: frontend
+    envVars:
+      - key: API_BASE_URL
+        fromService:
+          type: web
+          name: python-calculator-pro-api
+          envVarKey: RENDER_EXTERNAL_URL
