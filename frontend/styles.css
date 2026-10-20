@@ -73,3 +73,16 @@
 .equation-graph-section{margin-top:20px;padding-top:16px;border-top:1px solid var(--line)}
 .equation-graph-section h3{margin:0 0 4px;font-size:16px}
 .equation-graph-section .field-help{margin:0 0 10px}
+
+/* Phase 6: structured result summaries */
+.result-summary-title{margin:0 0 12px;color:var(--text);font-size:14px;font-weight:700}
+.result-summary-message{margin:0 0 12px;color:var(--muted);font-size:12px}
+.result-primary-value{margin:0 0 14px;color:var(--blue-bright);font:600 24px/1.35 "DM Mono",monospace;overflow-wrap:anywhere}
+.result-expression{margin:0 0 14px;padding:15px;border:1px solid var(--line);border-radius:9px;background:#0b1321;color:var(--text);font:500 15px/1.8 "DM Mono",monospace;overflow-wrap:anywhere}
+.result-value-row,.root-result{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:10px 0;border-bottom:1px solid var(--line-soft)}
+.result-value-label,.root-result span{color:var(--muted);font-size:11px;text-transform:capitalize}
+.result-value-content,.root-result strong{color:var(--text);font-size:12px;text-align:right;overflow-wrap:anywhere}
+.result-raw-details,.result-nested{margin:12px 0;color:var(--muted);font-size:11px}
+.result-raw-details summary,.result-nested summary{cursor:pointer;color:#9bb7e8;font-weight:600}
+.result-raw-details .result-json,.result-nested pre{margin-top:10px;max-height:320px;overflow:auto}
+@media(max-width:600px){.result-primary-value{font-size:21px}.result-value-row,.root-result{gap:10px}}
