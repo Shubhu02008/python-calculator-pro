@@ -44,6 +44,7 @@ from engine import (
     calculate_calculus,
     calculate_statistics,
     calculate_probability,
+    solve_equation_system,
 )
 
 
@@ -121,6 +122,15 @@ class EquationRequest(RequestModel):
     @classmethod
     def equation_must_not_be_blank(cls, value):
         return _nonblank_text(value, "Equation")
+
+
+class EquationSystemRequest(RequestModel):
+    equations: list[str] = Field(min_length=2, max_length=8)
+
+    @field_validator("equations")
+    @classmethod
+    def equations_must_be_nonblank(cls, values):
+        return [_nonblank_text(value, "Equation") for value in values]
 
 
 class BinomialRequest(RequestModel):
@@ -551,6 +561,12 @@ def solve(request: EquationRequest):
         else:
             solutions.append({"real": float(root), "imaginary": 0.0})
     return {"status": "solved", "solutions": solutions, "message": None}
+
+
+@app.post("/api/v1/equations/system")
+def solve_system(request: EquationSystemRequest):
+    """Solve a system of two to eight equations with supported symbolic variables."""
+    return solve_equation_system(request.equations)
 
 
 @app.post("/api/v1/binomials/expand", response_model=BinomialExpansionResult)
