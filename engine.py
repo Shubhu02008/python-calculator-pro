@@ -16,6 +16,7 @@ from advanced_math import (
     calculate_calculus as _calculate_calculus,
     calculate_statistics as _calculate_statistics,
     calculate_probability as _calculate_probability,
+    solve_equation_system as _solve_equation_system,
 )
 
 from binomial_theorem import expand_binomial as _expand_binomial
@@ -297,6 +298,13 @@ def solve_equation(equation):
     if not isinstance(equation, str):
         raise CalculatorError("Equation must be text.")
     return _run(lambda: _solve_equation(equation))
+
+
+def solve_equation_system(equations):
+    """Solve a small symbolic system using the restricted expression parser."""
+    if not isinstance(equations, (list, tuple)):
+        raise CalculatorError("Equations must be provided as a list of lines.")
+    return _run(lambda: _solve_equation_system(equations))
 
 
 def expand_binomial(expression):
