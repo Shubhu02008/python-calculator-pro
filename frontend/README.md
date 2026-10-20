@@ -57,3 +57,20 @@ The frontend uses `GET /api/v1/capabilities` to populate supported unit identifi
 ## Verification status
 
 Phase 4 source has been committed on the `frontend/phase-4-tools` branch for review. A live browser/API runtime test has not yet been performed. Run the API and static frontend as described above, then exercise each tool with valid and invalid inputs before merging.
+
+
+## Phase 5 — graphing and result presentation
+
+- Quadratic equations receive an automatic graph beneath the solver response when the expression passes a conservative quadratic-expression check.
+- The solver response (including roots, if supplied) is rendered first. Graph sampling uses the existing /api/v1/graph/sample endpoint and does not calculate or replace roots.
+- The equation solver includes editable x-range bounds; changing the viewport does not change solver results.
+- Graphs include labelled ticks and axes, discontinuity-aware line breaks, and visual clipping for extreme values.
+- This phase has not been live-tested in a browser against a running API; validate locally before merging.
+
+## Phase 6 — result readability and release checks
+
+- Tool results use readable summaries for equations, roots, expansions, scalar answers, and graph samples.
+- The complete API payload remains available under “Technical response” and can be copied.
+- Graph axes and ticks are labelled, and undefined samples interrupt the curve.
+- Frontend JavaScript syntax is checked in GitHub Actions.
+- Do not publish the static frontend with the default localhost API URL; configure the API origin and matching CORS allowlist for deployment.

@@ -32,4 +32,7 @@ jobs:
 
       - run: python -m compileall -q .
 
+      - name: Check frontend JavaScript syntax
+        run: node --check frontend/app.js
+
       - run: python -m pytest -q
