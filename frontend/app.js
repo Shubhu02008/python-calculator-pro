@@ -103,7 +103,7 @@
       if (opts.step !== undefined) control.step = opts.step;
       if (opts.type === "number") control.step = opts.step || "any";
     }
-    control.name=name; control.id="field-"+name; control.required = opts.required !== false;
+    control.name=name; control.id="field-"+name; control.required = opts.required === true;
     if (opts.value !== undefined) control.value=opts.value;
     if (opts.help) { control.setAttribute("aria-describedby","help-"+name); const help=document.createElement("small");help.className="field-help";help.id="help-"+name;help.textContent=opts.help;wrap.append(control,help); }
     else wrap.append(control);
@@ -135,7 +135,7 @@
     const outTitle=document.createElement("h2");outTitle.textContent="Result";outHead.append(outTitle);output.append(outHead);
     const body=document.createElement("div");body.className="result-body";body.textContent="Enter values and run the calculation.";output.append(body);
     form.addEventListener("submit", async event => {
-      event.preventDefault(); if(isBusy)return;
+      event.preventDefault(); if(activeTool === "Scientific Calculator" || isBusy)return;
       const submit=form.querySelector('[type="submit"]');const original=submit.textContent;
       submit.disabled=true;submit.textContent="Calculating…";isBusy=true;form.querySelectorAll(".form-error").forEach(el=>el.remove());
       try { const result=await submitForm(form); renderResult(body,result); }
