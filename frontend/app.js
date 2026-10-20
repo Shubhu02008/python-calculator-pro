@@ -138,7 +138,11 @@
       event.preventDefault(); if(activeTool === "Scientific Calculator" || isBusy)return;
       const submit=form.querySelector('[type="submit"]');const original=submit.textContent;
       submit.disabled=true;submit.textContent="Calculating…";isBusy=true;form.querySelectorAll(".form-error").forEach(el=>el.remove());
-      try { const result=await submitForm(form); renderResult(body,result); }
+      try {
+        const result=await submitForm(form);
+        renderResult(body,result);
+        if(activeTool==="Quadratic & Polynomial Solver") await appendEquationGraph(body,form,result);
+      }
       catch(error) { body.replaceChildren();const message=document.createElement("p");message.className="result-error";message.textContent=error.message;body.append(message); }
       finally { submit.disabled=false;submit.textContent=original;isBusy=false; }
     });
@@ -168,18 +172,49 @@
   }
   function drawGraph(points) {
     const figure=document.createElement("figure");figure.className="graph-figure";
-    const width=640,height=320,pad=30,valid=points.filter(p=>Number.isFinite(p.x)&&Number.isFinite(p.y));
-    if(valid.length<2)return figure;
-    let xmin=Math.min(...valid.map(p=>p.x)),xmax=Math.max(...valid.map(p=>p.x)),ymin=Math.min(...valid.map(p=>p.y)),ymax=Math.max(...valid.map(p=>p.y));
-    if(xmin===xmax){xmin-=1;xmax+=1;}if(ymin===ymax){ymin-=1;ymax+=1;}
-    const px=x=>pad+(x-xmin)/(xmax-xmin)*(width-pad*2),py=y=>height-pad-(y-ymin)/(ymax-ymin)*(height-pad*2),ns="http://www.w3.org/2000/svg";
-    const svg=document.createElementNS(ns,"svg");svg.setAttribute("viewBox","0 0 "+width+" "+height);svg.setAttribute("role","img");svg.setAttribute("aria-label","Sampled function graph");
+    const width=720,height=360,pad={left:58,right:18,top:18,bottom:42};
+    const valid=points.filter(p=>Number.isFinite(p.x)&&Number.isFinite(p.y));
+    if(valid.length<2){const msg=document.createElement("figcaption");msg.textContent="Not enough finite samples to draw this graph.";figure.append(msg);return figure;}
+    const xmin=Math.min(...valid.map(p=>p.x)),xmax=Math.max(...valid.map(p=>p.x));
+    let ymin=Math.min(...valid.map(p=>p.y)),ymax=Math.max(...valid.map(p=>p.y));
+    if(xmin===xmax||!Number.isFinite(xmin)||!Number.isFinite(xmax)){const msg=document.createElement("figcaption");msg.textContent="Invalid x-range returned by the API.";figure.append(msg);return figure;}
+    if(ymin===ymax){const spread=Math.max(1,Math.abs(ymin)*.1);ymin-=spread;ymax+=spread;}
+    if(Math.max(Math.abs(ymin),Math.abs(ymax))>1e6){ymin=Math.max(ymin,-1e6);ymax=Math.min(ymax,1e6);}
+    const px=x=>pad.left+(x-xmin)/(xmax-xmin)*(width-pad.left-pad.right);
+    const py=y=>height-pad.bottom-(y-ymin)/(ymax-ymin)*(height-pad.top-pad.bottom);
+    const ns="http://www.w3.org/2000/svg",svg=document.createElementNS(ns,"svg");
+    svg.setAttribute("viewBox","0 0 "+width+" "+height);svg.setAttribute("role","img");svg.setAttribute("aria-label","Function graph with labelled axes");
     function line(x1,y1,x2,y2,cls){const el=document.createElementNS(ns,"line");Object.entries({x1,y1,x2,y2}).forEach(([k,v])=>el.setAttribute(k,v));el.setAttribute("class",cls);svg.append(el);}
-    for(let i=0;i<=4;i++){const x=pad+i*(width-pad*2)/4;line(x,pad,x,height-pad,"graph-grid");const y=pad+i*(height-pad*2)/4;line(pad,y,width-pad,y,"graph-grid");}
-    if(xmin<=0&&xmax>=0)line(px(0),pad,px(0),height-pad,"graph-axis");if(ymin<=0&&ymax>=0)line(pad,py(0),width-pad,py(0),"graph-axis");
-    let d="",active=false;points.forEach(p=>{if(!Number.isFinite(p.x)||!Number.isFinite(p.y)){active=false;return;}d+=(active?"L":"M")+px(p.x).toFixed(2)+","+py(p.y).toFixed(2)+" ";active=true;});
-    const path=document.createElementNS(ns,"path");path.setAttribute("d",d);path.setAttribute("class","graph-curve");svg.append(path);figure.append(svg);
-    const caption=document.createElement("figcaption");caption.textContent="x: "+xmin.toPrecision(4)+" to "+xmax.toPrecision(4)+" · y: "+ymin.toPrecision(4)+" to "+ymax.toPrecision(4);figure.append(caption);return figure;
+    function label(x,y,text,anchor="middle",cls="graph-label"){const el=document.createElementNS(ns,"text");el.setAttribute("x",x);el.setAttribute("y",y);el.setAttribute("text-anchor",anchor);el.setAttribute("class",cls);el.textContent=text;svg.append(el);}
+    const fmt=v=>Math.abs(v)<1e-8?"0":Number(v.toPrecision(4)).toString();
+    for(let i=0;i<=4;i++){const xv=xmin+(xmax-xmin)*i/4,x=px(xv);line(x,pad.top,x,height-pad.bottom,"graph-grid");label(x,height-pad.bottom+20,fmt(xv));const yv=ymin+(ymax-ymin)*i/4,y=py(yv);line(pad.left,y,width-pad.right,y,"graph-grid");label(pad.left-9,y+4,fmt(yv),"end");}
+    if(xmin<=0&&xmax>=0)line(px(0),pad.top,px(0),height-pad.bottom,"graph-axis");
+    if(ymin<=0&&ymax>=0)line(pad.left,py(0),width-pad.right,py(0),"graph-axis");
+    let d="",active=false,previousY=null;
+    points.forEach(p=>{if(!Number.isFinite(p.x)||!Number.isFinite(p.y)||p.y<ymin||p.y>ymax){active=false;previousY=null;return;}if(previousY!==null&&Math.abs(p.y-previousY)>(ymax-ymin)*.7)active=false;d+=(active?"L":"M")+px(p.x).toFixed(2)+","+py(p.y).toFixed(2)+" ";active=true;previousY=p.y;});
+    const path=document.createElementNS(ns,"path");path.setAttribute("d",d);path.setAttribute("class","graph-curve");svg.append(path);
+    label((pad.left+width-pad.right)/2,height-6,"x","middle","graph-axis-title");
+    const yt=document.createElementNS(ns,"text");yt.setAttribute("x","15");yt.setAttribute("y",height/2);yt.setAttribute("transform","rotate(-90 15 "+(height/2)+")");yt.setAttribute("class","graph-axis-title");yt.setAttribute("text-anchor","middle");yt.textContent="y";svg.append(yt);
+    figure.append(svg);const caption=document.createElement("figcaption");caption.textContent="x: "+fmt(xmin)+" to "+fmt(xmax)+" · y viewport: "+fmt(ymin)+" to "+fmt(ymax);figure.append(caption);return figure;
+  }
+  function equationGraphExpression(raw) {
+    const parts=raw.split("=");if(parts.length>2)return null;
+    const expression=parts.length===2?"("+parts[0]+")-("+parts[1]+")":parts[0];
+    if(!/\bx\s*(?:\^\s*2|\*\*\s*2)\b/i.test(expression))return null;
+    const withoutFunctions=expression.replace(/\b(?:sin|cos|tan|sqrt|log|ln|exp|abs|pi|e)\b/gi,"");
+    if(/\b[a-wyz]\w*\b/i.test(withoutFunctions))return null;
+    return expression;
+  }
+  async function appendEquationGraph(container,form) {
+    const expression=equationGraphExpression(val(form,"equation"));if(!expression)return;
+    let x_min,x_max;
+    try{x_min=number(form,"graph_x_min");x_max=number(form,"graph_x_max");}catch(error){const p=document.createElement("p");p.className="result-error";p.textContent="Graph unavailable: "+error.message;container.append(p);return;}
+    if(x_min>=x_max){const p=document.createElement("p");p.className="result-error";p.textContent="Graph not shown: maximum x must be greater than minimum x. The equation results above are unchanged.";container.append(p);return;}
+    const section=document.createElement("section");section.className="equation-graph-section";
+    const heading=document.createElement("h3");heading.textContent="Quadratic graph";section.append(heading);
+    const note=document.createElement("p");note.className="field-help";note.textContent="Graph range changes only the viewport. Roots and equation results above come from the solver.";section.append(note);container.append(section);
+    try{const sampled=await api("/api/v1/graph/sample",{expression,x_min,x_max,points:301});if(Array.isArray(sampled.points))section.append(drawGraph(sampled.points));else{const msg=document.createElement("p");msg.className="result-error";msg.textContent="The API did not return graph samples.";section.append(msg);}}
+    catch(error){const msg=document.createElement("p");msg.className="result-error";msg.textContent="Graph unavailable: "+error.message;section.append(msg);}
   }
   function transformDegreeTrig(expression) {
     if(angleMode!=="DEG")return expression;
@@ -255,7 +290,7 @@
     setDrawer(false);if(title==="Scientific Calculator"){scientificWorkspace();return;}
     let spec=[];
     switch(title){
-      case "Quadratic & Polynomial Solver":spec=[["Equation",[txt("equation","Equation in x","","e.g. x^2 - 5*x + 6 = 0","Use = 0 for a polynomial equation.")]]];break;
+      case "Quadratic & Polynomial Solver":spec=[["Equation",[txt("equation","Equation in x","","e.g. x^2 - 5*x + 6 = 0","Graph appears automatically for quadratic equations."),num("graph_x_min","Graph minimum x","-10"),num("graph_x_max","Graph maximum x","10")]]];break;
       case "Binomial Expansion":spec=[["Expression",[txt("expression","Binomial expression","","e.g. (x + 2)^3")]]];break;
       case "Graphing Calculator":spec=[["Function",[txt("expression","Function of x","","e.g. sin(x) or x^2 - 4"),num("x_min","Minimum x","-10"),num("x_max","Maximum x","10"),num("points","Sample points","201","Choose 2–2,000 points.")]]];break;
       case "Calculus":spec=[["Calculus operation",[sel("operation","Operation",selectOptions.calculusOperation),sel("variable","Variable",options(["x","y","z","t"])),num("order","Derivative order","1"),txt("expression","Expression","","e.g. x^3 + sin(x)"),txt("lower","Lower bound","0"),txt("upper","Upper bound","1"),txt("point","Limit point","0"),sel("direction","Limit direction",options(["both","plus","minus"]))]]];break;
