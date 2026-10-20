@@ -166,9 +166,61 @@
   }
   function renderResult(container,result) {
     container.replaceChildren();
-    if(result&&typeof result==="object"&&Array.isArray(result.points)){const points=result.points.filter(point=>Number.isFinite(point.x)&&Number.isFinite(point.y));if(points.length)container.append(drawGraph(result.points));}
-    const pre=document.createElement("pre");pre.className="result-json";pre.textContent=typeof result==="string"?result:JSON.stringify(result,null,2);container.append(pre);
-    const copy=button("Copy result","secondary-button","button");copy.addEventListener("click",async()=>{const text=pre.textContent;try{await navigator.clipboard.writeText(text);copy.textContent="Copied";}catch{const ta=document.createElement("textarea");ta.value=text;document.body.append(ta);ta.select();const ok=document.execCommand("copy");ta.remove();copy.textContent=ok?"Copied":"Copy unavailable";}});container.append(copy);
+    const isRecord=value=>value!==null&&typeof value==="object"&&!Array.isArray(value);
+    const heading=(text)=>{const el=document.createElement("h3");el.className="result-summary-title";el.textContent=text;container.append(el);return el;};
+    const text=(value)=>value===null||value===undefined?"—":typeof value==="string"?value:typeof value==="number"?formatNumber(value):JSON.stringify(value);
+    const row=(label,value)=>{
+      const item=document.createElement("div");item.className="result-value-row";
+      const term=document.createElement("span");term.className="result-value-label";term.textContent=label.replaceAll("_"," ");
+      const detail=document.createElement("strong");detail.className="result-value-content";detail.textContent=text(value);
+      item.append(term,detail);container.append(item);
+    };
+    if(isRecord(result)&&Array.isArray(result.points)){
+      const finite=result.points.filter(point=>point&&Number.isFinite(point.x)&&Number.isFinite(point.y));
+      if(finite.length)container.append(drawGraph(result.points));
+      row("sample_points",result.points.length);
+      row("defined_samples",finite.length);
+    } else if(isRecord(result)&&Array.isArray(result.solutions)&&typeof result.status==="string"){
+      const status=result.status==="solved"?"Solutions found":result.status==="no_solution"?"No solution":result.status==="infinite_solutions"?"Infinite solutions":"Solver result";
+      heading(status);
+      if(result.message){const message=document.createElement("p");message.className="result-summary-message";message.textContent=result.message;container.append(message);}
+      if(result.solutions.length){
+        result.solutions.forEach((root,index)=>{
+          const real=Number(root.real),imag=Number(root.imaginary||0);
+          let value;
+          if(Math.abs(imag)<1e-12)value="x = "+formatNumber(real);
+          else value="x = "+formatNumber(real)+(imag<0?" − ":" + ")+formatNumber(Math.abs(imag))+"i";
+          const line=document.createElement("div");line.className="root-result";
+          const label=document.createElement("span");label.textContent="Root "+(index+1);
+          const answer=document.createElement("strong");answer.textContent=value;line.append(label,answer);container.append(line);
+        });
+      }
+      if(!result.solutions.length&&!result.message){const msg=document.createElement("p");msg.className="result-summary-message";msg.textContent="The solver returned no individual roots.";container.append(msg);}
+    } else if(isRecord(result)&&typeof result.expansion==="string"){
+      heading("Expanded expression");
+      const expression=document.createElement("p");expression.className="result-expression";expression.textContent=result.expansion;container.append(expression);
+    } else if(isRecord(result)){
+      if(typeof result.result==="number"||typeof result.result==="string"){
+        heading("Answer");const answer=document.createElement("p");answer.className="result-primary-value";answer.textContent=text(result.result);container.append(answer);
+      }
+      Object.entries(result).forEach(([key,value])=>{
+        if(key==="result"&&(typeof value==="number"||typeof value==="string"))return;
+        if(key==="points"||key==="solutions"||key==="expansion")return;
+        if(Array.isArray(value)||isRecord(value)){
+          const details=document.createElement("details");details.className="result-nested";
+          const summary=document.createElement("summary");summary.textContent=key.replaceAll("_"," ");details.append(summary);
+          const pre=document.createElement("pre");pre.textContent=JSON.stringify(value,null,2);details.append(pre);container.append(details);
+        } else row(key,value);
+      });
+    } else {
+      const value=document.createElement("p");value.className="result-primary-value";value.textContent=text(result);container.append(value);
+    }
+    const details=document.createElement("details");details.className="result-raw-details";
+    const summary=document.createElement("summary");summary.textContent="Technical response";details.append(summary);
+    const pre=document.createElement("pre");pre.className="result-json";pre.textContent=typeof result==="string"?result:JSON.stringify(result,null,2);details.append(pre);container.append(details);
+    const copy=button("Copy result","secondary-button","button");
+    copy.addEventListener("click",async()=>{const content=pre.textContent;try{await navigator.clipboard.writeText(content);copy.textContent="Copied";}catch{const ta=document.createElement("textarea");ta.value=content;document.body.append(ta);ta.select();const ok=document.execCommand("copy");ta.remove();copy.textContent=ok?"Copied":"Copy unavailable";}});
+    container.append(copy);
   }
   function drawGraph(points) {
     const figure=document.createElement("figure");figure.className="graph-figure";
@@ -179,7 +231,7 @@
     let ymin=Math.min(...valid.map(p=>p.y)),ymax=Math.max(...valid.map(p=>p.y));
     if(xmin===xmax||!Number.isFinite(xmin)||!Number.isFinite(xmax)){const msg=document.createElement("figcaption");msg.textContent="Invalid x-range returned by the API.";figure.append(msg);return figure;}
     if(ymin===ymax){const spread=Math.max(1,Math.abs(ymin)*.1);ymin-=spread;ymax+=spread;}
-    if(Math.max(Math.abs(ymin),Math.abs(ymax))>1e6){ymin=Math.max(ymin,-1e6);ymax=Math.min(ymax,1e6);}
+    if(Math.max(Math.abs(ymin),Math.abs(ymax))>1e6){ymin=Math.max(-1e6,Math.min(1e6,ymin));ymax=Math.max(-1e6,Math.min(1e6,ymax));if(ymin===ymax){ymin-=1;ymax+=1;}}
     const px=x=>pad.left+(x-xmin)/(xmax-xmin)*(width-pad.left-pad.right);
     const py=y=>height-pad.bottom-(y-ymin)/(ymax-ymin)*(height-pad.top-pad.bottom);
     const ns="http://www.w3.org/2000/svg",svg=document.createElementNS(ns,"svg");
