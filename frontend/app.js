@@ -188,6 +188,15 @@
       }
       row("sample_points",result.points.length);
       row("defined_samples",finite.length);
+    } else if(isRecord(result)&&Array.isArray(result.variables)&&Array.isArray(result.solutions)&&typeof result.status==="string"){
+      heading(result.status==="solved"?"System solutions":result.status==="infinite_solutions"?"Underdetermined system":"No solution");
+      if(result.message){const message=document.createElement("p");message.className="result-summary-message";message.textContent=result.message;container.append(message);}
+      result.solutions.forEach((solution,index)=>{
+        const section=document.createElement("section");section.className="system-solution";
+        const title=document.createElement("h4");title.textContent="Solution "+(index+1);section.append(title);
+        result.variables.forEach(variable=>{const item=document.createElement("div");item.className="result-value-row";const label=document.createElement("span");label.className="result-value-label";label.textContent=variable;const answer=document.createElement("strong");answer.className="result-value-content";answer.textContent=solution[variable]===undefined?"Free variable":String(solution[variable]);item.append(label,answer);section.append(item);});
+        container.append(section);
+      });
     } else if(isRecord(result)&&Array.isArray(result.solutions)&&typeof result.status==="string"){
       const status=result.status==="solved"?"Solutions found":result.status==="no_solution"?"No solution":result.status==="infinite_solutions"?"Infinite solutions":"Solver result";
       heading(status);
@@ -326,7 +335,7 @@
 
   async function submitForm(form) {
     switch(activeTool){
-      case "Quadratic & Polynomial Solver": return api("/api/v1/equations/solve",{equation:val(form,"equation")});
+      case "Quadratic & Polynomial Solver": return val(form,"equation_mode")==="system" ? api("/api/v1/equations/system",{equations:val(form,"system_equations").split(/\n+/).map(line=>line.trim()).filter(Boolean)}) : api("/api/v1/equations/solve",{equation:val(form,"equation")});
       case "Binomial Expansion": return api("/api/v1/binomials/expand",{expression:val(form,"expression")});
       case "Graphing Calculator": {const x_min=number(form,"x_min"),x_max=number(form,"x_max"),points=integer(form,"points");if(x_min>=x_max)throw new Error("Maximum x must be greater than minimum x.");if(points<2||points>2000)throw new Error("Sample points must be between 2 and 2,000.");return api("/api/v1/graph/sample",{expression:val(form,"expression"),x_min,x_max,points});}
       case "Calculus": {const operation=val(form,"operation"),payload={operation,expression:val(form,"expression"),variable:val(form,"variable"),order:integer(form,"order"),direction:val(form,"direction"),point:val(form,"point")||"0"};if(operation==="definite_integral"){payload.lower=val(form,"lower");payload.upper=val(form,"upper");}if(operation==="integral"){delete payload.point;delete payload.direction;}return api("/api/v1/calculus",payload);}
@@ -363,7 +372,7 @@
     setDrawer(false);if(title==="Scientific Calculator"){scientificWorkspace();return;}
     let spec=[];
     switch(title){
-      case "Quadratic & Polynomial Solver":spec=[["Equation",[txt("equation","Equation in x","","e.g. x^2 - 5*x + 6 = 0","Graph appears automatically for quadratic equations."),num("graph_x_min","Graph minimum x","-10"),num("graph_x_max","Graph maximum x","10")]]];break;
+      case "Quadratic & Polynomial Solver":spec=[["Solver mode",[sel("equation_mode","Solve",[["polynomial","Single polynomial equation"],["system","System of equations"]])]],["Single equation",[txt("equation","Equation in x","","e.g. x^2 - 5*x + 6 = 0","For a system, choose System of equations above."),num("graph_x_min","Graph minimum x","-10"),num("graph_x_max","Graph maximum x","10")]],["System of equations",[area("system_equations","Equations (one per line)","x + y = 5\ny - x = 1","Enter each equation on a separate line.")]]];break;
       case "Binomial Expansion":spec=[["Expression",[txt("expression","Binomial expression","","e.g. (x + 2)^3")]]];break;
       case "Graphing Calculator":spec=[["Function",[txt("expression","Function of x","","e.g. sin(x) or x^2 - 4"),num("x_min","Minimum x","-10"),num("x_max","Maximum x","10"),num("points","Sample points","401","Choose 2–2,000 points. More samples can make curves smoother.")]]];break;
       case "Calculus":spec=[["Calculus operation",[sel("operation","Operation",selectOptions.calculusOperation),sel("variable","Variable",options(["x","y","z","t"])),num("order","Derivative order","1"),txt("expression","Expression","","e.g. x^3 + sin(x)"),txt("lower","Lower bound","0"),txt("upper","Upper bound","1"),txt("point","Limit point","0"),sel("direction","Limit direction",options(["both","plus","minus"]))]]];break;
@@ -379,6 +388,11 @@
       case "Date Calculator":spec=[["Date calculation",[sel("operation","Operation",selectOptions.dateOperation),field("date","Date",{type:"text",value:new Date().toISOString().slice(0,10),help:"Use YYYY-MM-DD."}),num("days","Number of days","7"),field("other_date","Second date",{type:"text",value:new Date().toISOString().slice(0,10),help:"Only used for date difference; YYYY-MM-DD."})]]];break;
     }
     const {form}=createPanel(title,descriptions[title]);addFields(form,spec);
+    if(title==="Quadratic & Polynomial Solver"){
+      const mode=form.elements.equation_mode;
+      const updateEquationMode=()=>{const system=mode.value==="system";form.elements.equation.closest(".field").hidden=system;form.elements.graph_x_min.closest(".field").hidden=system;form.elements.graph_x_max.closest(".field").hidden=system;form.elements.system_equations.closest(".field").hidden=!system;};
+      mode.addEventListener("change",updateEquationMode);updateEquationMode();
+    }
     if(title==="Graphing Calculator"){
       const expression=form.elements.expression;
       expression.setAttribute("aria-describedby","graph-expression-help");
