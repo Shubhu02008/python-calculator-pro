@@ -95,3 +95,6 @@
 .graph-result-heading{margin-top:8px}
 .graph-figure svg{min-width:0;min-height:220px}
 @media(max-width:600px){.graph-figure{padding:6px}.graph-figure svg{min-height:180px}.solution-steps{padding:12px}}
+
+.system-solution{margin:12px 0;padding:12px;border:1px solid var(--line);border-radius:10px;background:rgba(5,10,20,.2)}
+.system-solution h4{margin:0 0 8px;color:var(--text);font-size:12px}
