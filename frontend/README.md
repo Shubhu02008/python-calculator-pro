@@ -41,3 +41,19 @@ History is stored in this browser using localStorage. It is not synced across de
 ## Current limits
 
 Only the Scientific Calculator is functional in this phase. Other sidebar entries remain placeholders until their planned phases. The API does not provide general calculation steps, so the interface does not invent them.
+
+## Phase 4 scope
+
+The remaining 14 tools now have frontend forms wired to the existing versioned API:
+
+- Equation solver, binomial expansion, and graph sampling (with an SVG plot).
+- Calculus operations, matrix operations, descriptive statistics, and probability/combinatorics.
+- Unit and currency conversion.
+- Simple interest, compound interest, and loan EMI.
+- Discount and GST calculations, number-base conversion, BMI, and date calculations.
+
+The frontend uses `GET /api/v1/capabilities` to populate supported unit identifiers when available. Matrix input accepts rows separated by new lines or semicolons, with cells separated by commas or spaces. Graphing uses API-sampled points and breaks the curve where the API returns undefined values. Currency conversion depends on the backend's exchange-rate provider and may fail when that provider is unavailable.
+
+## Verification status
+
+Phase 4 source has been committed on the `frontend/phase-4-tools` branch for review. A live browser/API runtime test has not yet been performed. Run the API and static frontend as described above, then exercise each tool with valid and invalid inputs before merging.

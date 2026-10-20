@@ -14,3 +14,49 @@
 .result-details{margin-top:11px;border-top:1px solid #26354b;padding-top:9px;color:#9aabc4;font-size:10px}.result-details summary{width:max-content;max-width:100%;color:#8db5ff;cursor:pointer;font-weight:600}.result-details dl{display:grid;gap:6px;margin:10px 0 0}.result-details dl>div{display:flex;justify-content:space-between;gap:14px}.result-details dt{color:#7c8da7}.result-details dd{margin:0;color:#d5e1f3;text-align:right;overflow-wrap:anywhere}
 .history-list{display:flex;flex-direction:column;flex:1;min-height:0}.history-list .history-empty{flex:1}.history-entry{padding:14px 0;border-bottom:1px solid var(--line-soft)}.history-expression{display:block;width:100%;padding:0;border:0;background:transparent;color:#91a4c0;font-family:"DM Mono",monospace;font-size:11px;text-align:left;overflow-wrap:anywhere;cursor:pointer}.history-expression:hover{color:#b5d0ff}.history-result{margin-top:5px;color:#edf3ff;font-size:16px;font-weight:600;overflow-wrap:anywhere}.history-meta{display:flex;align-items:center;justify-content:space-between;gap:7px;margin-top:8px;color:#64758e;font-size:9px}.history-actions{display:flex;align-items:center;gap:8px}.history-action{padding:2px 0;border:0;background:transparent;color:#8eabdc;font-size:9px;cursor:pointer}.history-action:hover{color:#c0d6ff}.history-action:focus-visible{outline:1px solid var(--blue-bright);outline-offset:2px}.history-footer .text-button:not(:disabled){color:#9bbcff;cursor:pointer}.history-footer .text-button:not(:disabled):hover{color:#d2e1ff}
 @media(max-width:520px){.expression-input{font-size:18px}.answer-output{font-size:22px}.history-entry{padding:12px 0}}
+
+
+/* Phase 4: API-backed tool workspaces */
+[hidden]{display:none!important}
+.tool-workspace{min-width:0}
+.tool-grid{grid-template-columns:minmax(0,1.1fr) minmax(280px,.9fr);align-items:start;gap:19px}
+.tool-card,.result-card{padding:22px;min-width:0}
+.tool-card-heading{padding-bottom:18px;border-bottom:1px solid var(--line)}
+.tool-card-heading h2,.result-card h2{margin:0;font-size:16px;letter-spacing:-.3px}
+.tool-card-heading p{margin:7px 0 0;color:var(--muted);font-size:11px;line-height:1.7}
+.tool-form{display:flex;flex-direction:column;gap:16px;padding-top:18px}
+.form-section{min-width:0;margin:0;padding:0;border:0}
+.form-section h3,.history-mini h3{margin:0 0 12px;color:#9aacc6;font-size:10px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase}
+.field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.field{display:flex;flex-direction:column;gap:7px;min-width:0;color:#9cacc3;font-size:11px}
+.field[hidden]{display:none!important}
+.field-label{color:#aab9cf;font-size:11px;font-weight:600}
+.field input,.field select,.field textarea{width:100%;min-width:0;min-height:41px;padding:10px 11px;border:1px solid #2b3b54;border-radius:8px;background:#0c1423;color:#e7eefb;font:12px "DM Mono",monospace;outline:none}
+.field textarea{resize:vertical;line-height:1.6}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:#4c83e8;box-shadow:0 0 0 3px #3476ef20}
+.field input::placeholder,.field textarea::placeholder{color:#586a85}
+.field-help{color:#647791;font-size:10px;line-height:1.6}
+.form-actions{display:flex;align-items:center;gap:10px;padding-top:3px}
+.primary-button,.secondary-button{min-height:38px;padding:10px 15px;border:1px solid #3e77e2;border-radius:8px;background:#3476ef;color:#fff;font-size:11px;font-weight:700;cursor:pointer}
+.primary-button:hover{background:#4382f5}.primary-button:disabled{opacity:.6;cursor:wait}
+.secondary-button{border-color:#30415c;background:#17243a;color:#a9c4f3}.secondary-button:hover{background:#20324f}
+.result-card{min-height:220px}
+.result-body{padding-top:18px;color:#9eafc7;font-size:12px;line-height:1.7;overflow-wrap:anywhere}
+.result-json{max-width:100%;margin:0 0 14px;padding:14px;border:1px solid #25364e;border-radius:9px;background:#0b1321;color:#d5e3f7;white-space:pre-wrap;overflow-wrap:anywhere;font:11px/1.7 "DM Mono",monospace}
+.result-error{padding:12px;border:1px solid #743b50;border-radius:8px;background:#321b2a;color:#ffb4c1;font-size:11px;line-height:1.7}
+.graph-figure{margin:0 0 16px;padding:10px;border:1px solid #293a53;border-radius:9px;background:#0a1220}
+.graph-figure svg{display:block;width:100%;height:auto;max-height:330px}
+.graph-grid{stroke:#26344a;stroke-width:1}.graph-axis{stroke:#647995;stroke-width:1.2}.graph-curve{fill:none;stroke:#6ea3ff;stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+.graph-figure figcaption{padding:7px 3px 0;color:#7486a1;font-size:10px}
+.history-mini{margin-top:20px;padding-top:17px;border-top:1px solid var(--line)}
+.history-mini-row{display:flex;align-items:start;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--line-soft)}
+.history-expression{max-width:70%;border:0;background:transparent;color:#9bb7e8;text-align:left;overflow-wrap:anywhere;cursor:pointer;font:10px/1.5 "DM Mono",monospace}
+.history-mini-row strong{color:#e1ebfa;font-size:11px;text-align:right;overflow-wrap:anywhere}
+.muted{color:#687b96;font-size:11px}
+.scientific-display .field{width:100%}.scientific-display .field input{text-align:right;font-size:17px;min-height:54px}
+.functional-keypad{grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;padding:0;margin:0}
+.functional-keypad .key{height:42px;cursor:pointer}
+.functional-keypad .key:hover{border-color:#416cb0;background:#1c2d48}
+.tool-card .tool-form .keypad{padding-bottom:0}
+@media(max-width:1100px){.tool-grid{grid-template-columns:minmax(0,1fr)}.result-card{min-height:160px}}
+@media(max-width:600px){.tool-card,.result-card{padding:16px}.field-grid{grid-template-columns:minmax(0,1fr);gap:12px}.functional-keypad{gap:5px}.functional-keypad .key{height:40px;font-size:12px}.tool-card-heading h2,.result-card h2{font-size:15px}}
