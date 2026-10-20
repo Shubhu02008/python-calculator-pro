@@ -60,3 +60,16 @@
 .tool-card .tool-form .keypad{padding-bottom:0}
 @media(max-width:1100px){.tool-grid{grid-template-columns:minmax(0,1fr)}.result-card{min-height:160px}}
 @media(max-width:600px){.tool-card,.result-card{padding:16px}.field-grid{grid-template-columns:minmax(0,1fr);gap:12px}.functional-keypad{gap:5px}.functional-keypad .key{height:40px;font-size:12px}.tool-card-heading h2,.result-card h2{font-size:15px}}
+
+/* Phase 5: labelled graph axes and equation graph presentation */
+.graph-figure{margin:18px 0 8px;padding:12px;border:1px solid var(--line);border-radius:12px;background:rgba(5,10,20,.35);overflow:hidden}
+.graph-figure svg{display:block;width:100%;height:auto;min-height:220px}
+.graph-grid{stroke:var(--line);stroke-width:1}
+.graph-axis{stroke:var(--muted);stroke-width:1.25}
+.graph-curve{fill:none;stroke:var(--blue-bright);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.graph-label{fill:var(--muted);font-size:11px}
+.graph-axis-title{fill:var(--text);font-size:12px;font-weight:600}
+.graph-figure figcaption{margin-top:8px;color:var(--muted);font-size:12px}
+.equation-graph-section{margin-top:20px;padding-top:16px;border-top:1px solid var(--line)}
+.equation-graph-section h3{margin:0 0 4px;font-size:16px}
+.equation-graph-section .field-help{margin:0 0 10px}
