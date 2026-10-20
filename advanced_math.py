@@ -87,8 +87,8 @@ def solve_equation_system(equations):
         parts = equation.split("=")
         if len(parts) > 2:
             raise ValueError(f"Equation {index} must contain at most one equals sign.")
-        left = _parse_expression(parts[0])
-        right = _parse_expression(parts[1]) if len(parts) == 2 else sp.Integer(0)
+        left = _parse_expression(parts[0].strip())
+        right = _parse_expression(parts[1].strip()) if len(parts) == 2 else sp.Integer(0)
         expressions.append(sp.simplify(left - right))
     symbols = sorted(set().union(*(expr.free_symbols for expr in expressions)), key=lambda item: item.name)
     if not symbols:
