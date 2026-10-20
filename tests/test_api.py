@@ -92,7 +92,7 @@ def test_equation_system_solves_two_variables():
         json={"equations": ["x + y = 5", "y - x = 1"]},
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 200, response.json()
     body = response.json()
     assert body["status"] == "solved"
     assert body["variables"] == ["x", "y"]
