@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1020">
+  <meta name="description" content="Python Calculator Pro — a focused scientific calculator workspace.">
+  <title>Python Calculator Pro</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./app.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <div class="mobile-scrim" data-close-drawer hidden></div>
+    <aside class="sidebar" id="sidebar" aria-label="Calculator tools">
+      <a class="brand" href="#" aria-label="Python Calculator Pro dashboard">
+        <span class="brand-mark" aria-hidden="true"><span>∑</span></span>
+        <span class="brand-copy"><strong>Python Calculator</strong><small>PRO WORKSPACE</small></span>
+      </a>
+      <div class="nav-label">WORKSPACE</div>
+      <nav class="tool-nav" aria-label="Calculator tools">
+        <button class="nav-item is-active" type="button" data-tool="Scientific Calculator"><span class="nav-icon">⌗</span><span>Scientific Calculator</span></button>
+        <button class="nav-item" type="button" data-tool="Quadratic & Polynomial Solver"><span class="nav-icon">x²</span><span>Quadratic &amp; Polynomial Solver</span></button>
+        <button class="nav-item" type="button" data-tool="Binomial Expansion"><span class="nav-icon">ⁿ</span><span>Binomial Expansion</span></button>
+        <button class="nav-item" type="button" data-tool="Graphing Calculator"><span class="nav-icon">⌁</span><span>Graphing Calculator</span></button>
+        <button class="nav-item" type="button" data-tool="Calculus"><span class="nav-icon">∫</span><span>Calculus</span></button>
+        <button class="nav-item" type="button" data-tool="Matrix Calculator"><span class="nav-icon">▦</span><span>Matrix Calculator</span></button>
+        <button class="nav-item" type="button" data-tool="Statistics"><span class="nav-icon">▥</span><span>Statistics</span></button>
+        <button class="nav-item" type="button" data-tool="Probability & Combinatorics"><span class="nav-icon">◷</span><span>Probability &amp; Combinatorics</span></button>
+        <button class="nav-item" type="button" data-tool="Unit Converter"><span class="nav-icon">⇄</span><span>Unit Converter</span></button>
+        <button class="nav-item" type="button" data-tool="Currency Converter"><span class="nav-icon">¤</span><span>Currency Converter</span></button>
+        <button class="nav-item" type="button" data-tool="Finance & Loan EMI"><span class="nav-icon">₹</span><span>Finance &amp; Loan EMI</span></button>
+        <button class="nav-item" type="button" data-tool="Discount & GST Calculator"><span class="nav-icon">%</span><span>Discount &amp; GST Calculator</span></button>
+        <button class="nav-item" type="button" data-tool="Number Base Converter"><span class="nav-icon">01</span><span>Number Base Converter</span></button>
+        <button class="nav-item" type="button" data-tool="BMI Calculator"><span class="nav-icon">⌁</span><span>BMI Calculator</span></button>
+        <button class="nav-item" type="button" data-tool="Date Calculator"><span class="nav-icon">▦</span><span>Date Calculator</span></button>
+      </nav>
+      <div class="sidebar-footer"><span class="status-dot"></span><span>Workspace ready</span><span class="version">v1.0</span></div>
+    </aside>
+
+    <main class="main-column">
+      <header class="topbar">
+        <div class="topbar-leading">
+          <button class="icon-button menu-button" type="button" data-open-drawer aria-label="Open tool navigation" aria-expanded="false">☰</button>
+          <div class="breadcrumbs"><span>Workspace</span><span class="crumb-separator">/</span><strong id="page-title">Scientific Calculator</strong></div>
+        </div>
+        <div class="topbar-actions">
+          <span class="api-status" id="api-status" role="status" aria-live="polite"><span class="status-dot status-dot-muted"></span><span>Checking API…</span></span>
+          <div class="avatar" aria-label="Python Calculator Pro">PC</div>
+        </div>
+      </header>
+
+      <div class="workspace-content">
+        <section class="workspace-heading">
+          <div>
+            <div class="eyebrow">CALCULATION WORKSPACE</div>
+            <h1 id="workspace-title">Scientific Calculator</h1>
+            <p id="workspace-subtitle">A precise space for everyday maths and advanced expressions.</p>
+          </div>
+          <div class="angle-toggle" role="group" aria-label="Angle unit">
+            <button type="button" class="angle-option is-selected" aria-pressed="true" data-angle="DEG">DEG</button>
+            <button type="button" class="angle-option" aria-pressed="false" data-angle="RAD">RAD</button>
+          </div>
+        </section>
+
+        <div class="workspace-grid">
+          <section class="calculator-card panel" aria-label="Scientific calculator layout">
+            <div class="display-area">
+              <div class="display-topline"><span>EXPRESSION</span><span class="keyboard-hint"><kbd>Enter</kbd> to calculate</span></div>
+              <input id="expression-input" class="expression-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Try sin(pi / 2) + sqrt(25)" aria-describedby="expression-error" aria-label="Mathematical expression"><p id="expression-error" class="expression-error" role="alert" hidden></p>
+              <div class="display-divider"></div>
+              <div class="answer-label">RESULT</div>
+              <div id="answer-output" class="answer-output" aria-live="polite">Your answer appears here</div><details id="result-details" class="result-details" hidden><summary>Calculation details</summary><dl><div><dt>Exact fraction</dt><dd id="exact-output">—</dd></div><div><dt>Approximation</dt><dd id="approx-output">—</dd></div><div><dt>Angle mode</dt><dd id="mode-output">DEG</dd></div></dl></details>
+            </div>
+            <div class="keypad-toolbar"><span>SCIENTIFIC KEYPAD</span><span class="keypad-note">Common functions</span></div>
+            <div class="keypad" aria-label="Calculator keypad preview">
+              <button type="button" class="key key-function" data-insert="sin(">sin</button><button type="button" class="key key-function" data-insert="cos(">cos</button><button type="button" class="key key-function" data-insert="tan(">tan</button><button type="button" class="key key-function" data-insert="ln(">ln</button><button type="button" class="key key-function" data-insert="log(">log</button>
+              <button type="button" class="key key-function" data-insert="sqrt(">√</button><button type="button" class="key key-function" data-insert="^2">x²</button><button type="button" class="key key-function" data-insert="^">xʸ</button><button type="button" class="key key-function" data-insert="(">(</button><button type="button" class="key key-function" data-insert=")">)</button>
+              <button type="button" class="key" data-insert="7">7</button><button type="button" class="key" data-insert="8">8</button><button type="button" class="key" data-insert="9">9</button><button type="button" class="key key-operator" data-insert="/">÷</button><button type="button" class="key key-operator" data-action="backspace" aria-label="Delete previous character">⌫</button>
+              <button type="button" class="key" data-insert="4">4</button><button type="button" class="key" data-insert="5">5</button><button type="button" class="key" data-insert="6">6</button><button type="button" class="key key-operator" data-insert="*">×</button><button type="button" class="key key-operator" data-action="clear">AC</button>
+              <button type="button" class="key" data-insert="1">1</button><button type="button" class="key" data-insert="2">2</button><button type="button" class="key" data-insert="3">3</button><button type="button" class="key key-operator" data-insert="-">−</button><button type="button" class="key key-operator" data-insert="+">+</button>
+              <button type="button" class="key key-function" data-insert="pi">π</button><button type="button" class="key" data-insert="0">0</button><button type="button" class="key" data-insert=".">.</button><button type="button" class="key key-function" data-insert="%">%</button><button type="button" class="key key-equals" data-action="calculate">=</button>
+            </div>
+            <p class="shell-note">Use your keyboard or select a key. Expressions are evaluated by the Python Calculator API.</p>
+          </section>
+
+          <aside class="history-card panel" aria-labelledby="history-title">
+            <div class="panel-heading">
+              <div><h2 id="history-title">History</h2><p>Recent calculations</p></div>
+              <span class="history-count" id="history-count">0</span>
+            </div>
+            <div class="history-list" id="history-list"><div class="history-empty">
+              <span class="history-empty-icon" aria-hidden="true">↺</span>
+              <strong>No calculations yet</strong>
+              <p>Your recent results will appear here as you work.</p>
+            </div></div>
+            <div class="history-footer"><span>Stored in this browser</span><button type="button" class="text-button" id="clear-history" disabled>Clear history</button></div>
+          </aside>
+        </div>
+        <footer class="workspace-footer"><span>Python Calculator Pro</span><span>Built for clear, confident calculations.</span></footer>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
