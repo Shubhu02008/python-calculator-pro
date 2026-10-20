@@ -176,7 +176,7 @@
       item.append(term,detail);container.append(item);
     };
     if(isRecord(result)&&Array.isArray(result.points)){
-      const finite=result.points.filter(point=>point&&Number.isFinite(Number(point.x))&&Number.isFinite(Number(point.y)));
+      const finite=result.points.filter(point=>point&&point.y!==null&&point.y!==undefined&&Number.isFinite(Number(point.x))&&Number.isFinite(Number(point.y)));
       const graphHeading=heading(activeTool==="Graphing Calculator"?"Function graph":"Graph");
       graphHeading.classList.add("graph-result-heading");
       if(finite.length>=2){
