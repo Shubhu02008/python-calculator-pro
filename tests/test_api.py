@@ -86,6 +86,28 @@ def test_equation_endpoint_reports_no_solution():
     assert response.json()["status"] == "no_solution"
 
 
+def test_equation_system_solves_two_variables():
+    response = client.post(
+        "/api/v1/equations/system",
+        json={"equations": ["x + y = 5", "y - x = 1"]},
+    )
+
+    assert response.status_code == 200, response.json()
+    body = response.json()
+    assert body["status"] == "solved"
+    assert body["variables"] == ["x", "y"]
+    assert body["solutions"] == [{"x": "2", "y": "3"}]
+
+
+def test_equation_system_rejects_a_single_equation():
+    response = client.post(
+        "/api/v1/equations/system",
+        json={"equations": ["x + y = 5"]},
+    )
+
+    assert response.status_code == 422
+
+
 def test_binomial_endpoint():
     response = client.post(
         "/api/v1/binomials/expand",

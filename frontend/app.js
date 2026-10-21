@@ -176,10 +176,27 @@
       item.append(term,detail);container.append(item);
     };
     if(isRecord(result)&&Array.isArray(result.points)){
-      const finite=result.points.filter(point=>point&&Number.isFinite(point.x)&&Number.isFinite(point.y));
-      if(finite.length)container.append(drawGraph(result.points));
+      const finite=result.points.filter(point=>point&&point.y!==null&&point.y!==undefined&&Number.isFinite(Number(point.x))&&Number.isFinite(Number(point.y)));
+      const graphHeading=heading(activeTool==="Graphing Calculator"?"Function graph":"Graph");
+      graphHeading.classList.add("graph-result-heading");
+      if(finite.length>=2){
+        container.append(drawGraph(result.points.map(point=>({x:Number(point.x),y:point.y===null?null:Number(point.y)}))));
+      } else {
+        const message=document.createElement("p");message.className="result-error";
+        message.textContent=result.points.length?"The API returned samples, but fewer than two points have defined real values. Try a different range or function.":"The API returned no graph samples. Please try again.";
+        container.append(message);
+      }
       row("sample_points",result.points.length);
       row("defined_samples",finite.length);
+    } else if(isRecord(result)&&Array.isArray(result.variables)&&Array.isArray(result.solutions)&&typeof result.status==="string"){
+      heading(result.status==="solved"?"System solutions":result.status==="infinite_solutions"?"Underdetermined system":"No solution");
+      if(result.message){const message=document.createElement("p");message.className="result-summary-message";message.textContent=result.message;container.append(message);}
+      result.solutions.forEach((solution,index)=>{
+        const section=document.createElement("section");section.className="system-solution";
+        const title=document.createElement("h4");title.textContent="Solution "+(index+1);section.append(title);
+        result.variables.forEach(variable=>{const item=document.createElement("div");item.className="result-value-row";const label=document.createElement("span");label.className="result-value-label";label.textContent=variable;const answer=document.createElement("strong");answer.className="result-value-content";answer.textContent=solution[variable]===undefined?"Free variable":String(solution[variable]);item.append(label,answer);section.append(item);});
+        container.append(section);
+      });
     } else if(isRecord(result)&&Array.isArray(result.solutions)&&typeof result.status==="string"){
       const status=result.status==="solved"?"Solutions found":result.status==="no_solution"?"No solution":result.status==="infinite_solutions"?"Infinite solutions":"Solver result";
       heading(status);
@@ -206,7 +223,20 @@
       Object.entries(result).forEach(([key,value])=>{
         if(key==="result"&&(typeof value==="number"||typeof value==="string"))return;
         if(key==="points"||key==="solutions"||key==="expansion")return;
-        if(Array.isArray(value)||isRecord(value)){
+        if(Array.isArray(value)&&/step|working|derivation/i.test(key)){
+          const section=document.createElement("section");section.className="solution-steps";
+          const title=document.createElement("h3");title.textContent=key.replaceAll("_"," ");section.append(title);
+          const list=document.createElement("ol");
+          value.forEach(item=>{
+            const li=document.createElement("li");
+            if(item!==null&&typeof item==="object"&&!Array.isArray(item)){
+              const parts=Object.entries(item).map(([name,detail])=>name.replaceAll("_"," ")+": "+text(detail));
+              li.textContent=parts.join(" · ");
+            } else li.textContent=text(item);
+            list.append(li);
+          });
+          section.append(list);container.append(section);
+        } else if(Array.isArray(value)||isRecord(value)){
           const details=document.createElement("details");details.className="result-nested";
           const summary=document.createElement("summary");summary.textContent=key.replaceAll("_"," ");details.append(summary);
           const pre=document.createElement("pre");pre.textContent=JSON.stringify(value,null,2);details.append(pre);container.append(details);
@@ -305,7 +335,7 @@
 
   async function submitForm(form) {
     switch(activeTool){
-      case "Quadratic & Polynomial Solver": return api("/api/v1/equations/solve",{equation:val(form,"equation")});
+      case "Quadratic & Polynomial Solver": return val(form,"equation_mode")==="system" ? api("/api/v1/equations/system",{equations:val(form,"system_equations").split(/\n+/).map(line=>line.trim()).filter(Boolean)}) : api("/api/v1/equations/solve",{equation:val(form,"equation")});
       case "Binomial Expansion": return api("/api/v1/binomials/expand",{expression:val(form,"expression")});
       case "Graphing Calculator": {const x_min=number(form,"x_min"),x_max=number(form,"x_max"),points=integer(form,"points");if(x_min>=x_max)throw new Error("Maximum x must be greater than minimum x.");if(points<2||points>2000)throw new Error("Sample points must be between 2 and 2,000.");return api("/api/v1/graph/sample",{expression:val(form,"expression"),x_min,x_max,points});}
       case "Calculus": {const operation=val(form,"operation"),payload={operation,expression:val(form,"expression"),variable:val(form,"variable"),order:integer(form,"order"),direction:val(form,"direction"),point:val(form,"point")||"0"};if(operation==="definite_integral"){payload.lower=val(form,"lower");payload.upper=val(form,"upper");}if(operation==="integral"){delete payload.point;delete payload.direction;}return api("/api/v1/calculus",payload);}
@@ -342,14 +372,14 @@
     setDrawer(false);if(title==="Scientific Calculator"){scientificWorkspace();return;}
     let spec=[];
     switch(title){
-      case "Quadratic & Polynomial Solver":spec=[["Equation",[txt("equation","Equation in x","","e.g. x^2 - 5*x + 6 = 0","Graph appears automatically for quadratic equations."),num("graph_x_min","Graph minimum x","-10"),num("graph_x_max","Graph maximum x","10")]]];break;
+      case "Quadratic & Polynomial Solver":spec=[["Solver mode",[sel("equation_mode","Solve",[["polynomial","Single polynomial equation"],["system","System of equations"]])]],["Single equation",[txt("equation","Equation in x","","e.g. x^2 - 5*x + 6 = 0","For a system, choose System of equations above."),num("graph_x_min","Graph minimum x","-10"),num("graph_x_max","Graph maximum x","10")]],["System of equations",[area("system_equations","Equations (one per line)","x + y = 5\ny - x = 1","Enter each equation on a separate line.")]]];break;
       case "Binomial Expansion":spec=[["Expression",[txt("expression","Binomial expression","","e.g. (x + 2)^3")]]];break;
-      case "Graphing Calculator":spec=[["Function",[txt("expression","Function of x","","e.g. sin(x) or x^2 - 4"),num("x_min","Minimum x","-10"),num("x_max","Maximum x","10"),num("points","Sample points","201","Choose 2–2,000 points.")]]];break;
+      case "Graphing Calculator":spec=[["Function",[txt("expression","Function of x","","e.g. sin(x) or x^2 - 4"),num("x_min","Minimum x","-10"),num("x_max","Maximum x","10"),num("points","Sample points","401","Choose 2–2,000 points. More samples can make curves smoother.")]]];break;
       case "Calculus":spec=[["Calculus operation",[sel("operation","Operation",selectOptions.calculusOperation),sel("variable","Variable",options(["x","y","z","t"])),num("order","Derivative order","1"),txt("expression","Expression","","e.g. x^3 + sin(x)"),txt("lower","Lower bound","0"),txt("upper","Upper bound","1"),txt("point","Limit point","0"),sel("direction","Limit direction",options(["both","plus","minus"]))]]];break;
       case "Matrix Calculator":spec=[["Matrix operation",[sel("operation","Matrix operation",selectOptions.matrixOperation),area("matrix_a","Matrix A","1, 2\n3, 4","Rows separated by new lines; values separated by commas."),area("matrix_b","Matrix B","5, 6\n7, 8","Required for add, subtract, multiply, and compare."),txt("scalar","Scalar","2"),num("power","Power","2"),num("size","Size for identity/zero","3"),num("row","Row (1-based)","1"),num("column","Column (1-based)","1"),area("vector","Vector b","5, 11","For solving Ax = b; values separated by commas."),sel("method","Inverse method",[["","Default"],["adjoint","Adjoint"],["gauss_jordan","Gauss–Jordan"]]),sel("steps","Step-by-step working",[["false","Off"],["true","On"]])]]];break;
       case "Statistics":spec=[["Dataset",[sel("operation","Statistic",selectOptions.statsOperation),area("values","Values","12, 15, 18, 18, 21","Separate observations with commas, spaces, or new lines.")]]];break;
       case "Probability & Combinatorics":spec=[["Probability or counting inputs",[sel("operation","Operation",selectOptions.probabilityOperation),num("favorable","Favourable outcomes","1"),num("total","Total outcomes","6"),num("event_a","P(A)","0.5"),num("event_b","P(B)","0.4"),num("intersection","P(A ∩ B)","0.2"),num("n","n","5"),num("r","r","2"),num("p","Success probability p","0.5"),num("k","Successes k","2")]]];break;
-      case "Unit Converter":{const dims=capabilities?.unit_dimensions||[],unitList=[...new Set(dims.flatMap(d=>d.units))].sort(),unitOpts=options(unitList.length?unitList:["m","cm","km","mm","ft","in","kg","g","lb","s","min","h","L","mL"]);spec=[["Conversion",[num("value","Value","1"),sel("from_unit","From unit",unitOpts),sel("to_unit","To unit",unitOpts)]]];break;}
+      case "Unit Converter":{const dims=capabilities?.unit_dimensions||[],fallback=[{id:"length",units:["m","cm","km","mm","ft","in"]},{id:"mass",units:["kg","g","mg","lb","oz"]},{id:"temperature",units:["celsius","fahrenheit","kelvin"]},{id:"time",units:["s","min","h","day"]},{id:"volume",units:["L","mL"]}];const categories=dims.length?dims:fallback;const categoryOptions=categories.map(d=>[d.id,d.id.replaceAll("_"," ").replace(/\\b\\w/g,c=>c.toUpperCase())]);const initial=categories[0];const unitOptions=initial.units.map(unit=>[unit,String(unit).replaceAll("_"," ").replace(/\\b\\w/g,c=>c.toUpperCase())]);spec=[["Conversion category",[sel("dimension","Unit category",categoryOptions)]],["Conversion",[num("value","Value","1"),sel("from_unit","From unit",unitOptions),sel("to_unit","To unit",unitOptions)]]];break;}
       case "Currency Converter":spec=[["Currency amount",[num("amount","Amount","100"),sel("from_currency","From currency",options(["INR","USD","EUR","GBP","JPY","CAD","AUD","CNY","SGD","AED"])),sel("to_currency","To currency",options(["USD","INR","EUR","GBP","JPY","CAD","AUD","CNY","SGD","AED"]))]]];break;
       case "Finance & Loan EMI":spec=[["Finance calculation",[sel("operation","Calculation",selectOptions.financeOperation),num("principal","Principal / loan amount","100000"),num("annual_rate","Annual interest rate (%)","8.5"),num("years","Term (years)","5"),num("compounding_per_year","Compounds per year","12"),num("tenure_months","Loan tenure (months)","60")]]];break;
       case "Discount & GST Calculator":spec=[["Discount or GST",[sel("operation","Calculation",[["discount","Discount"],["gst","GST"]]),num("price","Price / amount","1000"),num("discount_percent","Discount (%)","10"),num("gst_rate","GST rate (%)","18"),sel("inclusive","GST amount includes tax?",[["false","No — add GST"],["true","Yes — extract GST"]])]]];break;
@@ -358,6 +388,30 @@
       case "Date Calculator":spec=[["Date calculation",[sel("operation","Operation",selectOptions.dateOperation),field("date","Date",{type:"text",value:new Date().toISOString().slice(0,10),help:"Use YYYY-MM-DD."}),num("days","Number of days","7"),field("other_date","Second date",{type:"text",value:new Date().toISOString().slice(0,10),help:"Only used for date difference; YYYY-MM-DD."})]]];break;
     }
     const {form}=createPanel(title,descriptions[title]);addFields(form,spec);
+    if(title==="Quadratic & Polynomial Solver"){
+      const mode=form.elements.equation_mode;
+      const updateEquationMode=()=>{const system=mode.value==="system";form.elements.equation.closest(".field").hidden=system;form.elements.graph_x_min.closest(".field").hidden=system;form.elements.graph_x_max.closest(".field").hidden=system;form.elements.system_equations.closest(".field").hidden=!system;};
+      mode.addEventListener("change",updateEquationMode);updateEquationMode();
+    }
+    if(title==="Graphing Calculator"){
+      const expression=form.elements.expression;
+      expression.setAttribute("aria-describedby","graph-expression-help");
+      const help=document.createElement("small");help.className="field-help";help.id="graph-expression-help";help.textContent="Enter a function of x, such as x^2, sin(x), or 1/x. Press Calculate to draw the graph below.";
+      expression.closest(".field").append(help);
+    }
+    if(title==="Unit Converter"){
+      const category=form.elements.dimension,from=form.elements.from_unit,to=form.elements.to_unit;
+      const updateUnits=()=>{
+        const dims=capabilities?.unit_dimensions||[{id:"length",units:["m","cm","km","mm","ft","in"]},{id:"mass",units:["kg","g","mg","lb","oz"]},{id:"temperature",units:["celsius","fahrenheit","kelvin"]},{id:"time",units:["s","min","h","day"]},{id:"volume",units:["L","mL"]}];
+        const selected=dims.find(d=>d.id===category.value)||dims[0];if(!selected)return;
+        const previousFrom=from.value,previousTo=to.value;
+        const unitOptions=selected.units.map(unit=>[unit,String(unit).replaceAll("_"," ").replace(/\\b\\w/g,c=>c.toUpperCase())]);
+        [from,to].forEach(select=>{select.replaceChildren();unitOptions.forEach(([value,label])=>{const option=document.createElement("option");option.value=value;option.textContent=label;select.append(option);});});
+        from.value=selected.units.includes(previousFrom)?previousFrom:selected.units[0];
+        to.value=selected.units.includes(previousTo)?previousTo:(selected.units[1]||selected.units[0]);
+      };
+      category.addEventListener("change",updateUnits);updateUnits();
+    }
     if(title==="Matrix Calculator"){
       const op=form.elements.operation;
       const update=()=>{const v=op.value,hide=(name,yes)=>{form.elements[name].closest(".field").hidden=!yes;};
