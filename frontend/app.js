@@ -151,6 +151,29 @@
     return {form,body,output};
   }
   function addFields(form, sections) { sections.forEach(([title,fields])=>form.insertBefore(group(title,fields),form.querySelector(".form-actions"))); }
+  function addMathKeypad(form,title){
+    const names=title==="Quadratic & Polynomial Solver"?["equation","system_equations"]:title==="Graphing Calculator"?["expression"]:title==="Calculus"?["expression","lower","upper","point"]:["expression"];
+    const targets=names.map(name=>form.elements.namedItem(name)).filter(Boolean);
+    if(!targets.length)return;
+    targets.forEach(control=>{control.setAttribute("inputmode","none");control.setAttribute("autocomplete","off");control.setAttribute("autocapitalize","off");});
+    const keypad=document.createElement("div");keypad.className="math-keypad";keypad.setAttribute("aria-label","Math input keypad");
+    const keys=[["x","x"],["y","y"],["7","7"],["8","8"],["9","9"],["÷","/"],["4","4"],["5","5"],["6","6"],["×","*"],["1","1"],["2","2"],["3","3"],["−","-"],["0","0"],[".","."],["(", "("],[")",")"],["^","^"],["+","+"],["=","="],["⌫","BACKSPACE"],["Clear","CLEAR"]];
+    keys.forEach(([label,value])=>{
+      const key=document.createElement("button");key.type="button";key.className="math-key";key.textContent=label;key.dataset.mathKey=value;
+      key.addEventListener("mousedown",event=>event.preventDefault());
+      key.addEventListener("click",()=>{
+        const target=targets.find(control=>control===document.activeElement)||targets[0];
+        const start=Number.isInteger(target.selectionStart)?target.selectionStart:target.value.length;
+        const end=Number.isInteger(target.selectionEnd)?target.selectionEnd:start;
+        if(value==="CLEAR"){target.value="";target.setSelectionRange(0,0);}
+        else if(value==="BACKSPACE"){const from=start===end?Math.max(0,start-1):start;target.value=target.value.slice(0,from)+target.value.slice(end);target.setSelectionRange(from,from);}
+        else{target.value=target.value.slice(0,start)+value+target.value.slice(end);const cursor=start+value.length;target.setSelectionRange(cursor,cursor);}
+        target.dispatchEvent(new Event("input",{bubbles:true}));target.dispatchEvent(new Event("change",{bubbles:true}));
+      });
+      keypad.append(key);
+    });
+    form.insertBefore(keypad,form.querySelector(".form-actions"));
+  }
   function val(form,name) { const el=form.elements.namedItem(name); return el ? el.value.trim() : ""; }
   function number(form,name) { const raw=val(form,name); const value=Number(raw); if(raw===""||!Number.isFinite(value))throw new Error("Enter a valid finite number for "+name.replaceAll("_"," ")+"."); return value; }
   function integer(form,name) { const value=number(form,name); if(!Number.isInteger(value))throw new Error(name.replaceAll("_"," ")+" must be a whole number.");return value; }
@@ -388,9 +411,20 @@
       case "Date Calculator":spec=[["Date calculation",[sel("operation","Operation",selectOptions.dateOperation),field("date","Date",{type:"text",value:new Date().toISOString().slice(0,10),help:"Use YYYY-MM-DD."}),num("days","Number of days","7"),field("other_date","Second date",{type:"text",value:new Date().toISOString().slice(0,10),help:"Only used for date difference; YYYY-MM-DD."})]]];break;
     }
     const {form}=createPanel(title,descriptions[title]);addFields(form,spec);
+    if(["Quadratic & Polynomial Solver","Graphing Calculator","Calculus","Binomial Expansion"].includes(title)) addMathKeypad(form,title);
     if(title==="Quadratic & Polynomial Solver"){
       const mode=form.elements.equation_mode;
-      const updateEquationMode=()=>{const system=mode.value==="system";form.elements.equation.closest(".field").hidden=system;form.elements.graph_x_min.closest(".field").hidden=system;form.elements.graph_x_max.closest(".field").hidden=system;form.elements.system_equations.closest(".field").hidden=!system;};
+      const updateEquationMode=()=>{
+        const system=mode.value==="system";
+        form.elements.equation.closest(".field").hidden=system;
+        form.elements.graph_x_min.closest(".field").hidden=system;
+        form.elements.graph_x_max.closest(".field").hidden=system;
+        form.elements.system_equations.closest(".field").hidden=!system;
+        form.querySelectorAll(".form-section").forEach(section=>{
+          const fields=[...section.querySelectorAll(".field")];
+          section.hidden=fields.length>0&&fields.every(item=>item.hidden);
+        });
+      };
       mode.addEventListener("change",updateEquationMode);updateEquationMode();
     }
     if(title==="Graphing Calculator"){
