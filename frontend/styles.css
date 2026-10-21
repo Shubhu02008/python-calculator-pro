@@ -98,3 +98,11 @@
 
 .system-solution{margin:12px 0;padding:12px;border:1px solid var(--line);border-radius:10px;background:rgba(5,10,20,.2)}
 .system-solution h4{margin:0 0 8px;color:var(--text);font-size:12px}
+
+/* Touch-friendly mathematical keypad; math fields suppress the device keyboard. */
+.math-keypad{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;margin:16px 0;padding:12px;border:1px solid var(--line);border-radius:14px;background:rgba(5,10,20,.35)}
+.math-key{min-height:42px;border:1px solid var(--line);border-radius:9px;background:var(--panel,#111b2c);color:var(--text);font:600 15px/1.2 inherit;touch-action:manipulation;cursor:pointer}
+.math-key:active{background:var(--blue-bright);color:white}
+.math-key[data-math-key="CLEAR"],.math-key[data-math-key="BACKSPACE"]{font-size:12px}
+.form-section[hidden],.field[hidden]{display:none!important}
+@media(min-width:700px){.math-keypad{grid-template-columns:repeat(8,minmax(0,1fr))}}
