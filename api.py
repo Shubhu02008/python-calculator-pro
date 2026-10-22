@@ -117,7 +117,7 @@ class UnitConversionRequest(RequestModel):
 
 class EquationRequest(RequestModel):
     equation: str = Field(min_length=1, max_length=10_000)
-    equation_type: Literal["linear", "quadratic", "multivariable_linear", "multivariable_quadratic"] | None = None
+    equation_type: Literal["linear", "quadratic", "multivariable_linear", "multivariable_quadratic", "polynomial"] | None = None
 
     @field_validator("equation")
     @classmethod
@@ -370,6 +370,7 @@ class EquationSolutionResult(BaseModel):
     message: str | None = None
     variables: list[str] = Field(default_factory=list)
     relations: list[str] = Field(default_factory=list)
+    degree: int | None = None
 
 
 class BinomialExpansionResult(BaseModel):
@@ -586,6 +587,7 @@ def solve(request: EquationRequest):
                 "message": "The equation is an identity." if sp.simplify(relation_expr) == 0 else "The equation is inconsistent.",
                 "variables": [],
                 "relations": [],
+                "degree": 0,
             }
         degree = sp.Poly(relation_expr, *(symbols[name] for name in used)).total_degree()
         kind = request.equation_type
@@ -610,6 +612,34 @@ def solve(request: EquationRequest):
                 "message": "One equation in multiple variables describes a relation, usually with infinitely many points. The equivalent form below is solved for one variable.",
                 "variables": used,
                 "relations": relations,
+                "degree": int(degree),
+            }
+        if kind == "polynomial":
+            variable = symbols[used[0]]
+            polynomial = sp.Poly(relation_expr, variable)
+            try:
+                roots = sp.solve(polynomial.as_expr(), variable)
+                numeric_roots = []
+                for root in roots:
+                    numeric = complex(sp.N(root, 30))
+                    numeric_roots.append({"real": float(numeric.real), "imaginary": float(numeric.imag)})
+            except Exception:
+                numeric_roots = []
+            if not numeric_roots:
+                try:
+                    numeric_roots = [
+                        {"real": float(complex(root).real), "imaginary": float(complex(root).imag)}
+                        for root in sp.nroots(polynomial, maxsteps=200)
+                    ]
+                except Exception as exc:
+                    raise CalculatorError("This polynomial was recognized, but its roots could not be approximated reliably.") from exc
+            return {
+                "status": "solved",
+                "solutions": numeric_roots,
+                "message": f"Polynomial degree {int(degree)}. Roots are shown as numerical approximations.",
+                "variables": used,
+                "relations": [],
+                "degree": int(degree),
             }
     except CalculatorError:
         raise
@@ -631,7 +661,7 @@ def solve(request: EquationRequest):
             solutions.append({"real": root.real, "imaginary": root.imag})
         else:
             solutions.append({"real": float(root), "imaginary": 0.0})
-    return {"status": "solved", "solutions": solutions, "message": None}
+    return {"status": "solved", "solutions": solutions, "message": None, "degree": int(degree)}
 
 
 @app.post("/api/v1/equations/system")
