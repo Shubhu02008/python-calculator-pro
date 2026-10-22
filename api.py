@@ -636,7 +636,10 @@ def solve(request: EquationRequest):
                     numeric_roots.append({"real": float(numeric.real), "imaginary": float(numeric.imag)})
             except Exception:
                 numeric_roots = []
-            if not numeric_roots:
+            # SymPy's explicit solver may return only the roots it can express
+            # in closed form (for example, just 1 for x^5 - 1). Only accept
+            # that result when it accounts for the polynomial's full degree.
+            if len(numeric_roots) != int(degree):
                 try:
                     numeric_roots = [
                         {"real": float(complex(root).real), "imaginary": float(complex(root).imag)}
