@@ -377,7 +377,7 @@
         if(!equation.includes("="))throw new Error("Enter an equation with an equals sign, for example x^2 + y = 5.");
         return api("/api/v1/equations/solve",{equation, equation_type:mode});
       }
-      case "Graphing Calculator": {const x_min=number(form,"x_min"),x_max=number(form,"x_max"),points=integer(form,"points");if(x_min>=x_max)throw new Error("Maximum x must be greater than minimum x.");if(points<2||points>2000)throw new Error("Sample points must be between 2 and 2,000.");return api("/api/v1/graph/sample",{expression:val(form,"expression"),x_min,x_max,points});}
+      case "Graphing Calculator": {const x_min=number(form,"x_min"),x_max=number(form,"x_max"),points=integer(form,"points");if(x_min>=x_max)throw new Error("Maximum x must be greater than minimum x.");if(points<2||points>2000)throw new Error("Sample points must be between 2 and 2,000.");let expression=val(form,"expression").replace(/[−–]/g,"-").trim();if(/^\s*(?:x\s*=\s*y|y\s*=\s*x)\s*$/i.test(expression))expression="x";return api("/api/v1/graph/sample",{expression,x_min,x_max,points});}
       case "Calculus": {const operation=val(form,"operation"),payload={operation,expression:val(form,"expression"),variable:val(form,"variable"),order:integer(form,"order"),direction:val(form,"direction"),point:val(form,"point")||"0"};if(operation==="definite_integral"){payload.lower=val(form,"lower");payload.upper=val(form,"upper");}if(operation==="integral"){delete payload.point;delete payload.direction;}return api("/api/v1/calculus",payload);}
       case "Matrix Calculator": {
         const operation=val(form,"operation"),payload={operation,steps:val(form,"steps")==="true"};
