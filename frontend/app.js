@@ -137,6 +137,10 @@
       try {
         const result=await submitForm(form);
         renderResult(body,result);
+        const inputs=[...form.querySelectorAll("input,select,textarea")].filter(el=>el.name&&el.value&&!el.closest(".field")?.hidden);
+        const expression=activeTool+" · "+inputs.map(el=>el.name+"="+el.value).join(", ");
+        const displayedResult=typeof result==="object"?(result.result!==undefined?String(result.result):result.message||result.status||JSON.stringify(result)):String(result);
+        saveHistory({expression,displayedResult,timestamp:new Date().toISOString(),tool:activeTool});
         if(activeTool==="Equations") await appendEquationGraph(body,form,result);
       }
       catch(error) { body.replaceChildren();const message=document.createElement("p");message.className="result-error";message.textContent=error.message;body.append(message); }
@@ -153,8 +157,14 @@
     if(!targets.length)return;
     targets.forEach(control=>{control.setAttribute("inputmode","none");control.setAttribute("autocomplete","off");control.setAttribute("autocapitalize","off");});
     const keypad=document.createElement("div");keypad.className="math-keypad";keypad.setAttribute("aria-label","Math input keypad");
-    const keys=[["x","x"],["y","y"],["z","z"],["7","7"],["8","8"],["9","9"],["÷","/"],["4","4"],["5","5"],["6","6"],["×","*"],["1","1"],["2","2"],["3","3"],["−","-"],["0","0"],[".","."],["(", "("],[")",")"],["^","^"],["+","+"],["=","="],["⌫","BACKSPACE"],["Clear","CLEAR"]];
-    keys.forEach(([label,value])=>{
+    const pages=[
+      [["x","x"],["y","y"],["z","z"],["π","pi"],["e","e"],["√(","sqrt("],["sin(","sin("],["cos(","cos("],["tan(","tan("],["log(","log("],["ln(","ln("],["7","7"],["8","8"],["9","9"],["÷","/"],["4","4"],["5","5"],["6","6"],["×","*"],["1","1"],["2","2"],["3","3"],["−","-"],["0","0"],[".","."],["(","("],[")",")"],["^","^"],["+","+"],["=","="],["⌫","BACKSPACE"],["Clear","CLEAR"]],
+      [["sin⁻¹","asin("],["cos⁻¹","acos("],["tan⁻¹","atan("],["sinh","sinh("],["cosh","cosh("],["tanh","tanh("],["abs","abs("],["exp","exp("],["√","sqrt("],["∛","cbrt("],["n!","factorial("],["%","%"],["mod","%"],["∞","oo"],[",",","],["⌫","BACKSPACE"],["Clear","CLEAR"]]
+    ];
+    const switcher=document.createElement("div");switcher.className="keypad-page-switcher";
+    const keysWrap=document.createElement("div");keysWrap.className="math-keypad-keys";
+    let page=0;
+    const draw=()=>{keysWrap.replaceChildren();pages[page].forEach(([label,value])=>{
       const key=document.createElement("button");key.type="button";key.className="math-key";key.textContent=label;key.dataset.mathKey=value;
       key.addEventListener("mousedown",event=>event.preventDefault());
       key.addEventListener("click",()=>{
@@ -163,11 +173,13 @@
         const end=Number.isInteger(target.selectionEnd)?target.selectionEnd:start;
         if(value==="CLEAR"){target.value="";target.setSelectionRange(0,0);}
         else if(value==="BACKSPACE"){const from=start===end?Math.max(0,start-1):start;target.value=target.value.slice(0,from)+target.value.slice(end);target.setSelectionRange(from,from);}
-        else{target.value=target.value.slice(0,start)+value+target.value.slice(end);const cursor=start+value.length;target.setSelectionRange(cursor,cursor);}
-        target.dispatchEvent(new Event("input",{bubbles:true}));target.dispatchEvent(new Event("change",{bubbles:true}));
-      });
-      keypad.append(key);
-    });
+        else{const insert=value==="π"?"pi":value;target.setRangeText(insert,start,end,"end");}
+        target.dispatchEvent(new Event("input",{bubbles:true}));target.dispatchEvent(new Event("change",{bubbles:true}));target.focus();
+      });keysWrap.append(key);
+    });};
+    [["123","Numbers & functions"],["ƒx","More functions"]].forEach(([label,aria],index)=>{const btn=document.createElement("button");btn.type="button";btn.className="keypad-page-button";btn.textContent=label;btn.setAttribute("aria-label",aria);btn.setAttribute("aria-pressed",String(index===0));btn.addEventListener("click",()=>{page=index;switcher.querySelectorAll("button").forEach((b,i)=>b.setAttribute("aria-pressed",String(i===page)));draw();});switcher.append(btn);});
+    keypad.append(switcher,keysWrap);
+    draw();
     form.insertBefore(keypad,form.querySelector(".form-actions"));
   }
   function val(form,name) { const el=form.elements.namedItem(name); return el ? el.value.trim() : ""; }
