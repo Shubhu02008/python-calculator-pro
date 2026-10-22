@@ -120,7 +120,7 @@
   }
   function createPanel(title, description) {
     workspace.replaceChildren();
-    const grid=document.createElement("div"); grid.className="workspace-grid tool-grid";
+    const grid=document.createElement("div"); grid.className="workspace-grid tool-grid"; if(title==="Equations")grid.classList.add("equations-tool-grid");
     const panel=document.createElement("section");panel.className="panel tool-card";
     const head=document.createElement("div");head.className="tool-card-heading";
     const h=document.createElement("h2");h.textContent=title;head.append(h);
