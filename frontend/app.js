@@ -240,6 +240,24 @@
         result.variables.forEach(variable=>{const item=document.createElement("div");item.className="result-value-row";const label=document.createElement("span");label.className="result-value-label";label.textContent=variable;const answer=document.createElement("strong");answer.className="result-value-content";answer.textContent=solution[variable]===undefined?"Free variable":String(solution[variable]);item.append(label,answer);section.append(item);});
         container.append(section);
       });
+    } else if(activeTool==="Equations" && ["linear","quadratic"].includes(val(document.querySelector(".tool-form")||{elements:{}}, "equation_mode")) && isRecord(result) && Array.isArray(result.solutions) && typeof result.status==="string"){
+      const mode=val(document.querySelector(".tool-form")||{elements:{}}, "equation_mode");
+      heading(result.status==="solved"?"Answer":result.status==="no_solution"?"No solution":"Equation result");
+      if(result.message){const message=document.createElement("p");message.className="result-summary-message";message.textContent=result.message;container.append(message);}
+      if(result.status==="solved" && result.solutions.length){
+        const note=document.createElement("p");note.className="result-summary-message";note.textContent=mode==="quadratic"?"The values below are the roots of the quadratic equation.":"The value below satisfies the equation.";container.append(note);
+        result.solutions.forEach((root,index)=>{
+          const real=Number(root.real),imag=Number(root.imaginary||0);
+          let value="x = "+formatNumber(real);
+          if(Math.abs(imag)>=1e-12)value+=(imag<0?" − ":" + ")+formatNumber(Math.abs(imag))+"i";
+          const line=document.createElement("div");line.className="root-result";
+          const label=document.createElement("span");label.textContent="Solution "+(index+1);
+          const answer=document.createElement("strong");answer.textContent=value;
+          line.append(label,answer);container.append(line);
+        });
+      } else if(!result.solutions.length && !result.message){
+        const message=document.createElement("p");message.className="result-summary-message";message.textContent="No individual roots were returned for this equation.";container.append(message);
+      }
     } else if(isRecord(result)&&Array.isArray(result.solutions)&&typeof result.status==="string"){
       const status=result.status==="solved"?"Solutions found":result.status==="no_solution"?"No solution":result.status==="infinite_solutions"?"Infinite solutions":"Solver result";
       heading(status);
@@ -526,7 +544,7 @@
         ["multivariable_quadratic","Multivariable quadratic equation"],
         ["system","System of equations"],
         ["binomial","Binomial theorem / expansion"]
-      ])]],["Single equation",[txt("equation","Equation","","e.g. xy + yz = 3x^2yz","Use an equals sign. General polynomial mode accepts mixed terms and any degree in x, y, and z."),num("graph_x_min","Graph minimum x","-10"),num("graph_x_max","Graph maximum x","10")]],["System of equations",[area("system_equations","Equations (one per line)","x + y = 5\ny - x = 1","Enter each equation on a separate line.")]],["Binomial expansion",[txt("expression","Binomial expression","","e.g. (x + 2)^3")]]];break;
+      ])]],["Single equation",[txt("equation","Equation","","e.g. xy + yz = 3x^2yz","Use an equals sign. General polynomial mode accepts mixed terms and any degree in x, y, and z."),num("graph_x_min","Graph x-axis start (optional)","-10","Only controls the graph view; it does not affect the equation answer."),num("graph_x_max","Graph x-axis end (optional)","10","Only controls the graph view; it does not affect the equation answer.")]],["System of equations",[area("system_equations","Equations (one per line)","x + y = 5\ny - x = 1","Enter each equation on a separate line.")]],["Binomial expansion",[txt("expression","Binomial expression","","e.g. (x + 2)^3")]]];break;
       case "Graphing Calculator":spec=[["Function",[txt("expression","Function of x","","e.g. sin(x) or x^2 - 4"),num("x_min","Minimum x","-10"),num("x_max","Maximum x","10"),num("points","Sample points","401","Choose 2–2,000 points. More samples can make curves smoother.")]]];break;
       case "Calculus":spec=[["Calculus operation",[sel("operation","Operation",selectOptions.calculusOperation),sel("variable","Variable",options(["x","y","z","t"])),num("order","Derivative order","1"),txt("expression","Expression","","e.g. x^3 + sin(x)"),txt("lower","Lower bound","0"),txt("upper","Upper bound","1"),txt("point","Limit point","0"),sel("direction","Limit direction",options(["both","plus","minus"]))]]];break;
       case "Matrix Calculator":spec=[["Matrix operation",[sel("operation","Matrix operation",selectOptions.matrixOperation),area("matrix_a","Matrix A","1, 2\n3, 4","Rows separated by new lines; values separated by commas."),area("matrix_b","Matrix B","5, 6\n7, 8","Required for add, subtract, multiply, and compare."),txt("scalar","Scalar","2"),num("power","Power","2"),num("size","Size for identity/zero","3"),num("row","Row (1-based)","1"),num("column","Column (1-based)","1"),area("vector","Vector b","5, 11","For solving Ax = b; values separated by commas."),sel("method","Inverse method",[["","Default"],["adjoint","Adjoint"],["gauss_jordan","Gauss–Jordan"]]),sel("steps","Step-by-step working",[["false","Off"],["true","On"]])]]];break;
