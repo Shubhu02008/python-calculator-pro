@@ -210,3 +210,15 @@
 @keyframes math-drift{from{translate:0 -5px}to{translate:0 7px}}
 @media(max-width:760px){.math-wallpaper{inset:0;opacity:.72}.math-wallpaper span:nth-child(3n){display:none}.math-wallpaper span{color:rgba(112,157,232,.095)}}
 @media(prefers-reduced-motion:reduce){.math-wallpaper span{animation:none}}
+
+
+/* Shared keypad sizing for every tool, especially graphing and calculus forms. */
+.tool-form{min-width:0}
+.math-keypad{display:block;width:100%;min-width:0;max-width:100%;overflow:hidden}
+.math-keypad-keys{grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.math-keypad-keys .math-key{width:100%;min-width:0;white-space:normal;overflow-wrap:anywhere;min-height:48px;padding:8px 3px;font-size:clamp(12px,1.5vw,15px)}
+.keypad-page-switcher{width:100%;min-width:0}
+.keypad-page-button{min-width:0}
+@media(min-width:900px){.math-keypad-keys{grid-template-columns:repeat(8,minmax(0,1fr))}}
+@media(max-width:700px){.math-keypad{padding:9px}.math-keypad-keys{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.math-keypad-keys .math-key{min-height:46px;font-size:14px}.keypad-page-switcher{gap:6px}.keypad-page-button{min-height:40px}}
+@media(max-width:360px){.math-keypad-keys .math-key{min-height:42px;font-size:13px;padding:6px 2px}}
