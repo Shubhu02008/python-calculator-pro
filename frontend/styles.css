@@ -46,7 +46,7 @@
 .result-error{padding:12px;border:1px solid #743b50;border-radius:8px;background:#321b2a;color:#ffb4c1;font-size:11px;line-height:1.7}
 .graph-figure{margin:0 0 16px;padding:10px;border:1px solid #293a53;border-radius:9px;background:#0a1220}
 .graph-controls{display:flex;justify-content:flex-end;align-items:center;gap:6px;margin:0 0 8px}
-.graph-control-button{min-width:36px;min-height:34px;padding:5px 10px;border:1px solid #344966;border-radius:7px;background:#111e31;color:#dce8fb;font:600 13px/1.2 inherit;cursor:pointer;touch-action:manipulation}
+.graph-control-button{min-width:36px;min-height:34px;padding:5px 10px;border:1px solid #344966;border-radius:7px;background:#111e31;color:#dce8fb;font:600 13px/1.2 system-ui,sans-serif;cursor:pointer;touch-action:manipulation}
 .graph-control-button:focus-visible{outline:2px solid #6ea3ff;outline-offset:2px}
 .graph-figure svg{display:block;width:100%;height:auto;max-height:330px;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
 .graph-figure svg:active{cursor:grabbing}
