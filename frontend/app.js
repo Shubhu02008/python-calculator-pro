@@ -366,6 +366,7 @@
     }catch(error){const msg=document.createElement("p");msg.className="field-help";msg.textContent="Graph unavailable for this equation: "+error.message;section.append(msg);}
   }
   function transformDegreeTrig(expression) {
+    expression=expression.replace(/π/g,"pi");
     if(angleMode!=="DEG")return expression;
     const names=new Set(["sin","cos","tan"]);let out="",i=0;
     while(i<expression.length){const match=expression.slice(i).match(/^([A-Za-z_][A-Za-z_0-9]*)\s*\(/);if(!match){out+=expression[i++];continue;}
