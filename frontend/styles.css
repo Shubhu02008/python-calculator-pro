@@ -120,3 +120,24 @@
 .math-keypad-keys .math-key{min-width:0;min-height:48px;padding:.45rem .2rem;border:1px solid var(--border-color,#293449);border-radius:12px;background:var(--surface-2,#151e30);color:var(--text-color,#e7edf8);font-size:1rem;font-weight:600;box-shadow:0 2px 0 rgba(0,0,0,.12);transition:background .12s,transform .12s}
 .math-keypad-keys .math-key:active{transform:translateY(1px);background:var(--accent,#326fe5);color:#fff}
 @media(max-width:420px){.math-keypad-keys{gap:.35rem}.math-keypad-keys .math-key{min-height:44px;font-size:.92rem}}
+
+
+/* Equation workspace: give the form and math keypad the full available width. */
+.equations-tool-grid{grid-template-columns:minmax(0,1fr)!important;align-items:start}
+.equations-tool-grid>.tool-card,.equations-tool-grid>.result-card{width:100%;min-width:0}
+.equations-tool-grid .math-keypad{display:block;width:100%;min-width:0}
+.equations-tool-grid .keypad-page-switcher{display:flex;gap:8px;flex-wrap:wrap}
+.equations-tool-grid .keypad-page-button{flex:1 1 150px;min-width:0}
+.equations-tool-grid .math-keypad-keys{grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.equations-tool-grid .math-keypad-keys .math-key{width:100%;min-width:0;min-height:48px;padding:8px 4px;font-size:15px;overflow-wrap:anywhere}
+.equations-tool-grid .field input,.equations-tool-grid .field select,.equations-tool-grid .field textarea{min-height:48px;font-size:14px}
+.equations-tool-grid .field textarea{min-height:100px}
+.equations-tool-grid .form-actions .primary-button{min-width:140px;min-height:44px;font-size:13px}
+@media(min-width:900px){
+  .equations-tool-grid .math-keypad-keys{grid-template-columns:repeat(8,minmax(0,1fr))}
+  .equations-tool-grid .field-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:480px){
+  .equations-tool-grid .math-keypad-keys{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+  .equations-tool-grid .math-keypad-keys .math-key{min-height:44px;font-size:14px}
+}
