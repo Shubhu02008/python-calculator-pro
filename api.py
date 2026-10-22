@@ -367,6 +367,8 @@ class EquationSolutionResult(BaseModel):
     status: Literal["solved", "no_solution", "infinite_solutions"]
     solutions: list[RootValue]
     message: str | None = None
+    variables: list[str] = Field(default_factory=list)
+    relations: list[str] = Field(default_factory=list)
 
 
 class BinomialExpansionResult(BaseModel):
@@ -544,8 +546,60 @@ def convert(request: UnitConversionRequest):
 
 @app.post("/api/v1/equations/solve", response_model=EquationSolutionResult)
 def solve(request: EquationRequest):
-    """Solve a supported polynomial equation in x."""
-    result = solve_equation(request.equation)
+    """Solve one-variable polynomials or describe a single relation in two variables."""
+    import re
+    import sympy as sp
+    from sympy.parsing.sympy_parser import (
+        convert_xor,
+        implicit_multiplication_application,
+        parse_expr,
+        standard_transformations,
+    )
+
+    equation = request.equation.replace("²", "^2").replace("³", "^3")
+    sides = equation.split("=")
+    if len(sides) == 2:
+        names = sorted(set(re.findall(r"[xyz]", equation.lower())))
+        if len(names) == 2:
+            if not re.fullmatch(r"[0-9xyz+*/^().\s-]+", equation.lower()):
+                raise CalculatorError(
+                    "For a two-variable equation, use only x, y, z, numbers, and basic arithmetic operators."
+                )
+            symbols = {name: sp.Symbol(name, real=True) for name in "xyz"}
+            transformations = standard_transformations + (
+                implicit_multiplication_application,
+                convert_xor,
+            )
+            try:
+                left = parse_expr(
+                    sides[0], local_dict=symbols,
+                    transformations=transformations, evaluate=True
+                )
+                right = parse_expr(
+                    sides[1], local_dict=symbols,
+                    transformations=transformations, evaluate=True
+                )
+                relation_expr = sp.expand(left - right)
+                used = sorted(str(symbol) for symbol in relation_expr.free_symbols)
+                if not used:
+                    raise ValueError("The equation contains no remaining variables.")
+                target = symbols[used[-1]]
+                solved = sp.solve(relation_expr, target)
+                relations = [f"{target} = {sp.sstr(value)}" for value in solved]
+                if not relations:
+                    relations = [sp.sstr(sp.Eq(left, right))]
+            except Exception as exc:
+                raise CalculatorError(
+                    "Could not interpret this two-variable equation. Try a polynomial such as 2x + 3y = 12 or x^2 + y^2 = 25."
+                ) from exc
+            return {
+                "status": "infinite_solutions",
+                "solutions": [],
+                "message": "One equation in two variables describes a relation, usually with infinitely many points. The equivalent form below is solved for one variable.",
+                "variables": used,
+                "relations": relations,
+            }
+    result = solve_equation(equation)
     if isinstance(result, str):
         status = (
             "infinite_solutions"

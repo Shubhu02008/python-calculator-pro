@@ -1,6 +1,6 @@
 (() => {
   "use strict";
-  const API_BASE_URL = (window.CALCULATOR_API_BASE_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
+  const API_BASE_URL = String(window.CALCULATOR_API_BASE_URL || "").replace(/\/$/, "");
   const HISTORY_KEY = "python-calculator-pro.history.v1";
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -67,6 +67,7 @@
     const label = document.createElement("span"); label.textContent = message; apiStatus.append(dot,label);
   }
   async function api(path, body) {
+    if (!API_BASE_URL) throw new Error("The calculator API URL is missing. Reload the site after the latest Render deployment; if the problem continues, check the frontend API_BASE_URL setting.");
     const options = body === undefined ? {method:"GET"} : {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)};
     let response;
     try { response = await fetch(API_BASE_URL + path, options); }
@@ -157,7 +158,7 @@
     if(!targets.length)return;
     targets.forEach(control=>{control.setAttribute("inputmode","none");control.setAttribute("autocomplete","off");control.setAttribute("autocapitalize","off");});
     const keypad=document.createElement("div");keypad.className="math-keypad";keypad.setAttribute("aria-label","Math input keypad");
-    const keys=[["x","x"],["y","y"],["7","7"],["8","8"],["9","9"],["÷","/"],["4","4"],["5","5"],["6","6"],["×","*"],["1","1"],["2","2"],["3","3"],["−","-"],["0","0"],[".","."],["(", "("],[")",")"],["^","^"],["+","+"],["=","="],["⌫","BACKSPACE"],["Clear","CLEAR"]];
+    const keys=[["x","x"],["y","y"],["z","z"],["7","7"],["8","8"],["9","9"],["÷","/"],["4","4"],["5","5"],["6","6"],["×","*"],["1","1"],["2","2"],["3","3"],["−","-"],["0","0"],[".","."],["(", "("],[")",")"],["^","^"],["+","+"],["=","="],["⌫","BACKSPACE"],["Clear","CLEAR"]];
     keys.forEach(([label,value])=>{
       const key=document.createElement("button");key.type="button";key.className="math-key";key.textContent=label;key.dataset.mathKey=value;
       key.addEventListener("mousedown",event=>event.preventDefault());
@@ -198,7 +199,12 @@
       const detail=document.createElement("strong");detail.className="result-value-content";detail.textContent=text(value);
       item.append(term,detail);container.append(item);
     };
-    if(isRecord(result)&&Array.isArray(result.points)){
+    if(isRecord(result)&&Array.isArray(result.relations)&&result.relations.length){
+      heading("Equation relation");
+      if(result.message){const message=document.createElement("p");message.className="result-summary-message";message.textContent=result.message;container.append(message);}
+      result.relations.forEach(relation=>{const expression=document.createElement("p");expression.className="result-expression";expression.textContent=relation;container.append(expression);});
+      if(Array.isArray(result.variables)&&result.variables.length){const variables=document.createElement("p");variables.className="field-help";variables.textContent="Variables: "+result.variables.join(", ")+". This is one equation in two variables, not a system of equations.";container.append(variables);}
+    } else if(isRecord(result)&&Array.isArray(result.points)){
       const finite=result.points.filter(point=>point&&point.y!==null&&point.y!==undefined&&Number.isFinite(Number(point.x))&&Number.isFinite(Number(point.y)));
       const graphHeading=heading(activeTool==="Graphing Calculator"?"Function graph":"Graph");
       graphHeading.classList.add("graph-result-heading");
@@ -303,11 +309,18 @@
     figure.append(svg);const caption=document.createElement("figcaption");caption.textContent="x: "+fmt(xmin)+" to "+fmt(xmax)+" · y viewport: "+fmt(ymin)+" to "+fmt(ymax);figure.append(caption);return figure;
   }
   function equationGraphExpression(raw) {
-    const parts=raw.split("=");if(parts.length>2)return null;
+    const normalized=String(raw).replaceAll("²","^2").replaceAll("³","^3").replace(/[−–]/g,"-").replace(/[×·]/g,"*").replaceAll("÷","/");
+    const parts=normalized.split("=");if(parts.length>2)return null;
     const expression=parts.length===2?"("+parts[0]+")-("+parts[1]+")":parts[0];
-    if(!/\bx\s*(?:\^\s*2|\*\*\s*2)\b/i.test(expression))return null;
     const withoutFunctions=expression.replace(/\b(?:sin|cos|tan|sqrt|log|ln|exp|abs|pi|e)\b/gi,"");
-    if(/\b[a-wyz]\w*\b/i.test(withoutFunctions))return null;
+    if(/\b[y-z]\b/i.test(withoutFunctions))return null;
+    const hasQuadratic=
+      /\bx\s*(?:\^\s*2|\*\*\s*2)\b/i.test(expression)||
+      /\bx\s*\*\s*x\b/i.test(expression)||
+      /\bx\s*x\b/i.test(expression)||
+      /\bx\s*\(/i.test(expression)||
+      /\([^()]*\bx\b[^()]*\)\s*(?:\^|\*\*)\s*2\b/i.test(expression);
+    if(!hasQuadratic)return null;
     return expression;
   }
   async function appendEquationGraph(container,form) {
@@ -395,7 +408,7 @@
     setDrawer(false);if(title==="Scientific Calculator"){scientificWorkspace();return;}
     let spec=[];
     switch(title){
-      case "Quadratic & Polynomial Solver":spec=[["Solver mode",[sel("equation_mode","Solve",[["polynomial","Single polynomial equation"],["system","System of equations"]])]],["Single equation",[txt("equation","Equation in x","","e.g. x^2 - 5*x + 6 = 0","For a system, choose System of equations above."),num("graph_x_min","Graph minimum x","-10"),num("graph_x_max","Graph maximum x","10")]],["System of equations",[area("system_equations","Equations (one per line)","x + y = 5\ny - x = 1","Enter each equation on a separate line.")]]];break;
+      case "Quadratic & Polynomial Solver":spec=[["Solver mode",[sel("equation_mode","Solve",[["polynomial","Single polynomial equation"],["system","System of equations"]])]],["Single equation",[txt("equation","Equation in x, y, or z","","e.g. x^2 - 5*x + 6 = 0 or 2x + 3y = 12","Enter one equation here. Choose System of equations only for multiple equations."),num("graph_x_min","Graph minimum x","-10"),num("graph_x_max","Graph maximum x","10")]],["System of equations",[area("system_equations","Equations (one per line)","x + y = 5\ny - x = 1","Enter each equation on a separate line.")]]];break;
       case "Binomial Expansion":spec=[["Expression",[txt("expression","Binomial expression","","e.g. (x + 2)^3")]]];break;
       case "Graphing Calculator":spec=[["Function",[txt("expression","Function of x","","e.g. sin(x) or x^2 - 4"),num("x_min","Minimum x","-10"),num("x_max","Maximum x","10"),num("points","Sample points","401","Choose 2–2,000 points. More samples can make curves smoother.")]]];break;
       case "Calculus":spec=[["Calculus operation",[sel("operation","Operation",selectOptions.calculusOperation),sel("variable","Variable",options(["x","y","z","t"])),num("order","Derivative order","1"),txt("expression","Expression","","e.g. x^3 + sin(x)"),txt("lower","Lower bound","0"),txt("upper","Upper bound","1"),txt("point","Limit point","0"),sel("direction","Limit direction",options(["both","plus","minus"]))]]];break;
