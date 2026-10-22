@@ -117,6 +117,7 @@ class UnitConversionRequest(RequestModel):
 
 class EquationRequest(RequestModel):
     equation: str = Field(min_length=1, max_length=10_000)
+    equation_type: Literal["linear", "quadratic", "multivariable_linear", "multivariable_quadratic"] | None = None
 
     @field_validator("equation")
     @classmethod
@@ -546,7 +547,7 @@ def convert(request: UnitConversionRequest):
 
 @app.post("/api/v1/equations/solve", response_model=EquationSolutionResult)
 def solve(request: EquationRequest):
-    """Solve one-variable polynomials or describe a single relation in two variables."""
+    """Solve one-variable equations or describe a single multivariable relation."""
     import re
     import sympy as sp
     from sympy.parsing.sympy_parser import (
@@ -558,47 +559,64 @@ def solve(request: EquationRequest):
 
     equation = request.equation.replace("²", "^2").replace("³", "^3")
     sides = equation.split("=")
-    if len(sides) == 2:
-        names = sorted(set(re.findall(r"[xyz]", equation.lower())))
-        if len(names) == 2:
-            if not re.fullmatch(r"[0-9xyz=+*/^().\s-]+", equation.lower()):
-                raise CalculatorError(
-                    "For a two-variable equation, use only x, y, z, numbers, and basic arithmetic operators."
-                )
-            symbols = {name: sp.Symbol(name, real=True) for name in "xyz"}
-            transformations = standard_transformations + (
-                implicit_multiplication_application,
-                convert_xor,
-            )
-            try:
-                left = parse_expr(
-                    sides[0], local_dict=symbols,
-                    transformations=transformations, evaluate=True
-                )
-                right = parse_expr(
-                    sides[1], local_dict=symbols,
-                    transformations=transformations, evaluate=True
-                )
-                relation_expr = sp.expand(left - right)
-                used = sorted(str(symbol) for symbol in relation_expr.free_symbols)
-                if not used:
-                    raise ValueError("The equation contains no remaining variables.")
-                target = symbols[used[-1]]
-                solved = sp.solve(relation_expr, target)
-                relations = [f"{target} = {sp.sstr(value)}" for value in solved]
-                if not relations:
-                    relations = [sp.sstr(sp.Eq(left, right))]
-            except Exception as exc:
-                raise CalculatorError(
-                    "Could not interpret this two-variable equation. Try a polynomial such as 2x + 3y = 12 or x^2 + y^2 = 25."
-                ) from exc
+    if len(sides) != 2 or not sides[0].strip() or not sides[1].strip():
+        raise CalculatorError("Enter exactly one equation with an equals sign, such as x^2 + y + z + 18 = 0.")
+    if not re.fullmatch(r"[0-9xyz=+*/^().\s-]+", equation.lower()):
+        raise CalculatorError("Use only x, y, z, numbers, parentheses, and basic arithmetic operators.")
+    symbols = {name: sp.Symbol(name, real=True) for name in "xyz"}
+    transformations = standard_transformations + (
+        implicit_multiplication_application,
+        convert_xor,
+    )
+    try:
+        left = parse_expr(
+            sides[0], local_dict=symbols,
+            transformations=transformations, evaluate=True
+        )
+        right = parse_expr(
+            sides[1], local_dict=symbols,
+            transformations=transformations, evaluate=True
+        )
+        relation_expr = sp.expand(left - right)
+        used = sorted(str(symbol) for symbol in relation_expr.free_symbols)
+        if not used:
+            return {
+                "status": "infinite_solutions" if sp.simplify(relation_expr) == 0 else "no_solution",
+                "solutions": [],
+                "message": "The equation is an identity." if sp.simplify(relation_expr) == 0 else "The equation is inconsistent.",
+                "variables": [],
+                "relations": [],
+            }
+        degree = sp.Poly(relation_expr, *(symbols[name] for name in used)).total_degree()
+        kind = request.equation_type
+        multivariable = len(used) >= 2
+        if kind in ("linear", "quadratic") and multivariable:
+            raise CalculatorError("Choose a multivariable equation type when the equation contains two or more variables.")
+        if kind in ("multivariable_linear", "multivariable_quadratic") and not multivariable:
+            raise CalculatorError("A multivariable equation must contain at least two different variables.")
+        if kind in ("linear", "multivariable_linear") and degree != 1:
+            raise CalculatorError("A linear equation must have total degree 1.")
+        if kind in ("quadratic", "multivariable_quadratic") and degree != 2:
+            raise CalculatorError("A quadratic equation must have total degree 2.")
+        if multivariable:
+            target = symbols[used[-1]]
+            solved = sp.solve(relation_expr, target)
+            relations = [f"{target} = {sp.sstr(value)}" for value in solved]
+            if not relations:
+                relations = [sp.sstr(sp.Eq(left, right))]
             return {
                 "status": "infinite_solutions",
                 "solutions": [],
-                "message": "One equation in two variables describes a relation, usually with infinitely many points. The equivalent form below is solved for one variable.",
+                "message": "One equation in multiple variables describes a relation, usually with infinitely many points. The equivalent form below is solved for one variable.",
                 "variables": used,
                 "relations": relations,
             }
+    except CalculatorError:
+        raise
+    except Exception as exc:
+        raise CalculatorError(
+            "Could not interpret this equation. Try x^2 - 5x + 6 = 0, 2x + 3y = 12, or x^2 + y + z + 18 = 0."
+        ) from exc
     result = solve_equation(equation)
     if isinstance(result, str):
         status = (
@@ -607,7 +625,6 @@ def solve(request: EquationRequest):
             else "no_solution"
         )
         return {"status": status, "solutions": [], "message": result}
-
     solutions = []
     for root in result:
         if isinstance(root, complex):
