@@ -200,8 +200,9 @@
     if(isRecord(result)&&Array.isArray(result.relations)&&result.relations.length){
       heading("Equation relation");
       if(result.message){const message=document.createElement("p");message.className="result-summary-message";message.textContent=result.message;container.append(message);}
+      if(Number.isInteger(result.degree))row("total_degree",result.degree);
       result.relations.forEach(relation=>{const expression=document.createElement("p");expression.className="result-expression";expression.textContent=relation;container.append(expression);});
-      if(Array.isArray(result.variables)&&result.variables.length){const variables=document.createElement("p");variables.className="field-help";variables.textContent="Variables: "+result.variables.join(", ")+". This is one equation in two variables, not a system of equations.";container.append(variables);}
+      if(Array.isArray(result.variables)&&result.variables.length){const variables=document.createElement("p");variables.className="field-help";variables.textContent="Variables: "+result.variables.join(", ")+". This is one equation in multiple variables, not a system of equations.";container.append(variables);}
     } else if(isRecord(result)&&Array.isArray(result.points)){
       const finite=result.points.filter(point=>point&&point.y!==null&&point.y!==undefined&&Number.isFinite(Number(point.x))&&Number.isFinite(Number(point.y)));
       const graphHeading=heading(activeTool==="Graphing Calculator"?"Function graph":"Graph");
