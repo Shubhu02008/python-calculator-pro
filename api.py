@@ -601,15 +601,26 @@ def solve(request: EquationRequest):
         if kind in ("quadratic", "multivariable_quadratic") and degree != 2:
             raise CalculatorError("A quadratic equation must have total degree 2.")
         if multivariable:
-            target = symbols[used[-1]]
-            solved = sp.solve(relation_expr, target)
-            relations = [f"{target} = {sp.sstr(value)}" for value in solved]
-            if not relations:
+            if kind == "polynomial":
+                # Preserve the full implicit relation: solving for one variable can
+                # silently drop special cases when a factor is cancelled.
                 relations = [sp.sstr(sp.Eq(left, right))]
+                message = (
+                    f"General polynomial of total degree {int(degree)}. "
+                    "One equation with multiple variables defines a relation, not a unique point. "
+                    "Add constraints or more equations to determine specific values."
+                )
+            else:
+                target = symbols[used[-1]]
+                solved = sp.solve(relation_expr, target)
+                relations = [f"{target} = {sp.sstr(value)}" for value in solved]
+                if not relations:
+                    relations = [sp.sstr(sp.Eq(left, right))]
+                message = "One equation in multiple variables describes a relation, usually with infinitely many points. The equivalent form below is solved for one variable."
             return {
                 "status": "infinite_solutions",
                 "solutions": [],
-                "message": "One equation in multiple variables describes a relation, usually with infinitely many points. The equivalent form below is solved for one variable.",
+                "message": message,
                 "variables": used,
                 "relations": relations,
                 "degree": int(degree),
