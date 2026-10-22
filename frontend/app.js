@@ -312,6 +312,7 @@
     xSpan=ySpan*plotW/plotH;
     const centerX=(initialXMin+initialXMax)/2,centerY=(rawYMin+rawYMax)/2;
     const view={xmin:centerX-xSpan/2,xmax:centerX+xSpan/2,ymin:centerY-ySpan/2,ymax:centerY+ySpan/2};
+    const initialView={...view};
     const svgNS="http://www.w3.org/2000/svg";
     const svg=document.createElementNS(svgNS,"svg");svg.setAttribute("viewBox",`0 0 ${width} ${height}`);svg.setAttribute("role","img");svg.setAttribute("aria-label","Interactive coordinate graph with labelled axes. Drag to pan, pinch or scroll to zoom.");
     const controls=document.createElement("div");controls.className="graph-controls";controls.setAttribute("aria-label","Graph controls");
@@ -391,7 +392,7 @@
     const makeControl=(label,aria,action)=>{const b=document.createElement("button");b.type="button";b.className="graph-control-button";b.textContent=label;b.setAttribute("aria-label",aria);b.addEventListener("click",action);controls.append(b);};
     makeControl("−","Zoom out",()=>zoomAt((view.xmin+view.xmax)/2,(view.ymin+view.ymax)/2,1.25));
     makeControl("+","Zoom in",()=>zoomAt((view.xmin+view.xmax)/2,(view.ymin+view.ymax)/2,.8));
-    makeControl("Reset","Reset graph view",()=>{view.xmin=initialXMin;view.xmax=initialXMax;const span=(view.xmax-view.xmin)*plotH/plotW;view.ymin=centerY-span/2;view.ymax=centerY+span/2;render();scheduleResample();});
+    makeControl("Reset","Reset graph view",()=>{Object.assign(view,initialView);render();scheduleResample();});
     render();figure.append(controls,svg,caption);return figure;
   }
   function equationGraphExpression(raw) {
