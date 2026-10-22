@@ -86,6 +86,33 @@ def test_equation_endpoint_reports_no_solution():
     assert response.json()["status"] == "no_solution"
 
 
+def test_general_polynomial_mode_handles_multivariable_mixed_terms_and_degree_four():
+    response = client.post(
+        "/api/v1/equations/solve",
+        json={"equation": "xy + yz = 3x^2yz", "equation_type": "polynomial"},
+    )
+
+    assert response.status_code == 200, response.json()
+    body = response.json()
+    assert body["status"] == "infinite_solutions"
+    assert body["variables"] == ["x", "y", "z"]
+    assert body["degree"] == 4
+    assert body["relations"]
+
+
+def test_general_polynomial_mode_solves_single_variable_degree_five():
+    response = client.post(
+        "/api/v1/equations/solve",
+        json={"equation": "x^5 - 1 = 0", "equation_type": "polynomial"},
+    )
+
+    assert response.status_code == 200, response.json()
+    body = response.json()
+    assert body["status"] == "solved"
+    assert body["degree"] == 5
+    assert len(body["solutions"]) == 5
+
+
 def test_equation_system_solves_two_variables():
     response = client.post(
         "/api/v1/equations/system",
