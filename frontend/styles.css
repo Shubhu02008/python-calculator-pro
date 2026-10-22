@@ -141,3 +141,26 @@
   .equations-tool-grid .math-keypad-keys{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
   .equations-tool-grid .math-keypad-keys .math-key{min-height:44px;font-size:14px}
 }
+
+
+/* Motion polish: subtle, fast, and respectful of reduced-motion preferences. */
+@keyframes workspace-enter{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
+@keyframes panel-enter{from{opacity:0;transform:translateY(7px) scale(.995)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes credit-enter{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.workspace-heading{animation:workspace-enter .38s cubic-bezier(.2,.75,.25,1) both}
+.tool-workspace>.tool-grid,.tool-workspace>.panel,.tool-workspace>.workspace-grid{animation:panel-enter .32s cubic-bezier(.2,.75,.25,1) both}
+.tool-card,.result-card,.calculator-card,.history-card{transition:border-color .2s ease,box-shadow .2s ease,transform .2s ease}
+.tool-card:hover,.result-card:hover,.calculator-card:hover,.history-card:hover{border-color:#2b3c56;box-shadow:0 14px 34px #00000018}
+.nav-item{transition:background .18s ease,color .18s ease,border-color .18s ease,transform .18s ease}
+.nav-item:hover{transform:translateX(2px)}
+.primary-button,.secondary-button,.key,.math-key,.keypad-page-button,.angle-option,.icon-button{transition:background .16s ease,border-color .16s ease,color .16s ease,box-shadow .16s ease,transform .16s ease}
+.primary-button:hover,.secondary-button:hover,.key:hover,.math-key:hover,.keypad-page-button:hover,.icon-button:hover{transform:translateY(-1px);box-shadow:0 5px 14px #00000020}
+.primary-button:active,.secondary-button:active,.key:active,.math-key:active,.keypad-page-button:active,.icon-button:active{transform:translateY(0) scale(.985)}
+.expression-input,.field input,.field select,.field textarea{transition:border-color .18s ease,box-shadow .18s ease,background .18s ease}
+.history-entry{animation:workspace-enter .24s ease both}
+.creator-credit{animation:credit-enter .35s ease both}
+@media(prefers-reduced-motion:reduce){
+  .workspace-heading,.tool-workspace>.tool-grid,.tool-workspace>.panel,.tool-workspace>.workspace-grid,.history-entry,.creator-credit{animation:none!important}
+  .tool-card,.result-card,.calculator-card,.history-card,.nav-item,.primary-button,.secondary-button,.key,.math-key,.keypad-page-button,.angle-option,.icon-button,.expression-input,.field input,.field select,.field textarea{transition:none!important}
+  .nav-item:hover,.primary-button:hover,.secondary-button:hover,.key:hover,.math-key:hover,.keypad-page-button:hover,.icon-button:hover,.primary-button:active,.secondary-button:active,.key:active,.math-key:active,.keypad-page-button:active,.icon-button:active{transform:none!important}
+}
