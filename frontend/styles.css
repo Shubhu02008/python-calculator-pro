@@ -106,3 +106,13 @@
 .math-key[data-math-key="CLEAR"],.math-key[data-math-key="BACKSPACE"]{font-size:12px}
 .form-section[hidden],.field[hidden]{display:none!important}
 @media(min-width:700px){.math-keypad{grid-template-columns:repeat(8,minmax(0,1fr))}}
+
+
+/* Refined shared mathematical keypad */
+.keypad-page-switcher{display:flex;gap:.5rem;margin:.75rem 0 .6rem}
+.keypad-page-button{flex:1;min-height:42px;border:1px solid var(--border-color,#293449);border-radius:12px;background:var(--surface-2,#151e30);color:var(--text-color,#e7edf8);font-weight:700}
+.keypad-page-button[aria-pressed="true"]{background:var(--accent,#326fe5);border-color:transparent;color:#fff}
+.math-keypad-keys{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.5rem}
+.math-keypad-keys .math-key{min-width:0;min-height:48px;padding:.45rem .2rem;border:1px solid var(--border-color,#293449);border-radius:12px;background:var(--surface-2,#151e30);color:var(--text-color,#e7edf8);font-size:1rem;font-weight:600;box-shadow:0 2px 0 rgba(0,0,0,.12);transition:background .12s,transform .12s}
+.math-keypad-keys .math-key:active{transform:translateY(1px);background:var(--accent,#326fe5);color:#fff}
+@media(max-width:420px){.math-keypad-keys{gap:.35rem}.math-keypad-keys .math-key{min-height:44px;font-size:.92rem}}
