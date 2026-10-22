@@ -152,7 +152,7 @@
   }
   function addFields(form, sections) { sections.forEach(([title,fields])=>form.insertBefore(group(title,fields),form.querySelector(".form-actions"))); }
   function addMathKeypad(form,title){
-    const names=title==="Equations"?["equation","system_equations","expression"]:title==="Graphing Calculator"?["expression"]:title==="Calculus"?["expression","lower","upper","point"]:["expression"];
+    const names=title==="Scientific Calculator"?["expression"]:title==="Equations"?["equation","system_equations","expression"]:title==="Graphing Calculator"?["expression"]:title==="Calculus"?["expression","lower","upper","point"]:["expression"];
     const targets=names.map(name=>form.elements.namedItem(name)).filter(Boolean);
     if(!targets.length)return;
     targets.forEach(control=>{control.setAttribute("inputmode","none");control.setAttribute("autocomplete","off");control.setAttribute("autocapitalize","off");});
@@ -173,7 +173,7 @@
         const end=Number.isInteger(target.selectionEnd)?target.selectionEnd:start;
         if(value==="CLEAR"){target.value="";target.setSelectionRange(0,0);}
         else if(value==="BACKSPACE"){const from=start===end?Math.max(0,start-1):start;target.value=target.value.slice(0,from)+target.value.slice(end);target.setSelectionRange(from,from);}
-        else{const insert=value==="π"?"pi":value;target.setRangeText(insert,start,end,"end");}
+        else{const insert=value==="π"?"π":value;target.setRangeText(insert,start,end,"end");}
         target.dispatchEvent(new Event("input",{bubbles:true}));target.dispatchEvent(new Event("change",{bubbles:true}));target.focus();
       });keysWrap.append(key);
     });};
@@ -465,7 +465,7 @@
       case "Date Calculator":spec=[["Date calculation",[sel("operation","Operation",selectOptions.dateOperation),field("date","Date",{type:"text",value:new Date().toISOString().slice(0,10),help:"Use YYYY-MM-DD."}),num("days","Number of days","7"),field("other_date","Second date",{type:"text",value:new Date().toISOString().slice(0,10),help:"Only used for date difference; YYYY-MM-DD."})]]];break;
     }
     const {form}=createPanel(title,descriptions[title]);addFields(form,spec);
-    if(["Equations","Graphing Calculator","Calculus"].includes(title)) addMathKeypad(form,title);
+    if(["Scientific Calculator","Equations","Graphing Calculator","Calculus"].includes(title)) addMathKeypad(form,title);
     if(title==="Equations"){
       const mode=form.elements.equation_mode;
       const updateEquationMode=()=>{
