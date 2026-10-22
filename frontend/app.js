@@ -18,8 +18,7 @@
     "Matrix Calculator": "Run matrix arithmetic and linear algebra operations.",
     "Statistics": "Summarize a dataset with descriptive statistical measures.",
     "Probability & Combinatorics": "Calculate event probabilities, permutations, combinations, and binomial probabilities.",
-    "Unit Converter": "Convert values between supported measurement units.",
-    "Currency Converter": "Convert currencies using the backend's available exchange-rate provider.",
+    "Unit Converter": "Convert physical units, currencies, and number bases in one workspace.",
     "Finance & Loan EMI": "Calculate interest, compound growth, and fixed monthly loan instalments.",
     "Discount & GST Calculator": "Calculate discounts, GST, and tax-inclusive prices.",
     "Number Base Converter": "Convert integer values between number bases 2 and 36.",
@@ -43,10 +42,8 @@
     "Statistics": {kind:"statistics"},
     "Probability & Combinatorics": {kind:"probability"},
     "Unit Converter": {kind:"units"},
-    "Currency Converter": {kind:"currency"},
     "Finance & Loan EMI": {kind:"finance"},
     "Discount & GST Calculator": {kind:"discount"},
-    "Number Base Converter": {kind:"base"},
     "BMI Calculator": {kind:"bmi"},
     "Date Calculator": {kind:"date"}
   };
@@ -418,11 +415,9 @@
       }
       case "Statistics": return api("/api/v1/statistics",{operation:val(form,"operation"),values:csvNumbers(form,"values")});
       case "Probability & Combinatorics": {const operation=val(form,"operation"),payload={operation};["favorable","total","event_a","event_b","intersection","n","r","p","k"].forEach(key=>{const raw=val(form,key);if(raw!=="")payload[key]=Number(raw);});return api("/api/v1/probability",payload);}
-      case "Unit Converter": return api("/api/v1/units/convert",{value:number(form,"value"),from_unit:val(form,"from_unit"),to_unit:val(form,"to_unit")});
-      case "Currency Converter": return api("/api/v1/currency/convert",{amount:number(form,"amount"),from_currency:val(form,"from_currency").toUpperCase(),to_currency:val(form,"to_currency").toUpperCase()});
+      case "Unit Converter": {const mode=val(form,"conversion_type");if(mode==="currency")return api("/api/v1/currency/convert",{amount:number(form,"amount"),from_currency:val(form,"from_currency").toUpperCase(),to_currency:val(form,"to_currency").toUpperCase()});if(mode==="base")return api("/api/v1/numbers/convert-base",{value:val(form,"base_value"),from_base:integer(form,"from_base"),to_base:integer(form,"to_base")});return api("/api/v1/units/convert",{value:number(form,"value"),from_unit:val(form,"from_unit"),to_unit:val(form,"to_unit")});}
       case "Finance & Loan EMI": {const op=val(form,"operation");if(op==="simple-interest")return api("/api/v1/finance/simple-interest",{principal:number(form,"principal"),annual_rate:number(form,"annual_rate"),years:number(form,"years")});if(op==="compound-interest")return api("/api/v1/finance/compound-interest",{principal:number(form,"principal"),annual_rate:number(form,"annual_rate"),years:number(form,"years"),compounding_per_year:integer(form,"compounding_per_year")});return api("/api/v1/finance/emi",{principal:number(form,"principal"),annual_rate:number(form,"annual_rate"),tenure_months:integer(form,"tenure_months")});}
       case "Discount & GST Calculator": {if(val(form,"operation")==="discount")return api("/api/v1/discount/calculate",{price:number(form,"price"),discount_percent:number(form,"discount_percent")});return api("/api/v1/gst/calculate",{amount:number(form,"price"),gst_rate:number(form,"gst_rate"),inclusive:val(form,"inclusive")==="true"});}
-      case "Number Base Converter": return api("/api/v1/numbers/convert-base",{value:val(form,"value"),from_base:integer(form,"from_base"),to_base:integer(form,"to_base")});
       case "BMI Calculator": return api("/api/v1/health/bmi",{weight_kg:number(form,"weight_kg"),height_m:number(form,"height_m")});
       case "Date Calculator": {const operation=val(form,"operation"),payload={operation,date:val(form,"date"),days:integer(form,"days")||0};if(operation==="difference")payload.other_date=val(form,"other_date");return api("/api/v1/dates/calculate",payload);}
       default: throw new Error("This tool is not configured yet.");
@@ -451,11 +446,9 @@
       case "Matrix Calculator":spec=[["Matrix operation",[sel("operation","Matrix operation",selectOptions.matrixOperation),area("matrix_a","Matrix A","1, 2\n3, 4","Rows separated by new lines; values separated by commas."),area("matrix_b","Matrix B","5, 6\n7, 8","Required for add, subtract, multiply, and compare."),txt("scalar","Scalar","2"),num("power","Power","2"),num("size","Size for identity/zero","3"),num("row","Row (1-based)","1"),num("column","Column (1-based)","1"),area("vector","Vector b","5, 11","For solving Ax = b; values separated by commas."),sel("method","Inverse method",[["","Default"],["adjoint","Adjoint"],["gauss_jordan","Gauss–Jordan"]]),sel("steps","Step-by-step working",[["false","Off"],["true","On"]])]]];break;
       case "Statistics":spec=[["Dataset",[sel("operation","Statistic",selectOptions.statsOperation),area("values","Values","12, 15, 18, 18, 21","Separate observations with commas, spaces, or new lines.")]]];break;
       case "Probability & Combinatorics":spec=[["Probability or counting inputs",[sel("operation","Operation",selectOptions.probabilityOperation),num("favorable","Favourable outcomes","1"),num("total","Total outcomes","6"),num("event_a","P(A)","0.5"),num("event_b","P(B)","0.4"),num("intersection","P(A ∩ B)","0.2"),num("n","n","5"),num("r","r","2"),num("p","Success probability p","0.5"),num("k","Successes k","2")]]];break;
-      case "Unit Converter":{const dims=capabilities?.unit_dimensions||[],fallback=[{id:"length",units:["m","cm","km","mm","ft","in"]},{id:"mass",units:["kg","g","mg","lb","oz"]},{id:"temperature",units:["celsius","fahrenheit","kelvin"]},{id:"time",units:["s","min","h","day"]},{id:"volume",units:["L","mL"]}];const categories=dims.length?dims:fallback;const categoryOptions=categories.map(d=>[d.id,d.id.replaceAll("_"," ").replace(/\\b\\w/g,c=>c.toUpperCase())]);const initial=categories[0];const unitOptions=initial.units.map(unit=>[unit,String(unit).replaceAll("_"," ").replace(/\\b\\w/g,c=>c.toUpperCase())]);spec=[["Conversion category",[sel("dimension","Unit category",categoryOptions)]],["Conversion",[num("value","Value","1"),sel("from_unit","From unit",unitOptions),sel("to_unit","To unit",unitOptions)]]];break;}
-      case "Currency Converter":spec=[["Currency amount",[num("amount","Amount","100"),sel("from_currency","From currency",options(["INR","USD","EUR","GBP","JPY","CAD","AUD","CNY","SGD","AED"])),sel("to_currency","To currency",options(["USD","INR","EUR","GBP","JPY","CAD","AUD","CNY","SGD","AED"]))]]];break;
+      case "Unit Converter":{const dims=capabilities?.unit_dimensions||[],fallback=[{id:"length",units:["m","cm","km","mm","ft","in"]},{id:"mass",units:["kg","g","mg","lb","oz"]},{id:"temperature",units:["celsius","fahrenheit","kelvin"]},{id:"time",units:["s","min","h","day"]},{id:"volume",units:["L","mL"]}];const categories=dims.length?dims:fallback;const categoryOptions=categories.map(d=>[d.id,d.id.replaceAll("_"," ").replace(/\b\w/g,c=>c.toUpperCase())]);const initial=categories[0];const unitOptions=initial.units.map(unit=>[unit,String(unit).replaceAll("_"," ").replace(/\b\w/g,c=>c.toUpperCase())]);spec=[["Conversion type",[sel("conversion_type","What do you want to convert?",[["units","Physical units"],["currency","Currency"],["base","Number base"]])]],["Unit category",[sel("dimension","Unit category",categoryOptions)]],["Unit conversion",[num("value","Value","1"),sel("from_unit","From unit",unitOptions),sel("to_unit","To unit",unitOptions)]],["Currency conversion",[num("amount","Amount","100"),sel("from_currency","From currency",options(["INR","USD","EUR","GBP","JPY","CAD","AUD","CNY","SGD","AED"])),sel("to_currency","To currency",options(["USD","INR","EUR","GBP","JPY","CAD","AUD","CNY","SGD","AED"]))]],["Number base conversion",[txt("base_value","Integer value","255","e.g. 255 or FF"),num("from_base","From base","10"),num("to_base","To base","16")]]];break;}
       case "Finance & Loan EMI":spec=[["Finance calculation",[sel("operation","Calculation",selectOptions.financeOperation),num("principal","Principal / loan amount","100000"),num("annual_rate","Annual interest rate (%)","8.5"),num("years","Term (years)","5"),num("compounding_per_year","Compounds per year","12"),num("tenure_months","Loan tenure (months)","60")]]];break;
       case "Discount & GST Calculator":spec=[["Discount or GST",[sel("operation","Calculation",[["discount","Discount"],["gst","GST"]]),num("price","Price / amount","1000"),num("discount_percent","Discount (%)","10"),num("gst_rate","GST rate (%)","18"),sel("inclusive","GST amount includes tax?",[["false","No — add GST"],["true","Yes — extract GST"]])]]];break;
-      case "Number Base Converter":spec=[["Number conversion",[txt("value","Integer value","255","e.g. 255 or FF"),num("from_base","From base","10"),num("to_base","To base","16")]]];break;
       case "BMI Calculator":spec=[["Body measurements",[num("weight_kg","Weight (kg)","70"),num("height_m","Height (metres)","1.75")]]];break;
       case "Date Calculator":spec=[["Date calculation",[sel("operation","Operation",selectOptions.dateOperation),field("date","Date",{type:"text",value:new Date().toISOString().slice(0,10),help:"Use YYYY-MM-DD."}),num("days","Number of days","7"),field("other_date","Second date",{type:"text",value:new Date().toISOString().slice(0,10),help:"Only used for date difference; YYYY-MM-DD."})]]];break;
     }
@@ -484,6 +477,9 @@
       expression.closest(".field").append(help);
     }
     if(title==="Unit Converter"){
+      const conversionType=form.elements.conversion_type;
+      const updateConversionType=()=>{const type=conversionType.value;const show=(name,yes)=>{const el=form.elements[name];if(el)el.closest(".field").hidden=!yes;};show("dimension",type==="units");["value","from_unit","to_unit"].forEach(n=>show(n,type==="units"));["amount","from_currency","to_currency"].forEach(n=>show(n,type==="currency"));["base_value","from_base","to_base"].forEach(n=>show(n,type==="base"));};
+      conversionType.addEventListener("change",updateConversionType);updateConversionType();
       const category=form.elements.dimension,from=form.elements.from_unit,to=form.elements.to_unit;
       const updateUnits=()=>{
         const dims=capabilities?.unit_dimensions||[{id:"length",units:["m","cm","km","mm","ft","in"]},{id:"mass",units:["kg","g","mg","lb","oz"]},{id:"temperature",units:["celsius","fahrenheit","kelvin"]},{id:"time",units:["s","min","h","day"]},{id:"volume",units:["L","mL"]}];
