@@ -561,7 +561,7 @@ def solve(request: EquationRequest):
     if len(sides) == 2:
         names = sorted(set(re.findall(r"[xyz]", equation.lower())))
         if len(names) == 2:
-            if not re.fullmatch(r"[0-9xyz+*/^().\s-]+", equation.lower()):
+            if not re.fullmatch(r"[0-9xyz=+*/^().\s-]+", equation.lower()):
                 raise CalculatorError(
                     "For a two-variable equation, use only x, y, z, numbers, and basic arithmetic operators."
                 )
