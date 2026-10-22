@@ -406,6 +406,7 @@
   }
 
   function renderTool(title) {
+    if(title==="Quadratic & Polynomial Solver" || title==="Binomial Expansion") title="Equations";
     activeTool=title;pageTitle.textContent=title;workspaceTitle.textContent=title;workspaceSubtitle.textContent=descriptions[title]||"";
     angleToggle.hidden=title!=="Scientific Calculator";
     navItems.forEach(item=>{const selected=item.dataset.tool===title;item.classList.toggle("is-active",selected);if(selected)item.setAttribute("aria-current","page");else item.removeAttribute("aria-current");});
@@ -440,7 +441,7 @@
       const updateEquationMode=()=>{
         const selected=mode.value,system=selected==="system",binomial=selected==="binomial";
         form.elements.equation.closest(".field").hidden=system||binomial;
-        form.elements.graph_x_min.closest(".field").hidden=system||binomial||!selected.startsWith("quadratic");
+        form.elements.graph_x_min.closest(".field").hidden=system||binomial||!selected.includes("quadratic");
         form.elements.graph_x_max.closest(".field").hidden=system||binomial||!selected.startsWith("quadratic");
         form.elements.system_equations.closest(".field").hidden=!system;
         form.elements.expression.closest(".field").hidden=!binomial;
