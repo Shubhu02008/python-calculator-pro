@@ -350,3 +350,40 @@ def test_single_two_variable_quadratic_equation_returns_both_branches():
     assert body["variables"] == ["x", "y"]
     assert len(body["relations"]) == 2
     assert all(relation.startswith("y = ") for relation in body["relations"])
+
+
+def test_multivariable_quadratic_equation_with_three_variables_returns_relation():
+    response = client.post(
+        "/api/v1/equations/solve",
+        json={
+            "equation": "x^2 + y + z + 18 = 0",
+            "equation_type": "multivariable_quadratic",
+        },
+    )
+
+    assert response.status_code == 200, response.json()
+    body = response.json()
+    assert body["status"] == "infinite_solutions"
+    assert body["variables"] == ["x", "y", "z"]
+    assert body["relations"]
+    assert body["relations"][0].startswith("z = ")
+
+
+def test_equation_type_rejects_wrong_polynomial_degree():
+    response = client.post(
+        "/api/v1/equations/solve",
+        json={"equation": "x^2 + 1 = 0", "equation_type": "linear"},
+    )
+
+    assert response.status_code == 422
+    assert "degree 1" in response.json()["error"]["message"]
+
+
+def test_multivariable_equation_type_requires_multiple_variables():
+    response = client.post(
+        "/api/v1/equations/solve",
+        json={"equation": "x + 2 = 0", "equation_type": "multivariable_linear"},
+    )
+
+    assert response.status_code == 422
+    assert "at least two" in response.json()["error"]["message"]
