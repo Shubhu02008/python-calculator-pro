@@ -246,15 +246,15 @@
       if(result.message){const message=document.createElement("p");message.className="result-summary-message";message.textContent=result.message;container.append(message);}
       if(result.status==="solved" && result.solutions.length){
         const note=document.createElement("p");note.className="result-summary-message";note.textContent=mode==="quadratic"?"The values below are the roots of the quadratic equation.":"The value below satisfies the equation.";container.append(note);
-        result.solutions.forEach((root,index)=>{
+        const values=result.solutions.map(root=>{
           const real=Number(root.real),imag=Number(root.imaginary||0);
-          let value="x = "+formatNumber(real);
-          if(Math.abs(imag)>=1e-12)value+=(imag<0?" − ":" + ")+formatNumber(Math.abs(imag))+"i";
-          const line=document.createElement("div");line.className="root-result";
-          const label=document.createElement("span");label.textContent="Solution "+(index+1);
-          const answer=document.createElement("strong");answer.textContent=value;
-          line.append(label,answer);container.append(line);
+          if(Math.abs(imag)<1e-12)return formatNumber(real);
+          return formatNumber(real)+(imag<0?" − ":" + ")+formatNumber(Math.abs(imag))+"i";
         });
+        const line=document.createElement("div");line.className="root-result";
+        const label=document.createElement("span");label.textContent="Answer";
+        const answer=document.createElement("strong");answer.textContent="x = "+values.join(" or x = ");
+        line.append(label,answer);container.append(line);
       } else if(!result.solutions.length && !result.message){
         const message=document.createElement("p");message.className="result-summary-message";message.textContent="No individual roots were returned for this equation.";container.append(message);
       }
@@ -429,7 +429,9 @@
     const section=document.createElement("section");section.className="equation-graph-section";
     const heading=document.createElement("h3");heading.textContent="Equation graph";section.append(heading);
     const note=document.createElement("p");note.className="field-help";
-    note.textContent=mode==="system"
+    note.textContent=["linear","quadratic"].includes(mode)
+      ?"The graph uses an automatic viewing range. You do not need to enter minimum or maximum values."
+      :mode==="system"
       ?"The graph shows the first equation as a 2D slice; a full system may require multiple plots."
       :"For equations with multiple variables, y and z are fixed at 0 and the equation residual is plotted against x. This is a 2D slice, not the full relation.";
     section.append(note);container.append(section);
@@ -544,7 +546,7 @@
         ["multivariable_quadratic","Multivariable quadratic equation"],
         ["system","System of equations"],
         ["binomial","Binomial theorem / expansion"]
-      ])]],["Single equation",[txt("equation","Equation","","e.g. xy + yz = 3x^2yz","Use an equals sign. General polynomial mode accepts mixed terms and any degree in x, y, and z."),num("graph_x_min","Graph x-axis start (optional)","-10","Only controls the graph view; it does not affect the equation answer."),num("graph_x_max","Graph x-axis end (optional)","10","Only controls the graph view; it does not affect the equation answer.")]],["System of equations",[area("system_equations","Equations (one per line)","x + y = 5\ny - x = 1","Enter each equation on a separate line.")]],["Binomial expansion",[txt("expression","Binomial expression","","e.g. (x + 2)^3")]]];break;
+      ])]],["Single equation",[txt("equation","Equation","","e.g. xy + yz = 3x^2yz","Use an equals sign. General polynomial mode accepts mixed terms and any degree in x, y, and z.")]],["System of equations",[area("system_equations","Equations (one per line)","x + y = 5\ny - x = 1","Enter each equation on a separate line.")]],["Binomial expansion",[txt("expression","Binomial expression","","e.g. (x + 2)^3")]]];break;
       case "Graphing Calculator":spec=[["Function",[txt("expression","Function of x","","e.g. sin(x) or x^2 - 4"),num("x_min","Minimum x","-10"),num("x_max","Maximum x","10"),num("points","Sample points","401","Choose 2–2,000 points. More samples can make curves smoother.")]]];break;
       case "Calculus":spec=[["Calculus operation",[sel("operation","Operation",selectOptions.calculusOperation),sel("variable","Variable",options(["x","y","z","t"])),num("order","Derivative order","1"),txt("expression","Expression","","e.g. x^3 + sin(x)"),txt("lower","Lower bound","0"),txt("upper","Upper bound","1"),txt("point","Limit point","0"),sel("direction","Limit direction",options(["both","plus","minus"]))]]];break;
       case "Matrix Calculator":spec=[["Matrix operation",[sel("operation","Matrix operation",selectOptions.matrixOperation),area("matrix_a","Matrix A","1, 2\n3, 4","Rows separated by new lines; values separated by commas."),area("matrix_b","Matrix B","5, 6\n7, 8","Required for add, subtract, multiply, and compare."),txt("scalar","Scalar","2"),num("power","Power","2"),num("size","Size for identity/zero","3"),num("row","Row (1-based)","1"),num("column","Column (1-based)","1"),area("vector","Vector b","5, 11","For solving Ax = b; values separated by commas."),sel("method","Inverse method",[["","Default"],["adjoint","Adjoint"],["gauss_jordan","Gauss–Jordan"]]),sel("steps","Step-by-step working",[["false","Off"],["true","On"]])]]];break;
@@ -563,8 +565,6 @@
       const updateEquationMode=()=>{
         const selected=mode.value,system=selected==="system",binomial=selected==="binomial";
         form.elements.equation.closest(".field").hidden=system||binomial;
-        form.elements.graph_x_min.closest(".field").hidden=system||binomial||!selected.includes("quadratic");
-        form.elements.graph_x_max.closest(".field").hidden=system||binomial||!selected.includes("quadratic");
         form.elements.system_equations.closest(".field").hidden=!system;
         form.elements.expression.closest(".field").hidden=!binomial;
         form.querySelectorAll(".form-section").forEach(section=>{
