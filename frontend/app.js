@@ -152,8 +152,12 @@
   }
   function addFields(form, sections) { sections.forEach(([title,fields])=>form.insertBefore(group(title,fields),form.querySelector(".form-actions"))); }
   function addMathKeypad(form,title){
-    const names=title==="Scientific Calculator"?["expression"]:title==="Equations"?["equation","system_equations","expression"]:title==="Graphing Calculator"?["expression"]:title==="Calculus"?["expression","lower","upper","point"]:["expression"];
-    const targets=names.map(name=>form.elements.namedItem(name)).filter(Boolean);
+    const preferred=title==="Equations"?["equation","system_equations","expression"]:title==="Calculus"?["expression","lower","upper","point"]:["expression"];
+    const named=preferred.map(name=>form.elements.namedItem(name)).filter(Boolean);
+    const fallback=[...form.querySelectorAll("input:not([type=hidden]):not([type=submit]),textarea")].filter(el=>!el.disabled);
+    const targets=[...new Set([...named,...fallback])];
+    if(!targets.length)return;
+    targets.forEach(control=>{control.setAttribute("inputmode","none");control.setAttribute("autocomplete","off");control.setAttribute("autocapitalize","off");});
     if(!targets.length)return;
     targets.forEach(control=>{control.setAttribute("inputmode","none");control.setAttribute("autocomplete","off");control.setAttribute("autocapitalize","off");});
     const keypad=document.createElement("div");keypad.className="math-keypad";keypad.setAttribute("aria-label","Math input keypad");
@@ -169,11 +173,18 @@
       key.addEventListener("mousedown",event=>event.preventDefault());
       key.addEventListener("click",()=>{
         const target=targets.find(control=>control===document.activeElement)||targets[0];
-        const start=Number.isInteger(target.selectionStart)?target.selectionStart:target.value.length;
-        const end=Number.isInteger(target.selectionEnd)?target.selectionEnd:start;
-        if(value==="CLEAR"){target.value="";target.setSelectionRange(0,0);}
-        else if(value==="BACKSPACE"){const from=start===end?Math.max(0,start-1):start;target.value=target.value.slice(0,from)+target.value.slice(end);target.setSelectionRange(from,from);}
-        else{const insert=value==="π"?"π":value;target.setRangeText(insert,start,end,"end");}
+        const supportsSelection=target.tagName==="TEXTAREA"||["text","search","url","tel","password"].includes(target.type);
+        if(!supportsSelection){
+          if(value==="CLEAR")target.value="";
+          else if(value==="BACKSPACE")target.value=target.value.slice(0,-1);
+          else if(!["=","%","BACKSPACE"].includes(value))target.value+=value;
+        }else{
+          const start=Number.isInteger(target.selectionStart)?target.selectionStart:target.value.length;
+          const end=Number.isInteger(target.selectionEnd)?target.selectionEnd:start;
+          if(value==="CLEAR"){target.value="";target.setSelectionRange(0,0);}
+          else if(value==="BACKSPACE"){const from=start===end?Math.max(0,start-1):start;target.value=target.value.slice(0,from)+target.value.slice(end);target.setSelectionRange(from,from);}
+          else{const insert=value==="π"?"pi":value;target.setRangeText(insert,start,end,"end");}
+        }
         target.dispatchEvent(new Event("input",{bubbles:true}));target.dispatchEvent(new Event("change",{bubbles:true}));target.focus();
       });keysWrap.append(key);
     });};
@@ -485,10 +496,7 @@
     const {form,body,output}=createPanel("Scientific Calculator","Type an expression or use the keypad. Evaluation is handled by the Python engine.");
     const expr=txt("expression","Expression","","e.g. sin(pi / 2) + sqrt(25)");
     form.insertBefore(group("Expression",[expr]),form.querySelector(".form-actions"));
-    const keypad=document.createElement("div");keypad.className="keypad functional-keypad";
-    const keys=[["sin(","function"],["cos(","function"],["tan(","function"],["ln(","function"],["log(","function"],["sqrt(","function"],["^2","function"],["^","function"],["(","function"],[")","function"],["7",""],["8",""],["9",""],["/","operator"],["⌫","operator"],["4",""],["5",""],["6",""],["*","operator"],["AC","operator"],["1",""],["2",""],["3",""],["-","operator"],["+","operator"],["pi","function"],["0",""],[".",""],["%","function"],["=","equals"]];
-    keys.forEach(([text,kind])=>{const b=button(text,"key "+(kind==="function"?"key-function":kind==="operator"?"key-operator":kind==="equals"?"key-equals":""),"button");b.addEventListener("click",()=>{const input=form.elements.expression;if(text==="=")form.requestSubmit();else if(text==="AC"){input.value="";input.focus();}else if(text==="⌫"){const start=input.selectionStart??input.value.length,end=input.selectionEnd??start;input.setRangeText("",start===end?Math.max(0,start-1):start,end,"end");input.focus();}else{const start=input.selectionStart??input.value.length,end=input.selectionEnd??start;input.setRangeText(text,start,end,"end");input.focus();}});keypad.append(b);});
-    form.insertBefore(keypad,form.querySelector(".form-actions"));
+    addMathKeypad(form,"Scientific Calculator");
     form.addEventListener("submit",async event=>{event.preventDefault();if(isBusy)return;isBusy=true;const submit=form.querySelector('[type="submit"]');submit.disabled=true;submit.textContent="Calculating…";try{const expression=val(form,"expression");if(!expression)throw new Error("Enter an expression to calculate.");const result=await api("/api/v1/calculate",{expression:transformDegreeTrig(expression)});renderResult(body,result);saveHistory({expression,result:result.result,displayedResult:formatNumber(result.result),angleMode,timestamp:new Date().toISOString()});}catch(error){body.replaceChildren();const p=document.createElement("p");p.className="result-error";p.textContent=error.message;body.append(p);}finally{isBusy=false;submit.disabled=false;submit.textContent="Calculate";}});
     output.append(historySection());
     form.elements.expression.addEventListener("keydown",event=>{if(event.key==="Enter"){event.preventDefault();form.requestSubmit();}});
@@ -559,7 +567,7 @@
       case "Date Calculator":spec=[["Date calculation",[sel("operation","Operation",selectOptions.dateOperation),field("date","Date",{type:"text",value:new Date().toISOString().slice(0,10),help:"Use YYYY-MM-DD."}),num("days","Number of days","7"),field("other_date","Second date",{type:"text",value:new Date().toISOString().slice(0,10),help:"Only used for date difference; YYYY-MM-DD."})]]];break;
     }
     const {form}=createPanel(title,descriptions[title]);addFields(form,spec);
-    if(["Scientific Calculator","Equations","Graphing Calculator","Calculus"].includes(title)) addMathKeypad(form,title);
+    addMathKeypad(form,title);
     if(title==="Equations"){
       const mode=form.elements.equation_mode;
       const updateEquationMode=()=>{
