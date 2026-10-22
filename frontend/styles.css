@@ -45,7 +45,11 @@
 .result-json{max-width:100%;margin:0 0 14px;padding:14px;border:1px solid #25364e;border-radius:9px;background:#0b1321;color:#d5e3f7;white-space:pre-wrap;overflow-wrap:anywhere;font:11px/1.7 "DM Mono",monospace}
 .result-error{padding:12px;border:1px solid #743b50;border-radius:8px;background:#321b2a;color:#ffb4c1;font-size:11px;line-height:1.7}
 .graph-figure{margin:0 0 16px;padding:10px;border:1px solid #293a53;border-radius:9px;background:#0a1220}
-.graph-figure svg{display:block;width:100%;height:auto;max-height:330px}
+.graph-controls{display:flex;justify-content:flex-end;align-items:center;gap:6px;margin:0 0 8px}
+.graph-control-button{min-width:36px;min-height:34px;padding:5px 10px;border:1px solid #344966;border-radius:7px;background:#111e31;color:#dce8fb;font:600 13px/1.2 inherit;cursor:pointer;touch-action:manipulation}
+.graph-control-button:focus-visible{outline:2px solid #6ea3ff;outline-offset:2px}
+.graph-figure svg{display:block;width:100%;height:auto;max-height:330px;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
+.graph-figure svg:active{cursor:grabbing}
 .graph-grid{stroke:#26344a;stroke-width:1}.graph-axis{stroke:#647995;stroke-width:1.2}.graph-curve{fill:none;stroke:#6ea3ff;stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
 .graph-figure figcaption{padding:7px 3px 0;color:#7486a1;font-size:10px}
 .history-mini{margin-top:20px;padding-top:17px;border-top:1px solid var(--line)}
