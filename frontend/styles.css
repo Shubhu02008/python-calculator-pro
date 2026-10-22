@@ -164,3 +164,28 @@
   .tool-card,.result-card,.calculator-card,.history-card,.nav-item,.primary-button,.secondary-button,.key,.math-key,.keypad-page-button,.angle-option,.icon-button,.expression-input,.field input,.field select,.field textarea{transition:none!important}
   .nav-item:hover,.primary-button:hover,.secondary-button:hover,.key:hover,.math-key:hover,.keypad-page-button:hover,.icon-button:hover,.primary-button:active,.secondary-button:active,.key:active,.math-key:active,.keypad-page-button:active,.icon-button:active{transform:none!important}
 }
+
+
+/* Varied tile entrances each time a tool tab is opened. */
+@keyframes tile-rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes tile-slide-left{from{opacity:0;transform:translateX(-18px)}to{opacity:1;transform:translateX(0)}}
+@keyframes tile-slide-right{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:translateX(0)}}
+@keyframes tile-pop{0%{opacity:0;transform:scale(.94)}70%{opacity:1;transform:scale(1.012)}100%{opacity:1;transform:scale(1)}}
+@keyframes tile-soft-flip{from{opacity:0;transform:perspective(800px) rotateX(5deg) translateY(8px)}to{opacity:1;transform:perspective(800px) rotateX(0) translateY(0)}}
+.tool-workspace>.tool-grid>.tool-card:nth-child(4n+1),
+.tool-workspace>.workspace-grid>.calculator-card:nth-child(4n+1){animation:tile-rise .42s cubic-bezier(.2,.75,.25,1) both}
+.tool-workspace>.tool-grid>.result-card:nth-child(4n+2),
+.tool-workspace>.workspace-grid>.history-card:nth-child(4n+2){animation:tile-slide-right .44s cubic-bezier(.2,.75,.25,1) both}
+.tool-workspace>.tool-grid>.tool-card:nth-child(4n+3),
+.tool-workspace>.tool-grid>.result-card:nth-child(4n+3){animation:tile-pop .46s cubic-bezier(.2,.75,.25,1) both}
+.tool-workspace>.tool-grid>.tool-card:nth-child(4n+4),
+.tool-workspace>.tool-grid>.result-card:nth-child(4n+4){animation:tile-soft-flip .43s cubic-bezier(.2,.75,.25,1) both}
+.tool-workspace .tool-grid>*:nth-child(2),
+.tool-workspace .workspace-grid>*:nth-child(2){animation-delay:55ms}
+.tool-workspace .tool-grid>*:nth-child(3),
+.tool-workspace .workspace-grid>*:nth-child(3){animation-delay:100ms}
+.tool-workspace .tool-grid>*:nth-child(4),
+.tool-workspace .workspace-grid>*:nth-child(4){animation-delay:145ms}
+@media(prefers-reduced-motion:reduce){
+ .tool-workspace>.tool-grid>.tool-card,.tool-workspace>.tool-grid>.result-card,.tool-workspace>.workspace-grid>.calculator-card,.tool-workspace>.workspace-grid>.history-card{animation:none!important}
+}
