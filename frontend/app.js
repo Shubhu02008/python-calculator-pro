@@ -140,7 +140,7 @@
       try {
         const result=await submitForm(form);
         renderResult(body,result);
-        if(activeTool==="Equations" && ["quadratic","multivariable_quadratic"].includes(val(form,"equation_mode"))) await appendEquationGraph(body,form,result);
+        if(activeTool==="Equations") await appendEquationGraph(body,form,result);
       }
       catch(error) { body.replaceChildren();const message=document.createElement("p");message.className="result-error";message.textContent=error.message;body.append(message); }
       finally { submit.disabled=false;submit.textContent=original;isBusy=false; }
@@ -216,6 +216,12 @@
       }
       row("sample_points",result.points.length);
       row("defined_samples",finite.length);
+    } else if(activeTool==="Equations" && val(document.querySelector(".tool-form")||{elements:{}}, "equation_mode")==="polynomial" && isRecord(result) && typeof result.status==="string"){
+      heading(result.status==="solved"?"Polynomial roots":result.status==="no_solution"?"No solution":"Polynomial relation");
+      if(result.message){const message=document.createElement("p");message.className="result-summary-message";message.textContent=result.message;container.append(message);}
+      if(Number.isInteger(result.degree))row("total_degree",result.degree);
+      if(Array.isArray(result.relations))result.relations.forEach(relation=>{const expression=document.createElement("p");expression.className="result-expression";expression.textContent=relation;container.append(expression);});
+      if(Array.isArray(result.solutions))result.solutions.forEach((solution,index)=>{const real=Number(solution.real),imag=Number(solution.imaginary||0);const line=document.createElement("div");line.className="root-result";const label=document.createElement("span");label.textContent="Root "+(index+1);const answer=document.createElement("strong");answer.textContent="x = "+formatNumber(real)+(Math.abs(imag)<1e-12?"":(imag<0?" − ":" + ")+formatNumber(Math.abs(imag))+"i");line.append(label,answer);container.append(line);});
     } else if(isRecord(result)&&Array.isArray(result.variables)&&Array.isArray(result.solutions)&&typeof result.status==="string"){
       heading(result.status==="solved"?"System solutions":result.status==="infinite_solutions"?"Underdetermined system":"No solution");
       if(result.message){const message=document.createElement("p");message.className="result-summary-message";message.textContent=result.message;container.append(message);}
@@ -309,29 +315,46 @@
   }
   function equationGraphExpression(raw) {
     const normalized=String(raw).replaceAll("²","^2").replaceAll("³","^3").replace(/[−–]/g,"-").replace(/[×·]/g,"*").replaceAll("÷","/");
-    const parts=normalized.split("=");if(parts.length>2)return null;
-    const expression=parts.length===2?"("+parts[0]+")-("+parts[1]+")":parts[0];
-    const withoutFunctions=expression.replace(/\b(?:sin|cos|tan|sqrt|log|ln|exp|abs|pi|e)\b/gi,"");
-    if(/\b[y-z]\b/i.test(withoutFunctions))return null;
-    const hasQuadratic=
-      /\bx\s*(?:\^\s*2|\*\*\s*2)\b/i.test(expression)||
-      /\bx\s*\*\s*x\b/i.test(expression)||
-      /\bx\s*x\b/i.test(expression)||
-      /\bx\s*\(/i.test(expression)||
-      /\([^()]*\bx\b[^()]*\)\s*(?:\^|\*\*)\s*2\b/i.test(expression);
-    if(!hasQuadratic)return null;
+    const parts=normalized.split("=");if(parts.length>2||!parts[0]?.trim())return null;
+    // A 2D graph of a multivariable relation is a slice: hold y and z at zero,
+    // then plot the left-minus-right residual against x. Its zero crossings
+    // show solutions along that slice, not the entire higher-dimensional set.
+    const expression=(parts.length===2?"("+parts[0]+")-("+parts[1]+")":parts[0])
+      .replace(/\by\b/gi,"0").replace(/\bz\b/gi,"0");
+    if(!/^[0-9xX+*/^().\s-]+$/.test(expression))return null;
     return expression;
   }
-  async function appendEquationGraph(container,form) {
-    const expression=equationGraphExpression(val(form,"equation"));if(!expression)return;
-    let x_min,x_max;
-    try{x_min=number(form,"graph_x_min");x_max=number(form,"graph_x_max");}catch(error){const p=document.createElement("p");p.className="result-error";p.textContent="Graph unavailable: "+error.message;container.append(p);return;}
-    if(x_min>=x_max){const p=document.createElement("p");p.className="result-error";p.textContent="Graph not shown: maximum x must be greater than minimum x. The equation results above are unchanged.";container.append(p);return;}
+  async function appendEquationGraph(container,form,result) {
+    const mode=val(form,"equation_mode");
     const section=document.createElement("section");section.className="equation-graph-section";
-    const heading=document.createElement("h3");heading.textContent="Quadratic graph";section.append(heading);
-    const note=document.createElement("p");note.className="field-help";note.textContent="Graph range changes only the viewport. Roots and equation results above come from the solver.";section.append(note);container.append(section);
-    try{const sampled=await api("/api/v1/graph/sample",{expression,x_min,x_max,points:301});if(Array.isArray(sampled.points))section.append(drawGraph(sampled.points));else{const msg=document.createElement("p");msg.className="result-error";msg.textContent="The API did not return graph samples.";section.append(msg);}}
-    catch(error){const msg=document.createElement("p");msg.className="result-error";msg.textContent="Graph unavailable: "+error.message;section.append(msg);}
+    const heading=document.createElement("h3");heading.textContent="Equation graph";section.append(heading);
+    const note=document.createElement("p");note.className="field-help";
+    note.textContent=mode==="system"
+      ?"The graph shows the first equation as a 2D slice; a full system may require multiple plots."
+      :"For equations with multiple variables, y and z are fixed at 0 and the equation residual is plotted against x. This is a 2D slice, not the full relation.";
+    section.append(note);container.append(section);
+    if(mode==="binomial"){
+      const message=document.createElement("p");message.className="field-help";
+      message.textContent="A binomial expansion is an expression rather than an equation. Convert it into an equation to plot it.";
+      section.append(message);return;
+    }
+    let raw=val(form,"equation");
+    if(mode==="system")raw=val(form,"system_equations").split(/\n+/).map(line=>line.trim()).filter(Boolean)[0]||"";
+    const expression=equationGraphExpression(raw);
+    if(!expression){const msg=document.createElement("p");msg.className="field-help";msg.textContent="This equation could not be plotted with the current 2D graph engine. The equation result is still available above.";section.append(msg);return;}
+    let x_min,x_max;
+    try{x_min=number(form,"graph_x_min");x_max=number(form,"graph_x_max");}
+    catch{ x_min=-10; x_max=10; }
+    if(!Number.isFinite(x_min)||!Number.isFinite(x_max)||x_min>=x_max){x_min=-10;x_max=10;}
+    try{
+      const sampled=await api("/api/v1/graph/sample",{expression,x_min,x_max,points:401});
+      if(Array.isArray(sampled.points)&&sampled.points.length) {
+        section.append(drawGraph(sampled.points));
+        const caption=document.createElement("p");caption.className="field-help";caption.textContent="x range: "+x_min+" to "+x_max+". Zeros of the plotted residual indicate solutions in this slice.";section.append(caption);
+      } else {
+        const msg=document.createElement("p");msg.className="field-help";msg.textContent="No graph samples were returned. The equation result is still available above.";section.append(msg);
+      }
+    }catch(error){const msg=document.createElement("p");msg.className="field-help";msg.textContent="Graph unavailable for this equation: "+error.message;section.append(msg);}
   }
   function transformDegreeTrig(expression) {
     if(angleMode!=="DEG")return expression;
