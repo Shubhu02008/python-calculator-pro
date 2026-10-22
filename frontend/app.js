@@ -350,11 +350,11 @@
       if(view.ymin<=0&&view.ymax>=0)svg.append(node("line",{x1:pad.left,y1:py(0),x2:width-pad.right,y2:py(0),class:"graph-axis"}));
       let d="",active=false,previous=null;
       sampled.forEach(p=>{
-        if(!Number.isFinite(p.x)||!Number.isFinite(p.y)||p.x<view.xmin||p.x>view.xmax||p.y<view.ymin||p.y>view.ymax){active=false;previous=null;return;}
+        if(!Number.isFinite(p.x)||!Number.isFinite(p.y)||p.x<view.xmin||p.x>view.xmax){active=false;previous=null;return;}
         if(previous&&Math.abs(p.y-previous.y)>(view.ymax-view.ymin)*.65)active=false;
         d+=(active?"L":"M")+px(p.x).toFixed(2)+","+py(p.y).toFixed(2)+" ";active=true;previous=p;
       });
-      if(d){const path=node("path",{d,class:"graph-curve"});svg.append(path);}
+      if(d){const clipId="graph-clip-"+Math.random().toString(36).slice(2);const defs=node("defs");const clip=node("clipPath",{id:clipId});clip.append(node("rect",{x:pad.left,y:pad.top,width:plotW,height:plotH}));defs.append(clip);svg.append(defs);const path=node("path",{d,class:"graph-curve","clip-path":`url(#${clipId})`});svg.append(path);}
       svg.append(node("text",{x:(pad.left+width-pad.right)/2,y:height-8,"text-anchor":"middle",class:"graph-axis-title"},"x"));
       svg.append(node("text",{x:16,y:height/2,transform:`rotate(-90 16 ${height/2})`,"text-anchor":"middle",class:"graph-axis-title"},"y"));
     };
