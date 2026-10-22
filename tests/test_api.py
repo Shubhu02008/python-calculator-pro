@@ -321,3 +321,32 @@ def test_graph_evaluate_endpoint():
     )
     assert response.status_code == 200
     assert response.json() == {"x": 3.0, "y": 10.0}
+
+
+
+def test_single_two_variable_linear_equation_returns_relation():
+    response = client.post(
+        "/api/v1/equations/solve",
+        json={"equation": "2x + 3y = 12"},
+    )
+
+    assert response.status_code == 200, response.json()
+    body = response.json()
+    assert body["status"] == "infinite_solutions"
+    assert body["variables"] == ["x", "y"]
+    assert body["relations"]
+    assert body["relations"][0].startswith("y = ")
+
+
+def test_single_two_variable_quadratic_equation_returns_both_branches():
+    response = client.post(
+        "/api/v1/equations/solve",
+        json={"equation": "x^2 + y^2 = 25"},
+    )
+
+    assert response.status_code == 200, response.json()
+    body = response.json()
+    assert body["status"] == "infinite_solutions"
+    assert body["variables"] == ["x", "y"]
+    assert len(body["relations"]) == 2
+    assert all(relation.startswith("y = ") for relation in body["relations"])
