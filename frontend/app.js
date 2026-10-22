@@ -12,8 +12,7 @@
 
   const descriptions = {
     "Scientific Calculator": "A precise space for everyday maths and advanced expressions.",
-    "Quadratic & Polynomial Solver": "Solve polynomial equations and inspect their mathematical roots.",
-    "Binomial Expansion": "Expand binomial expressions using the symbolic calculation engine.",
+    "Equations": "Solve polynomial equations and inspect their mathematical roots.",
     "Graphing Calculator": "Sample and plot a function over a range of x-values.",
     "Calculus": "Calculate derivatives, integrals, definite integrals, and limits.",
     "Matrix Calculator": "Run matrix arithmetic and linear algebra operations.",
@@ -37,8 +36,7 @@
   };
   const tools = {
     "Scientific Calculator": {kind:"scientific"},
-    "Quadratic & Polynomial Solver": {kind:"equation"},
-    "Binomial Expansion": {kind:"binomial"},
+    "Equations": {kind:"equation"},
     "Graphing Calculator": {kind:"graph"},
     "Calculus": {kind:"calculus"},
     "Matrix Calculator": {kind:"matrix"},
@@ -142,7 +140,7 @@
       try {
         const result=await submitForm(form);
         renderResult(body,result);
-        if(activeTool==="Quadratic & Polynomial Solver") await appendEquationGraph(body,form,result);
+        if(activeTool==="Equations") await appendEquationGraph(body,form,result);
       }
       catch(error) { body.replaceChildren();const message=document.createElement("p");message.className="result-error";message.textContent=error.message;body.append(message); }
       finally { submit.disabled=false;submit.textContent=original;isBusy=false; }
@@ -153,7 +151,7 @@
   }
   function addFields(form, sections) { sections.forEach(([title,fields])=>form.insertBefore(group(title,fields),form.querySelector(".form-actions"))); }
   function addMathKeypad(form,title){
-    const names=title==="Quadratic & Polynomial Solver"?["equation","system_equations"]:title==="Graphing Calculator"?["expression"]:title==="Calculus"?["expression","lower","upper","point"]:["expression"];
+    const names=title==="Equations"?["equation","system_equations","expression"]:title==="Graphing Calculator"?["expression"]:title==="Calculus"?["expression","lower","upper","point"]:["expression"];
     const targets=names.map(name=>form.elements.namedItem(name)).filter(Boolean);
     if(!targets.length)return;
     targets.forEach(control=>{control.setAttribute("inputmode","none");control.setAttribute("autocomplete","off");control.setAttribute("autocapitalize","off");});
@@ -371,8 +369,14 @@
 
   async function submitForm(form) {
     switch(activeTool){
-      case "Quadratic & Polynomial Solver": return val(form,"equation_mode")==="system" ? api("/api/v1/equations/system",{equations:val(form,"system_equations").split(/\n+/).map(line=>line.trim()).filter(Boolean)}) : api("/api/v1/equations/solve",{equation:val(form,"equation")});
-      case "Binomial Expansion": return api("/api/v1/binomials/expand",{expression:val(form,"expression")});
+      case "Equations": {
+        const mode=val(form,"equation_mode");
+        if(mode==="binomial")return api("/api/v1/binomials/expand",{expression:val(form,"expression")});
+        if(mode==="system")return api("/api/v1/equations/system",{equations:val(form,"system_equations").split(/\n+/).map(line=>line.trim()).filter(Boolean)});
+        const equation=val(form,"equation");
+        if(!equation.includes("="))throw new Error("Enter an equation with an equals sign, for example x^2 + y = 5.");
+        return api("/api/v1/equations/solve",{equation, equation_type:mode});
+      }
       case "Graphing Calculator": {const x_min=number(form,"x_min"),x_max=number(form,"x_max"),points=integer(form,"points");if(x_min>=x_max)throw new Error("Maximum x must be greater than minimum x.");if(points<2||points>2000)throw new Error("Sample points must be between 2 and 2,000.");return api("/api/v1/graph/sample",{expression:val(form,"expression"),x_min,x_max,points});}
       case "Calculus": {const operation=val(form,"operation"),payload={operation,expression:val(form,"expression"),variable:val(form,"variable"),order:integer(form,"order"),direction:val(form,"direction"),point:val(form,"point")||"0"};if(operation==="definite_integral"){payload.lower=val(form,"lower");payload.upper=val(form,"upper");}if(operation==="integral"){delete payload.point;delete payload.direction;}return api("/api/v1/calculus",payload);}
       case "Matrix Calculator": {
@@ -408,7 +412,14 @@
     setDrawer(false);if(title==="Scientific Calculator"){scientificWorkspace();return;}
     let spec=[];
     switch(title){
-      case "Quadratic & Polynomial Solver":spec=[["Solver mode",[sel("equation_mode","Solve",[["polynomial","Single polynomial equation"],["system","System of equations"]])]],["Single equation",[txt("equation","Equation in x, y, or z","","e.g. x^2 - 5*x + 6 = 0 or 2x + 3y = 12","Enter one equation here. Choose System of equations only for multiple equations."),num("graph_x_min","Graph minimum x","-10"),num("graph_x_max","Graph maximum x","10")]],["System of equations",[area("system_equations","Equations (one per line)","x + y = 5\ny - x = 1","Enter each equation on a separate line.")]]];break;
+      case "Equations":spec=[["Equation type",[sel("equation_mode","Choose a tool",[
+        ["linear","Single-variable linear equation"],
+        ["quadratic","Single-variable quadratic equation"],
+        ["multivariable_linear","Multivariable linear equation"],
+        ["multivariable_quadratic","Multivariable quadratic equation"],
+        ["system","System of equations"],
+        ["binomial","Binomial theorem / expansion"]
+      ])]],["Single equation",[txt("equation","Equation","","e.g. 2x + 3 = 7 or x^2 + y + z + 18 = 0","Use an equals sign. A multivariable equation is one equation with multiple variables."),num("graph_x_min","Graph minimum x","-10"),num("graph_x_max","Graph maximum x","10")]],["System of equations",[area("system_equations","Equations (one per line)","x + y = 5\ny - x = 1","Enter each equation on a separate line.")]],["Binomial expansion",[txt("expression","Binomial expression","","e.g. (x + 2)^3")]]];break;
       case "Binomial Expansion":spec=[["Expression",[txt("expression","Binomial expression","","e.g. (x + 2)^3")]]];break;
       case "Graphing Calculator":spec=[["Function",[txt("expression","Function of x","","e.g. sin(x) or x^2 - 4"),num("x_min","Minimum x","-10"),num("x_max","Maximum x","10"),num("points","Sample points","401","Choose 2–2,000 points. More samples can make curves smoother.")]]];break;
       case "Calculus":spec=[["Calculus operation",[sel("operation","Operation",selectOptions.calculusOperation),sel("variable","Variable",options(["x","y","z","t"])),num("order","Derivative order","1"),txt("expression","Expression","","e.g. x^3 + sin(x)"),txt("lower","Lower bound","0"),txt("upper","Upper bound","1"),txt("point","Limit point","0"),sel("direction","Limit direction",options(["both","plus","minus"]))]]];break;
@@ -424,15 +435,16 @@
       case "Date Calculator":spec=[["Date calculation",[sel("operation","Operation",selectOptions.dateOperation),field("date","Date",{type:"text",value:new Date().toISOString().slice(0,10),help:"Use YYYY-MM-DD."}),num("days","Number of days","7"),field("other_date","Second date",{type:"text",value:new Date().toISOString().slice(0,10),help:"Only used for date difference; YYYY-MM-DD."})]]];break;
     }
     const {form}=createPanel(title,descriptions[title]);addFields(form,spec);
-    if(["Quadratic & Polynomial Solver","Graphing Calculator","Calculus","Binomial Expansion"].includes(title)) addMathKeypad(form,title);
-    if(title==="Quadratic & Polynomial Solver"){
+    if(["Equations","Graphing Calculator","Calculus"].includes(title)) addMathKeypad(form,title);
+    if(title==="Equations"){
       const mode=form.elements.equation_mode;
       const updateEquationMode=()=>{
-        const system=mode.value==="system";
-        form.elements.equation.closest(".field").hidden=system;
-        form.elements.graph_x_min.closest(".field").hidden=system;
-        form.elements.graph_x_max.closest(".field").hidden=system;
+        const selected=mode.value,system=selected==="system",binomial=selected==="binomial";
+        form.elements.equation.closest(".field").hidden=system||binomial;
+        form.elements.graph_x_min.closest(".field").hidden=system||binomial||!selected.startsWith("quadratic");
+        form.elements.graph_x_max.closest(".field").hidden=system||binomial||!selected.startsWith("quadratic");
         form.elements.system_equations.closest(".field").hidden=!system;
+        form.elements.expression.closest(".field").hidden=!binomial;
         form.querySelectorAll(".form-section").forEach(section=>{
           const fields=[...section.querySelectorAll(".field")];
           section.hidden=fields.length>0&&fields.every(item=>item.hidden);
