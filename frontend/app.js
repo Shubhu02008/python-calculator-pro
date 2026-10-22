@@ -308,7 +308,9 @@
     const px=x=>pad.left+(x-xmin)/(xmax-xmin)*(width-pad.left-pad.right);
     const py=y=>height-pad.bottom-(y-ymin)/(ymax-ymin)*(height-pad.top-pad.bottom);
     const ns="http://www.w3.org/2000/svg",svg=document.createElementNS(ns,"svg");
-    svg.setAttribute("viewBox","0 0 "+width+" "+height);svg.setAttribute("role","img");svg.setAttribute("aria-label","Function graph with labelled axes");
+    const originalView={x:0,y:0,width,height};let view={...originalView};
+    const updateView=()=>svg.setAttribute("viewBox",[view.x,view.y,view.width,view.height].join(" "));
+    updateView();svg.setAttribute("role","img");svg.setAttribute("aria-label","Interactive function graph. Drag to pan and pinch or use zoom controls.");
     function line(x1,y1,x2,y2,cls){const el=document.createElementNS(ns,"line");Object.entries({x1,y1,x2,y2}).forEach(([k,v])=>el.setAttribute(k,v));el.setAttribute("class",cls);svg.append(el);}
     function label(x,y,text,anchor="middle",cls="graph-label"){const el=document.createElementNS(ns,"text");el.setAttribute("x",x);el.setAttribute("y",y);el.setAttribute("text-anchor",anchor);el.setAttribute("class",cls);el.textContent=text;svg.append(el);}
     const fmt=v=>Math.abs(v)<1e-8?"0":Number(v.toPrecision(4)).toString();
@@ -320,7 +322,21 @@
     const path=document.createElementNS(ns,"path");path.setAttribute("d",d);path.setAttribute("class","graph-curve");svg.append(path);
     label((pad.left+width-pad.right)/2,height-6,"x","middle","graph-axis-title");
     const yt=document.createElementNS(ns,"text");yt.setAttribute("x","15");yt.setAttribute("y",height/2);yt.setAttribute("transform","rotate(-90 15 "+(height/2)+")");yt.setAttribute("class","graph-axis-title");yt.setAttribute("text-anchor","middle");yt.textContent="y";svg.append(yt);
-    figure.append(svg);const caption=document.createElement("figcaption");caption.textContent="x: "+fmt(xmin)+" to "+fmt(xmax)+" · y viewport: "+fmt(ymin)+" to "+fmt(ymax);figure.append(caption);return figure;
+
+    // Pointer interactions work with mouse and touch: drag to pan, pinch to zoom.
+    const pointers=new Map();let lastPoint=null,lastPinchDistance=0;
+    const pointInView=(event)=>{const rect=svg.getBoundingClientRect();return {x:view.x+(event.clientX-rect.left)/rect.width*view.width,y:view.y+(event.clientY-rect.top)/rect.height*view.height};};
+    const zoomAt=(x,y,factor)=>{const nextWidth=Math.max(90,Math.min(2880,view.width*factor));const nextHeight=nextWidth*height/width;const ratio=nextWidth/view.width;view={x:x-(x-view.x)*ratio,y:y-(y-view.y)*ratio,width:nextWidth,height:nextHeight};updateView();};
+    svg.addEventListener("pointerdown",event=>{if(event.pointerType==="mouse"&&event.button!==0)return;event.preventDefault();svg.setPointerCapture(event.pointerId);pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});lastPoint=pointInView(event);if(pointers.size===2){const pts=[...pointers.values()];lastPinchDistance=Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y);}});
+    svg.addEventListener("pointermove",event=>{if(!pointers.has(event.pointerId))return;const previous=pointers.get(event.pointerId);pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});if(pointers.size>=2){const pts=[...pointers.values()],distance=Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y);if(lastPinchDistance>0&&distance>0){const rect=svg.getBoundingClientRect(),midX=(pts[0].x+pts[1].x)/2,midY=(pts[0].y+pts[1].y)/2,anchor={x:view.x+(midX-rect.left)/rect.width*view.width,y:view.y+(midY-rect.top)/rect.height*view.height};zoomAt(anchor.x,anchor.y,lastPinchDistance/distance);}lastPinchDistance=distance;lastPoint=null;return;}const rect=svg.getBoundingClientRect();view.x-=(event.clientX-previous.x)/rect.width*view.width;view.y-=(event.clientY-previous.y)/rect.height*view.height;updateView();});
+    const endPointer=event=>{pointers.delete(event.pointerId);if(pointers.size<2)lastPinchDistance=0;lastPoint=null;};svg.addEventListener("pointerup",endPointer);svg.addEventListener("pointercancel",endPointer);svg.addEventListener("lostpointercapture",endPointer);
+    svg.addEventListener("wheel",event=>{event.preventDefault();const anchor=pointInView(event);zoomAt(anchor.x,anchor.y,event.deltaY<0?.85:1.18);},{passive:false});
+    const controls=document.createElement("div");controls.className="graph-controls";controls.setAttribute("aria-label","Graph controls");
+    const makeControl=(textValue,aria,action)=>{const button=document.createElement("button");button.type="button";button.className="graph-control-button";button.textContent=textValue;button.setAttribute("aria-label",aria);button.addEventListener("click",action);controls.append(button);};
+    makeControl("−","Zoom out",()=>zoomAt(view.x+view.width/2,view.y+view.height/2,1.25));
+    makeControl("+","Zoom in",()=>zoomAt(view.x+view.width/2,view.y+view.height/2,.8));
+    makeControl("Reset","Reset graph view",()=>{view={...originalView};updateView();});
+    figure.append(controls,svg);const caption=document.createElement("figcaption");caption.textContent="Touch: drag to pan, pinch to zoom. Mouse: drag or scroll to zoom. Use Reset to restore the original view.";figure.append(caption);return figure;
   }
   function equationGraphExpression(raw) {
     const normalized=String(raw).replaceAll("²","^2").replaceAll("³","^3").replace(/[−–]/g,"-").replace(/[×·]/g,"*").replaceAll("÷","/");
