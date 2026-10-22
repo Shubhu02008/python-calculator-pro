@@ -414,13 +414,14 @@
     let spec=[];
     switch(title){
       case "Equations":spec=[["Equation type",[sel("equation_mode","Choose a tool",[
+        ["polynomial","General polynomial equation (any degree)"],
         ["linear","Single-variable linear equation"],
         ["quadratic","Single-variable quadratic equation"],
         ["multivariable_linear","Multivariable linear equation"],
         ["multivariable_quadratic","Multivariable quadratic equation"],
         ["system","System of equations"],
         ["binomial","Binomial theorem / expansion"]
-      ])]],["Single equation",[txt("equation","Equation","","e.g. 2x + 3 = 7 or x^2 + y + z + 18 = 0","Use an equals sign. A multivariable equation is one equation with multiple variables."),num("graph_x_min","Graph minimum x","-10"),num("graph_x_max","Graph maximum x","10")]],["System of equations",[area("system_equations","Equations (one per line)","x + y = 5\ny - x = 1","Enter each equation on a separate line.")]],["Binomial expansion",[txt("expression","Binomial expression","","e.g. (x + 2)^3")]]];break;
+      ])]],["Single equation",[txt("equation","Equation","","e.g. xy + yz = 3x^2yz","Use an equals sign. General polynomial mode accepts mixed terms and any degree in x, y, and z."),num("graph_x_min","Graph minimum x","-10"),num("graph_x_max","Graph maximum x","10")]],["System of equations",[area("system_equations","Equations (one per line)","x + y = 5\ny - x = 1","Enter each equation on a separate line.")]],["Binomial expansion",[txt("expression","Binomial expression","","e.g. (x + 2)^3")]]];break;
       case "Graphing Calculator":spec=[["Function",[txt("expression","Function of x","","e.g. sin(x) or x^2 - 4"),num("x_min","Minimum x","-10"),num("x_max","Maximum x","10"),num("points","Sample points","401","Choose 2–2,000 points. More samples can make curves smoother.")]]];break;
       case "Calculus":spec=[["Calculus operation",[sel("operation","Operation",selectOptions.calculusOperation),sel("variable","Variable",options(["x","y","z","t"])),num("order","Derivative order","1"),txt("expression","Expression","","e.g. x^3 + sin(x)"),txt("lower","Lower bound","0"),txt("upper","Upper bound","1"),txt("point","Limit point","0"),sel("direction","Limit direction",options(["both","plus","minus"]))]]];break;
       case "Matrix Calculator":spec=[["Matrix operation",[sel("operation","Matrix operation",selectOptions.matrixOperation),area("matrix_a","Matrix A","1, 2\n3, 4","Rows separated by new lines; values separated by commas."),area("matrix_b","Matrix B","5, 6\n7, 8","Required for add, subtract, multiply, and compare."),txt("scalar","Scalar","2"),num("power","Power","2"),num("size","Size for identity/zero","3"),num("row","Row (1-based)","1"),num("column","Column (1-based)","1"),area("vector","Vector b","5, 11","For solving Ax = b; values separated by commas."),sel("method","Inverse method",[["","Default"],["adjoint","Adjoint"],["gauss_jordan","Gauss–Jordan"]]),sel("steps","Step-by-step working",[["false","Off"],["true","On"]])]]];break;
@@ -442,7 +443,7 @@
         const selected=mode.value,system=selected==="system",binomial=selected==="binomial";
         form.elements.equation.closest(".field").hidden=system||binomial;
         form.elements.graph_x_min.closest(".field").hidden=system||binomial||!selected.includes("quadratic");
-        form.elements.graph_x_max.closest(".field").hidden=system||binomial||!selected.startsWith("quadratic");
+        form.elements.graph_x_max.closest(".field").hidden=system||binomial||!selected.includes("quadratic");
         form.elements.system_equations.closest(".field").hidden=!system;
         form.elements.expression.closest(".field").hidden=!binomial;
         form.querySelectorAll(".form-section").forEach(section=>{
