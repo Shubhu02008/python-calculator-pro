@@ -491,6 +491,176 @@
     history.slice(0,8).forEach(item=>{const row=document.createElement("div");row.className="history-mini-row";const reuse=button(item.expression,"history-expression","button");reuse.addEventListener("click",()=>{const input=$('[name="expression"]');if(input){input.value=item.expression;input.focus();}});const result=document.createElement("strong");result.textContent=item.displayedResult;row.append(reuse,result);section.append(row);});
     const clear=button("Clear history","secondary-button","button");clear.addEventListener("click",()=>{if(window.confirm("Clear recent calculations stored in this browser?")){history=[];try{localStorage.removeItem(HISTORY_KEY);}catch{}renderTool(activeTool);}});section.append(clear);return section;
   }
+  const formulaReferences = {
+    "Scientific Calculator": {
+      intro:"A quick reference for common scientific-calculator expressions. Trigonometric functions use the selected DEG/RAD angle mode.",
+      items:[
+        ["Pythagorean identity","sin²θ + cos²θ = 1"],
+        ["Tangent identity","tan θ = sin θ / cos θ"],
+        ["Sine and cosine","sin 30° = 1/2; cos 60° = 1/2"],
+        ["Degree–radian conversion","Radians = Degrees × π / 180"],
+        ["Logarithm rules","log(ab) = log(a) + log(b); log(aⁿ) = n log(a)"],
+        ["Exponent rules","aᵐ × aⁿ = aᵐ⁺ⁿ; a⁰ = 1 (a ≠ 0)"],
+        ["Square root","√(ab) = √a × √b for non-negative a, b"]
+      ]
+    },
+    "Equations": {
+      intro:"These identities are useful when solving linear, quadratic, polynomial, multivariable, and binomial problems.",
+      items:[
+        ["Linear equation","ax + b = 0  ⇒  x = −b/a, a ≠ 0"],
+        ["Quadratic formula","For ax² + bx + c = 0: x = (−b ± √(b² − 4ac)) / 2a"],
+        ["Discriminant","D = b² − 4ac; D > 0: two distinct real roots; D = 0: repeated real root; D < 0: complex roots"],
+        ["Sum and product of roots","α + β = −b/a; αβ = c/a"],
+        ["Difference of squares","a² − b² = (a − b)(a + b)"],
+        ["Binomial theorem","(a + b)ⁿ = Σᵣ₌₀ⁿ ⁿCᵣ aⁿ⁻ʳbʳ"],
+        ["One equation, two variables","ax + by = c represents a line when a and b are not both zero"]
+      ]
+    },
+    "Graphing Calculator": {
+      intro:"Use these relationships to understand common graph shapes and key features before plotting a function.",
+      items:[
+        ["Straight line","y = mx + c; slope = m; y-intercept = c"],
+        ["Parabola","y = ax² + bx + c; vertex x-coordinate = −b/(2a)"],
+        ["Quadratic vertex","Vertex y-coordinate = f(−b/(2a))"],
+        ["Sine and cosine","y = sin x and y = cos x have period 2π (or 360°)"],
+        ["Reciprocal function","y = 1/x is undefined at x = 0"],
+        ["Circle","(x − h)² + (y − k)² = r²; centre (h, k), radius r"],
+        ["Slope between two points","m = (y₂ − y₁)/(x₂ − x₁), when x₂ ≠ x₁"]
+      ]
+    },
+    "Calculus": {
+      intro:"A compact reference for common differentiation, integration, and limit rules. Constants and domains matter.",
+      items:[
+        ["Power rule","d(xⁿ)/dx = n xⁿ⁻¹"],
+        ["Derivative of sine","d(sin x)/dx = cos x"],
+        ["Derivative of cosine","d(cos x)/dx = −sin x"],
+        ["Product rule","(uv)' = u'v + uv'"],
+        ["Chain rule","d f(g(x))/dx = f'(g(x)) g'(x)"],
+        ["Power integral","∫xⁿ dx = xⁿ⁺¹/(n + 1) + C, n ≠ −1"],
+        ["Definite integral","∫ₐᵇ f(x) dx = F(b) − F(a), where F' = f"],
+        ["Fundamental limit","limₓ→₀ sin x / x = 1 (x measured in radians)"]
+      ]
+    },
+    "Matrix Calculator": {
+      intro:"These core matrix formulas help interpret arithmetic, determinants, inverses, and linear systems.",
+      items:[
+        ["Matrix addition","(A + B)ᵢⱼ = Aᵢⱼ + Bᵢⱼ; matrices must have the same dimensions"],
+        ["Matrix multiplication","(AB)ᵢⱼ = Σₖ AᵢₖBₖⱼ; inner dimensions must match"],
+        ["2 × 2 determinant","For [[a,b],[c,d]], det(A) = ad − bc"],
+        ["2 × 2 inverse","A⁻¹ = 1/(ad − bc) [[d,−b],[−c,a]], when det(A) ≠ 0"],
+        ["Transpose","(Aᵀ)ᵢⱼ = Aⱼᵢ"],
+        ["Identity matrix","AI = IA = A for compatible dimensions"],
+        ["Linear system","Ax = b; if A is invertible, x = A⁻¹b"]
+      ]
+    },
+    "Statistics": {
+      intro:"Definitions for common descriptive statistics. Here n is the number of observations.",
+      items:[
+        ["Mean","x̄ = (Σxᵢ)/n"],
+        ["Median","The middle sorted value; for even n, average the two middle values"],
+        ["Range","Maximum − minimum"],
+        ["Population variance","σ² = Σ(xᵢ − μ)² / N"],
+        ["Sample variance","s² = Σ(xᵢ − x̄)² / (n − 1), n > 1"],
+        ["Standard deviation","Square root of the corresponding variance"],
+        ["Quartiles and IQR","IQR = Q₃ − Q₁"]
+      ]
+    },
+    "Probability & Combinatorics": {
+      intro:"Probability describes uncertainty; combinatorics counts arrangements and selections. The ampersand is intentional—the tool covers both topics.",
+      items:[
+        ["Basic probability","P(A) = favourable outcomes / total equally likely outcomes"],
+        ["Complement","P(Aᶜ) = 1 − P(A)"],
+        ["Union of two events","P(A ∪ B) = P(A) + P(B) − P(A ∩ B)"],
+        ["Conditional probability","P(A | B) = P(A ∩ B) / P(B), when P(B) > 0"],
+        ["Permutation","nPᵣ = n! / (n − r)!"],
+        ["Combination","nCᵣ = n! / [r!(n − r)!]"],
+        ["Binomial probability","P(X = k) = ⁿCₖ pᵏ(1 − p)ⁿ⁻ᵏ"]
+      ]
+    },
+    "Unit Converter": {
+      intro:"Conversion formulas vary by unit category. Use matching units and the correct temperature offset where applicable.",
+      items:[
+        ["Length","1 km = 1,000 m; 1 m = 100 cm; 1 in = 2.54 cm"],
+        ["Mass","1 kg = 1,000 g; 1 g = 1,000 mg"],
+        ["Time","1 h = 60 min = 3,600 s; 1 day = 24 h"],
+        ["Temperature: Celsius to Fahrenheit","°F = (°C × 9/5) + 32"],
+        ["Temperature: Fahrenheit to Celsius","°C = (°F − 32) × 5/9"],
+        ["Temperature: Celsius to Kelvin","K = °C + 273.15"],
+        ["General conversion","Converted value = input value × conversion factor (for linear unit conversions)"]
+      ]
+    },
+    "Finance & Loan EMI": {
+      intro:"These standard formulas use principal P, annual rate r, time t, and monthly rate i as defined below. Results depend on the rate and compounding assumptions.",
+      items:[
+        ["Simple interest","SI = P × r × t / 100"],
+        ["Simple-interest total","A = P + SI"],
+        ["Compound amount","A = P(1 + r/(100m))ᵐᵗ, with m compounding periods per year"],
+        ["Monthly loan rate","i = annual interest rate / 12 / 100"],
+        ["Loan EMI","EMI = P i (1 + i)ⁿ / [(1 + i)ⁿ − 1], where n is the number of monthly payments and i > 0"],
+        ["Zero-interest EMI","EMI = P / n when the loan has no interest"],
+        ["Total loan repayment","Total repayment = EMI × number of monthly payments"]
+      ]
+    },
+    "Discount & GST Calculator": {
+      intro:"Use these formulas to distinguish a discount from GST added to or included in a listed price.",
+      items:[
+        ["Discount amount","Discount = marked price × discount rate / 100"],
+        ["Price after discount","Selling price = marked price − discount"],
+        ["GST added to a price","GST = taxable amount × GST rate / 100"],
+        ["Price including GST","Total = taxable amount × (1 + GST rate / 100)"],
+        ["GST included in a total","GST portion = total × GST rate / (100 + GST rate)"],
+        ["Taxable value from inclusive total","Taxable value = total × 100 / (100 + GST rate)"]
+      ]
+    },
+    "BMI Calculator": {
+      intro:"Body mass index is a screening measure based on height and weight; it is not a diagnosis and does not measure body composition directly.",
+      items:[
+        ["BMI formula","BMI = weight in kilograms / (height in metres)²"],
+        ["Example","70 kg ÷ (1.75 m)² ≈ 22.86 kg/m²"],
+        ["Height conversion","Height in metres = height in centimetres / 100"],
+        ["Interpretation","Adult BMI categories are screening ranges and may not apply to children, teens, pregnancy, or every individual"]
+      ]
+    },
+    "Date Calculator": {
+      intro:"Date arithmetic follows calendar rules, including leap years and varying month lengths.",
+      items:[
+        ["Add days","Result date = starting date + specified number of calendar days"],
+        ["Subtract days","Result date = starting date − specified number of calendar days"],
+        ["Date difference","Elapsed days = absolute difference between the two dates"],
+        ["Leap year rule","A year is a leap year if divisible by 400, or divisible by 4 but not by 100"],
+        ["Calendar note","A difference in elapsed days is not necessarily the same as counting both start and end dates inclusively"]
+      ]
+    }
+  };
+
+  function formulaReferenceCard(title) {
+    const data = formulaReferences[title];
+    if (!data) return null;
+    const card = document.createElement("section");
+    card.className = "panel formula-reference-card";
+    const head = document.createElement("div");
+    head.className = "formula-reference-heading";
+    const heading = document.createElement("h2");
+    heading.textContent = "Formula reference";
+    const subtitle = document.createElement("p");
+    subtitle.textContent = data.intro;
+    head.append(heading, subtitle);
+    const list = document.createElement("div");
+    list.className = "formula-reference-list";
+    data.items.forEach(([name, formula]) => {
+      const item = document.createElement("article");
+      item.className = "formula-reference-item";
+      const label = document.createElement("h3");
+      label.textContent = name;
+      const expression = document.createElement("p");
+      expression.textContent = formula;
+      item.append(label, expression);
+      list.append(item);
+    });
+    card.append(head, list);
+    return card;
+  }
+
   function scientificWorkspace(){
     angleToggle.hidden=false;
     const {form,body,output}=createPanel("Scientific Calculator","Type an expression or use the keypad. Evaluation is handled by the Python engine.");
@@ -499,6 +669,7 @@
     addMathKeypad(form,"Scientific Calculator");
     form.addEventListener("submit",async event=>{event.preventDefault();if(isBusy)return;isBusy=true;const submit=form.querySelector('[type="submit"]');submit.disabled=true;submit.textContent="Calculating…";try{const expression=val(form,"expression");if(!expression)throw new Error("Enter an expression to calculate.");const result=await api("/api/v1/calculate",{expression:transformDegreeTrig(expression)});renderResult(body,result);saveHistory({expression,result:result.result,displayedResult:formatNumber(result.result),angleMode,timestamp:new Date().toISOString()});}catch(error){body.replaceChildren();const p=document.createElement("p");p.className="result-error";p.textContent=error.message;body.append(p);}finally{isBusy=false;submit.disabled=false;submit.textContent="Calculate";}});
     output.append(historySection());
+    const reference=formulaReferenceCard("Scientific Calculator");if(reference)output.append(reference);
     form.elements.expression.addEventListener("keydown",event=>{if(event.key==="Enter"){event.preventDefault();form.requestSubmit();}});
   }
 
@@ -625,6 +796,7 @@
     if(title==="Date Calculator"){
       const op=form.elements.operation;const update=()=>{form.elements.days.closest(".field").hidden=op.value==="difference";form.elements.other_date.closest(".field").hidden=op.value!=="difference";};op.addEventListener("change",update);update();
     }
+    const reference=formulaReferenceCard(title);if(reference)workspace.append(reference);
   }
   navItems.forEach(item=>item.addEventListener("click",()=>renderTool(item.dataset.tool)));
   renderTool(activeTool);checkApi();
