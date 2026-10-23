@@ -777,21 +777,30 @@
     const data = formulaReferences[title];
     if (!data) return null;
     const section = document.createElement("section");
-    section.className = "formula-notes";
-    section.setAttribute("aria-label", title + " formulas");
-    const list = document.createElement("div");
-    list.className = "formula-notes-list";
+    section.className = "panel formula-sheet";
+    section.setAttribute("aria-label", title + " formula sheet");
+    const heading = document.createElement("div");
+    heading.className = "panel-heading formula-sheet-heading";
+    const titleNode = document.createElement("h2");
+    titleNode.textContent = "Formula Sheet";
+    heading.append(titleNode);
+    const content = document.createElement("div");
+    content.className = "formula-sheet-content";
     data.items.forEach(([name, formula]) => {
-      const line = document.createElement("p");
-      line.className = "formula-notes-line";
-      const label = document.createElement("strong");
-      label.textContent = name + ": ";
-      const expression = document.createElement("span");
-      expression.textContent = formula;
-      line.append(label, expression);
-      list.append(line);
+      const group = document.createElement("section");
+      group.className = "formula-topic";
+      const topic = document.createElement("h3");
+      topic.textContent = name;
+      group.append(topic);
+      formula.split(/;\\s*/).map(part => part.trim()).filter(Boolean).forEach(part => {
+        const line = document.createElement("p");
+        line.className = "formula-equation";
+        line.textContent = part;
+        group.append(line);
+      });
+      content.append(group);
     });
-    section.append(list);
+    section.append(heading, content);
     return section;
   }
 
@@ -803,7 +812,7 @@
     addMathKeypad(form,"Scientific Calculator");
     form.addEventListener("submit",async event=>{event.preventDefault();if(isBusy)return;isBusy=true;const submit=form.querySelector('[type="submit"]');submit.disabled=true;submit.textContent="Calculating…";try{const expression=val(form,"expression");if(!expression)throw new Error("Enter an expression to calculate.");const result=await api("/api/v1/calculate",{expression:transformDegreeTrig(expression)});renderResult(body,result);saveHistory({expression,result:result.result,displayedResult:formatNumber(result.result),angleMode,timestamp:new Date().toISOString()});}catch(error){body.replaceChildren();const p=document.createElement("p");p.className="result-error";p.textContent=error.message;body.append(p);}finally{isBusy=false;submit.disabled=false;submit.textContent="Calculate";}});
     output.append(historySection());
-    const reference=formulaReferenceCard("Scientific Calculator");if(reference)output.append(reference);
+    const reference=formulaReferenceCard("Scientific Calculator");if(reference)workspace.append(reference);
     form.elements.expression.addEventListener("keydown",event=>{if(event.key==="Enter"){event.preventDefault();form.requestSubmit();}});
   }
 
