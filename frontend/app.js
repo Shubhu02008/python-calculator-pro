@@ -795,7 +795,7 @@
       const topic = document.createElement("h3");
       topic.textContent = name;
       group.append(topic);
-      formula.split(/;\\s*/).map(part => part.trim()).filter(Boolean).forEach(part => {
+      formula.split(/;\s*/).map(part => part.trim()).filter(Boolean).forEach(part => {
         const line = document.createElement("p");
         line.className = "formula-equation";
         line.textContent = part;
