@@ -785,38 +785,17 @@
     titleNode.textContent = "Formula Sheet";
     const subtitle = document.createElement("p");
     subtitle.className = "formula-sheet-subtitle";
-    subtitle.textContent = "Core formulas, written one per line.";
+    subtitle.textContent = "Core formulas, arranged like clear textbook notes.";
     heading.append(titleNode, subtitle);
     const content = document.createElement("div");
     content.className = "formula-sheet-content";
-    const splitFormulaLines = (formula) => {
-      // Semicolons are the primary separators; also split comma-separated equations.
-      const chunks = String(formula).split(";");
-      const lines = [];
-      const startsEquation = /^(?:(?:sin|cos|tan|cot|sec|cosec|arcsin|arccos|arctan|log|ln|lim|f\(|y\s*=|x\s*=|a\s*=|b\s*=|c\s*=|d\s*=|m\s*=|r\s*=|S\w*\s*=|P\s*\(|E\s*\(|Var\s*\(|SD\s*=|CV\s*=|BMI\s*=|EMI\s*=|GST\s*=|PV\s*=|FV\s*=|A\s*=|D\s*=|Δ\s*=|det\b|rank\b|tr\b|n!|\w+ₙ\s*=|\w+\([^)]*\)\s*=|[α-ωΑ-Ω]\w*\s*=|[A-Z]\w*\s*=)/i;
-      chunks.forEach(chunk => {
-        const commaParts = chunk.split(/,\s+(?=[^,]+)/);
-        let current = "";
-        commaParts.forEach((part, index) => {
-          const trimmed = part.trim();
-          if (index > 0 && startsEquation.test(trimmed)) {
-            if (current.trim()) lines.push(current.trim());
-            current = trimmed;
-          } else {
-            current += (current ? ", " : "") + trimmed;
-          }
-        });
-        if (current.trim()) lines.push(current.trim());
-      });
-      return lines;
-    };
     data.items.forEach(([name, formula]) => {
       const group = document.createElement("section");
       group.className = "formula-topic";
       const topic = document.createElement("h3");
       topic.textContent = name;
       group.append(topic);
-      splitFormulaLines(formula).forEach(part => {
+      formula.split(/;\\s*/).map(part => part.trim()).filter(Boolean).forEach(part => {
         const line = document.createElement("p");
         line.className = "formula-equation";
         line.textContent = part;
