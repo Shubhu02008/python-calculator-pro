@@ -776,29 +776,23 @@
   function formulaReferenceCard(title) {
     const data = formulaReferences[title];
     if (!data) return null;
-    const card = document.createElement("section");
-    card.className = "panel formula-reference-card";
-    const head = document.createElement("div");
-    head.className = "formula-reference-heading";
-    const heading = document.createElement("h2");
-    heading.textContent = "Formula reference";
-    const subtitle = document.createElement("p");
-    subtitle.textContent = data.intro;
-    head.append(heading, subtitle);
+    const section = document.createElement("section");
+    section.className = "formula-notes";
+    section.setAttribute("aria-label", title + " formulas");
     const list = document.createElement("div");
-    list.className = "formula-reference-list";
+    list.className = "formula-notes-list";
     data.items.forEach(([name, formula]) => {
-      const item = document.createElement("article");
-      item.className = "formula-reference-item";
-      const label = document.createElement("h3");
-      label.textContent = name;
-      const expression = document.createElement("p");
+      const line = document.createElement("p");
+      line.className = "formula-notes-line";
+      const label = document.createElement("strong");
+      label.textContent = name + ": ";
+      const expression = document.createElement("span");
       expression.textContent = formula;
-      item.append(label, expression);
-      list.append(item);
+      line.append(label, expression);
+      list.append(line);
     });
-    card.append(head, list);
-    return card;
+    section.append(list);
+    return section;
   }
 
   function scientificWorkspace(){
