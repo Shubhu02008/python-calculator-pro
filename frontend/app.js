@@ -783,7 +783,10 @@
     heading.className = "panel-heading formula-sheet-heading";
     const titleNode = document.createElement("h2");
     titleNode.textContent = "Formula Sheet";
-    heading.append(titleNode);
+    const subtitle = document.createElement("p");
+    subtitle.className = "formula-sheet-subtitle";
+    subtitle.textContent = "Core formulas, arranged like clear textbook notes.";
+    heading.append(titleNode, subtitle);
     const content = document.createElement("div");
     content.className = "formula-sheet-content";
     data.items.forEach(([name, formula]) => {
