@@ -222,3 +222,17 @@
 @media(min-width:900px){.math-keypad-keys{grid-template-columns:repeat(8,minmax(0,1fr))}}
 @media(max-width:700px){.math-keypad{padding:9px}.math-keypad-keys{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.math-keypad-keys .math-key{min-height:46px;font-size:14px}.keypad-page-switcher{gap:6px}.keypad-page-button{min-height:40px}}
 @media(max-width:360px){.math-keypad-keys .math-key{min-height:42px;font-size:13px;padding:6px 2px}}
+
+/* Educational formula reference cards beneath each calculator workspace. */
+.formula-reference-card{width:100%;min-width:0;margin-top:20px;padding:22px;animation:panel-enter .34s cubic-bezier(.2,.75,.25,1) both}
+.formula-reference-heading{margin-bottom:17px}
+.formula-reference-heading h2{margin:0;color:var(--text);font-size:16px;letter-spacing:-.25px}
+.formula-reference-heading p{max-width:900px;margin:7px 0 0;color:var(--muted);font-size:12px;line-height:1.7}
+.formula-reference-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.formula-reference-item{min-width:0;padding:13px 14px;border:1px solid var(--line-soft);border-radius:10px;background:#0c1423}
+.formula-reference-item h3{margin:0 0 6px;color:#a9c5f5;font-size:11px;font-weight:700;letter-spacing:.1px}
+.formula-reference-item p{margin:0;color:#c0cce0;font-family:"DM Mono",ui-monospace,monospace;font-size:11px;line-height:1.7;overflow-wrap:anywhere}
+.result-card>.formula-reference-card{margin-top:20px;padding:18px 0 0;border:0;border-top:1px solid var(--line);border-radius:0;background:transparent;box-shadow:none;animation:none}
+.result-card>.formula-reference-card .formula-reference-list{grid-template-columns:minmax(0,1fr)}
+.result-card>.formula-reference-card .formula-reference-item{background:#0c1423}
+@media(max-width:600px){.formula-reference-card{padding:16px}.formula-reference-list{grid-template-columns:minmax(0,1fr);gap:8px}.formula-reference-item{padding:12px}.formula-reference-item p{font-size:10.5px}.result-card>.formula-reference-card{padding:16px 0 0}}
