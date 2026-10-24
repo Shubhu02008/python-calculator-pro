@@ -196,7 +196,7 @@ def test_reciprocal_trigonometric_functions(expression, expected):
     assert evaluate(expression) == pytest.approx(expected)
 
 
-@pytest.mark.parametrize("expression", ["sec(pi/2)", "csc(pi)", "cot(pi)"])
+@pytest.mark.parametrize("expression", ["tan(pi/2)", "sec(pi/2)", "csc(pi)", "cot(pi)"])
 def test_reciprocal_trigonometric_functions_reject_undefined_angles(expression):
     with pytest.raises(ValueError, match="Invalid mathematical domain"):
         evaluate(expression)
