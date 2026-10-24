@@ -10,6 +10,7 @@ from requests and does not expose the implementation modules as file endpoints.
 
 import math
 import os
+from decimal import Decimal, InvalidOperation
 from typing import Literal
 
 from fastapi import FastAPI, Request
@@ -541,10 +542,14 @@ def calculate(request: ExpressionRequest):
     """Evaluate an expression and include an exact fraction when applicable."""
     result = evaluate_expression(request.expression)
     fraction = fraction_form(request.expression)
+    try:
+        approximation = fraction["approximation"] if fraction else format(Decimal(str(result)), ".4g")
+    except (InvalidOperation, ValueError, TypeError):
+        approximation = str(result)
     return {
         "result": result,
         "exact_fraction": fraction["exact_fraction"] if fraction else None,
-        "approximation": fraction["approximation"] if fraction else None,
+        "approximation": approximation,
     }
 
 
