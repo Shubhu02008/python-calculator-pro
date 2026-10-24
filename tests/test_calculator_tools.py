@@ -129,3 +129,10 @@ def test_date_calculator_rejects_invalid_date_and_operation():
         calculate_date("add_days", "2025-02-30", days=1)
     with pytest.raises(ValueError, match="Operation"):
         calculate_date("next_month", "2025-01-01")
+
+
+
+def test_emi_handles_high_rates_without_intermediate_overflow():
+    result = calculate_emi(1000, 10000, 1200)
+    assert result["monthly_emi"] == pytest.approx(8333.33, abs=0.01)
+    assert result["monthly_emi"] > 0
