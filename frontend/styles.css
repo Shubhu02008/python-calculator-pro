@@ -288,3 +288,14 @@ body:not(.calculator-open) .app-shell{display:none}
 .brand-mark{padding:2px;background:linear-gradient(145deg,#12223c,#0e182b);border:1px solid #2a4d79}
 .nav-icon-calculator{width:20px;height:22px;flex-basis:20px}
 .nav-icon-calculator svg{display:block;width:20px;height:22px}
+
+
+/* Voluntary project support messaging */
+.home-support{display:flex;align-items:center;gap:14px;max-width:590px;margin:25px auto 0;padding:15px 18px;border:1px solid #2a4264;border-radius:13px;background:linear-gradient(120deg,#14233aab,#101a2aab);text-align:left}
+.support-symbol{display:grid;place-items:center;flex:0 0 35px;width:35px;height:35px;border:1px solid #395986;border-radius:10px;background:#1a2d4b;color:#9fc0ff;font-size:22px}
+.home-support strong{display:block;color:#e6efff;font-size:12px;font-weight:700}
+.home-support p{margin:3px 0 0;color:#91a4c1;font-size:11px;line-height:1.65}
+.sidebar-support{display:flex;flex-direction:column;gap:3px;margin:1px 4px 8px;padding:9px 10px;border:1px solid #263955;border-radius:9px;background:#101b2c}
+.sidebar-support strong{color:#c9dcfa;font-size:10px;font-weight:700}
+.sidebar-support span{color:#8295b1;font-size:9px;line-height:1.5}
+@media(max-width:650px){.home-support{margin-top:22px;padding:13px 14px;gap:11px}.home-support p{font-size:10px}}
