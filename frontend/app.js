@@ -509,13 +509,23 @@
   function transformDegreeTrig(expression) {
     expression=expression.replace(/π/g,"pi");
     if(angleMode!=="DEG")return expression;
-    const names=new Set(["sin","cos","tan"]);let out="",i=0;
-    while(i<expression.length){const match=expression.slice(i).match(/^([A-Za-z_][A-Za-z_0-9]*)\s*\(/);if(!match){out+=expression[i++];continue;}
-      const name=match[1],open=i+match[0].lastIndexOf("(");let depth=1,j=open+1;
+    const names=new Set(["sin","cos","tan","sec","csc","cosec","cot"]);
+    const inverseNames=new Set(["asin","acos","atan"]);
+    let out="",i=0;
+    while(i<expression.length){
+      const match=expression.slice(i).match(/^([A-Za-z_][A-Za-z_0-9]*)\s*\(/);
+      if(!match){out+=expression[i++];continue;}
+      const name=match[1],normalizedName=name.toLowerCase(),open=i+match[0].lastIndexOf("(");
+      let depth=1,j=open+1;
       while(j<expression.length&&depth>0){if(expression[j]==="(")depth++;else if(expression[j]===")")depth--;j++;}
       if(depth!==0){out+=expression.slice(i);break;}
-      const inner=transformDegreeTrig(expression.slice(open+1,j-1));out+=names.has(name.toLowerCase())?name+"(radians("+inner+"))":name+"("+inner+")";i=j;
-    }return out;
+      const inner=transformDegreeTrig(expression.slice(open+1,j-1));
+      if(names.has(normalizedName))out+=name+"(radians("+inner+"))";
+      else if(inverseNames.has(normalizedName))out+="degrees("+name+"("+inner+"))";
+      else out+=name+"("+inner+")";
+      i=j;
+    }
+    return out;
   }
   function setAngleMode(mode){angleMode=mode;angleButtons.forEach(btn=>{const selected=btn.dataset.angle===mode;btn.classList.toggle("is-selected",selected);btn.setAttribute("aria-pressed",String(selected));});}
   angleButtons.forEach(btn=>btn.addEventListener("click",()=>setAngleMode(btn.dataset.angle)));
