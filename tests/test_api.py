@@ -414,3 +414,39 @@ def test_multivariable_equation_type_requires_multiple_variables():
 
     assert response.status_code == 422
     assert "at least two" in response.json()["error"]["message"]
+
+
+
+def test_implicit_graph_endpoint_plots_sideways_parabola():
+    response = client.post(
+        "/api/v1/graph/relation",
+        json={
+            "relation": "y^2 = 18x",
+            "x_min": -1,
+            "x_max": 10,
+            "y_min": -10,
+            "y_max": 10,
+            "grid_size": 80,
+        },
+    )
+    assert response.status_code == 200, response.json()
+    body = response.json()
+    assert len(body["segments"]) > 20
+    assert any(segment["y1"] > 1 and segment["y2"] > 1 for segment in body["segments"])
+    assert any(segment["y1"] < -1 and segment["y2"] < -1 for segment in body["segments"])
+
+
+def test_implicit_graph_endpoint_plots_circle():
+    response = client.post(
+        "/api/v1/graph/relation",
+        json={
+            "relation": "x^2 + y^2 = 25",
+            "x_min": -6,
+            "x_max": 6,
+            "y_min": -6,
+            "y_max": 6,
+            "grid_size": 80,
+        },
+    )
+    assert response.status_code == 200, response.json()
+    assert len(response.json()["segments"]) > 100
