@@ -307,7 +307,9 @@ body:not(.calculator-open) .app-shell{display:none}
 .sidebar-support a:hover{color:#fff;text-decoration:underline}
 .support-link:focus-visible,.sidebar-support a:focus-visible{outline:2px solid #a8c4ff;outline-offset:3px}
 
-/* Cheese-themed support accents, retaining the site's neon-blue palette */
-.cheese-symbol{font-family:system-ui,sans-serif;filter:drop-shadow(0 0 10px rgba(255,190,65,.24));font-size:28px}
+/* Custom neon cheese icons, matching the existing blue/purple glow */
+.cheese-symbol{background:transparent;border:0;filter:none;overflow:visible}
+.cheese-symbol svg{display:block;width:34px;height:34px;overflow:visible;fill:none;stroke:#ffd84a;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 3px #ffcf32) drop-shadow(0 0 8px #ffb81c)}
 .sidebar-support strong{display:flex;align-items:center;gap:6px}
-.sidebar-cheese{font-size:14px;filter:drop-shadow(0 0 5px rgba(255,190,65,.25))}
+.sidebar-cheese{display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;flex:0 0 17px;filter:none}
+.sidebar-cheese svg{display:block;width:17px;height:17px;overflow:visible;fill:none;stroke:#ffd84a;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 2px #ffcf32) drop-shadow(0 0 4px #ffb81c)}
