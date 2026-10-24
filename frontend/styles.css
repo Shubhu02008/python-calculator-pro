@@ -313,3 +313,5 @@ body:not(.calculator-open) .app-shell{display:none}
 .sidebar-support strong{display:flex;align-items:center;gap:6px}
 .sidebar-cheese{display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;flex:0 0 17px;filter:none}
 .sidebar-cheese svg{display:block;width:17px;height:17px;overflow:visible;fill:none;stroke:#ffd84a;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 2px #ffcf32) drop-shadow(0 0 4px #ffb81c)}
+
+.graph-coordinate-guide{stroke:var(--blue-bright,#6ea3ff);stroke-width:1;stroke-dasharray:4 4;opacity:.75;pointer-events:none}.graph-coordinate-point{fill:var(--blue-bright,#6ea3ff);stroke:var(--panel,#0a1220);stroke-width:2;pointer-events:none}.graph-coordinate-label-bg{fill:var(--panel,#0a1220);stroke:var(--blue-bright,#6ea3ff);stroke-width:1;pointer-events:none}.graph-coordinate-label{fill:var(--text,#f5f7fb);font-size:13px;font-weight:600;pointer-events:none}
