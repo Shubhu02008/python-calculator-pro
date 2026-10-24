@@ -124,9 +124,16 @@ def test_statistics_rejects_non_finite_range_result():
 
 
 def test_calculus_supports_reciprocal_trigonometric_functions():
-    secant = calculate_calculus("derivative", "sec(x)")
-    cosecant = calculate_calculus("derivative", "cosec(x)")
-    cotangent = calculate_calculus("derivative", "cot(x)")
-    assert secant["result"] == "sec(x)*tan(x)"
-    assert cosecant["result"] == "-cot(x)*csc(x)"
-    assert cotangent["result"] == "-1/sin(x)**2"
+    import sympy as sp
+
+    x = sp.Symbol("x")
+    results = {
+        "sec": calculate_calculus("derivative", "sec(x)")["result"],
+        "cosec": calculate_calculus("derivative", "cosec(x)")["result"],
+        "cot": calculate_calculus("derivative", "cot(x)")["result"],
+    }
+    local_functions = {"x": x, "sec": sp.sec, "tan": sp.tan,
+                       "csc": sp.csc, "cot": sp.cot, "sin": sp.sin}
+    assert sp.simplify(sp.sympify(results["sec"], locals=local_functions) - sp.diff(sp.sec(x), x)) == 0
+    assert sp.simplify(sp.sympify(results["cosec"], locals=local_functions) - sp.diff(sp.csc(x), x)) == 0
+    assert sp.simplify(sp.sympify(results["cot"], locals=local_functions) - sp.diff(sp.cot(x), x)) == 0
