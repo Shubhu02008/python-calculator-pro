@@ -944,6 +944,32 @@
     }
     const reference=formulaReferenceCard(title);if(reference)workspace.append(reference);
   }
+
+  const previewExamples = {
+    scientific: {label:"SCIENTIFIC CALCULATION", expression:"sin(30°)", answer:"0.5", detail:"Trigonometric ratio"},
+    equations: {label:"SOLVING AN EQUATION", expression:"2x + 3 = 11", answer:"x = 4", detail:"Subtract 3, then divide by 2"},
+    calculus: {label:"DIFFERENTIATION", expression:"d/dx (x³) at x = 2", answer:"12", detail:"Derivative: 3x²"},
+    matrices: {label:"MATRIX DETERMINANT", expression:"A = [[1, 2], [3, 4]]", answer:"−2", detail:"det(A) = (1 × 4) − (2 × 3)"}
+  };
+  const previewButtons = document.querySelectorAll("[data-preview]");
+  previewButtons.forEach(button => button.addEventListener("click", () => {
+    const example = previewExamples[button.dataset.preview];
+    if (!example) return;
+    const label = $("#preview-mode-label");
+    const expression = $("#preview-equation");
+    const answer = $("#preview-answer");
+    const detail = $("#preview-detail");
+    if (label) label.textContent = example.label;
+    if (expression) expression.textContent = example.expression;
+    if (answer) answer.textContent = example.answer;
+    if (detail) detail.textContent = example.detail;
+    previewButtons.forEach(item => {
+      const selected = item === button;
+      item.classList.toggle("is-selected", selected);
+      item.setAttribute("aria-pressed", String(selected));
+    });
+  }));
+
   const startCalculating = $("#start-calculating");
   if (startCalculating) startCalculating.addEventListener("click", event => {
     event.preventDefault();
