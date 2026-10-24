@@ -306,3 +306,8 @@ body:not(.calculator-open) .app-shell{display:none}
 .sidebar-support a{align-self:flex-start;margin-top:3px;color:#9fc0ff;font-size:9px;font-weight:700;text-decoration:none}
 .sidebar-support a:hover{color:#fff;text-decoration:underline}
 .support-link:focus-visible,.sidebar-support a:focus-visible{outline:2px solid #a8c4ff;outline-offset:3px}
+
+/* Cheese-themed support accents, retaining the site's neon-blue palette */
+.cheese-symbol{font-family:system-ui,sans-serif;filter:drop-shadow(0 0 10px rgba(255,190,65,.24));font-size:28px}
+.sidebar-support strong{display:flex;align-items:center;gap:6px}
+.sidebar-cheese{font-size:14px;filter:drop-shadow(0 0 5px rgba(255,190,65,.25))}
