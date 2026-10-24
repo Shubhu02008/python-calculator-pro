@@ -268,3 +268,16 @@ body:not(.calculator-open) .app-shell{display:none}
 .home-footer{max-width:1160px;margin:auto;padding:22px 28px 26px;border-top:1px solid #ffffff12;display:flex;align-items:center;justify-content:space-between;gap:18px;color:#71819a;font-size:11px}.home-footer strong{color:#b9c9e1}.home-footer nav{display:flex;gap:19px}
 @media(max-width:650px){.home-nav{height:66px;padding:0 18px}.home-brand{font-size:13px}.home-nav-link{font-size:11px}.home-hero{padding:64px 19px 54px}.home-hero h1{letter-spacing:-1.8px}.home-preview{margin-top:40px;padding:15px}.home-about{padding:49px 20px}.home-feature-row{grid-template-columns:1fr}.home-feature-row article{padding:17px}.home-footer{padding:21px 20px;align-items:flex-start;flex-direction:column}.home-footer nav{flex-wrap:wrap;gap:15px}}
 @media(prefers-reduced-motion:reduce){.home-start-button{transition:none}}
+
+/* Interactive homepage calculation preview */
+.preview-mode-label{color:#7faaff;font-size:9px;font-weight:800;letter-spacing:1.5px;margin-top:18px}
+.preview-equation{min-height:86px;display:flex;align-items:center;overflow-wrap:anywhere}
+.preview-result strong{min-height:19px;overflow-wrap:anywhere}
+.preview-tools{gap:8px}
+.preview-tool{cursor:pointer;padding:9px 12px;border:1px solid #293951;border-radius:8px;background:#111d30;color:#91a6c5;font:inherit;font-size:11px;transition:background .18s,border-color .18s,color .18s,transform .18s}
+.preview-tool:hover{border-color:#638fe1;color:#e5eeff;transform:translateY(-1px)}
+.preview-tool.is-selected{border-color:#5285ec;background:#1b3763;color:#eaf1ff;box-shadow:inset 0 0 0 1px #5285ec35}
+.preview-tool:focus-visible{outline:2px solid #a8c4ff;outline-offset:3px}
+.preview-hint{margin:13px 0 0;text-align:center;color:#657b9b;font-size:10px}
+@media(max-width:440px){.preview-tools{display:grid;grid-template-columns:1fr 1fr}.preview-tool{width:100%;padding:10px 7px}.preview-equation{min-height:75px}}
+@media(prefers-reduced-motion:reduce){.preview-tool{transition:none}}
