@@ -26,6 +26,7 @@ from unit_conversion import convert_unit as _convert_unit
 from unit_conversion import list_supported_units as _list_supported_units
 from graphing import evaluate_function as _evaluate_function
 from graphing import sample_function as _sample_function
+from graphing import sample_relation as _sample_relation
 
 from calculator_tools import (
     calculate_bmi as _calculate_bmi,
@@ -293,6 +294,13 @@ def sample_function(expression, x_min, x_max, points=101):
     return _run(lambda: _sample_function(expression, checked_min, checked_max, points))
 
 
+def sample_relation(relation, x_min, x_max, y_min, y_max, grid_size=80):
+    """Sample an implicit equation's zero contour as independent line segments."""
+    return _run(lambda: _sample_relation(
+        relation, x_min, x_max, y_min, y_max, grid_size=grid_size
+    ))
+
+
 def solve_equation(equation):
     """Solve a linear, quadratic, or cubic equation in x."""
     if not isinstance(equation, str):
@@ -399,6 +407,7 @@ __all__ = [
     "evaluate_function",
     "list_supported_units",
     "sample_function",
+    "sample_relation",
     "solve_equation",
     "calculate_bmi",
     "calculate_compound_interest",
