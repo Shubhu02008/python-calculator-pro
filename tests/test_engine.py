@@ -9,6 +9,7 @@ from engine import (
     calculate_operation,
     convert_unit,
     evaluate_expression,
+    fraction_form,
     expand_binomial,
     list_supported_units,
     solve_equation,
@@ -232,3 +233,8 @@ def test_fraction_form_skips_integers_and_non_rational_functions():
     assert fraction_form("6 / 3") is None
     assert fraction_form("sqrt(2)") is None
     assert fraction_form("sin(pi / 2)") is None
+
+
+def test_fraction_form_recognizes_exact_degree_mode_trig_values():
+    assert fraction_form("sin(radians(30))")["exact_fraction"] == "1/2"
+    assert fraction_form("cos(radians(60))")["exact_fraction"] == "1/2"
