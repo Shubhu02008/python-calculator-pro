@@ -6,6 +6,7 @@ for invalid input and unsupported numerical results.
 """
 
 import math
+import re
 from decimal import Decimal, InvalidOperation, localcontext
 from fractions import Fraction
 from numbers import Real
@@ -138,6 +139,24 @@ def fraction_form(expression):
         return None
 
     try:
+        # Degree-mode UI converts common exact-angle inputs to radians before
+        # sending them here. Preserve exact rational values for these known cases.
+        special_angle = re.fullmatch(
+            r"\s*(sin|cos)\s*\(\s*radians\s*\(\s*([+-]?\d+(?:\.0*)?)\s*\)\s*\)\s*",
+            expression, re.IGNORECASE,
+        )
+        if special_angle:
+            function, raw_angle = special_angle.groups()
+            angle = int(float(raw_angle)) % 360
+            values = {
+                ("sin", 30): Fraction(1, 2), ("sin", 150): Fraction(1, 2),
+                ("sin", 210): Fraction(-1, 2), ("sin", 330): Fraction(-1, 2),
+                ("cos", 60): Fraction(1, 2), ("cos", 300): Fraction(1, 2),
+                ("cos", 120): Fraction(-1, 2), ("cos", 240): Fraction(-1, 2),
+            }
+            exact = values.get((function.lower(), angle))
+            if exact is not None:
+                return {"exact_fraction": f"{exact.numerator}/{exact.denominator}", "approximation": format(Decimal(exact.numerator) / Decimal(exact.denominator), ".4g")}
         tokens = tokenize(expression)
         operators = {"+", "-", "*", "/", "^", "(", ")", "!", "%"}
         if any(
