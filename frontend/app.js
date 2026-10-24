@@ -353,7 +353,7 @@
     const svg=document.createElementNS(svgNS,"svg");svg.setAttribute("viewBox",`0 0 ${width} ${height}`);svg.setAttribute("role","img");svg.setAttribute("aria-label","Interactive coordinate graph with labelled axes. Drag to pan, pinch or scroll to zoom.");
     const controls=document.createElement("div");controls.className="graph-controls";controls.setAttribute("aria-label","Graph controls");
     const caption=document.createElement("figcaption");caption.textContent="Coordinates stay true to scale. Drag to pan; pinch, scroll, or use +/− to zoom. The graph resamples as you move.";
-    let sampled=points,requestTimer=null,requestVersion=0,drag=null,lastPinch=0;
+    let sampled=points,requestTimer=null,requestVersion=0,drag=null,lastPinch=0,selectedPoint=null;
     const pointers=new Map();
     const fmt=v=>{if(Math.abs(v)<1e-9)return "0";if(Math.abs(v)>=1e5||Math.abs(v)<1e-3)return v.toExponential(1);return Number(v.toPrecision(4)).toString();};
     const niceStep=range=>{const raw=range/8,power=Math.pow(10,Math.floor(Math.log10(Math.max(raw,1e-12)))),fraction=raw/power;return (fraction<1.5?1:fraction<3.5?2:fraction<7.5?5:10)*power;};
@@ -394,7 +394,19 @@
       if(d){const clipId="graph-clip-"+Math.random().toString(36).slice(2);const defs=node("defs");const clip=node("clipPath",{id:clipId});clip.append(node("rect",{x:pad.left,y:pad.top,width:plotW,height:plotH}));defs.append(clip);svg.append(defs);const path=node("path",{d,class:"graph-curve","clip-path":`url(#${clipId})`});svg.append(path);}
       svg.append(node("text",{x:(pad.left+width-pad.right)/2,y:height-8,"text-anchor":"middle",class:"graph-axis-title"},"x"));
       svg.append(node("text",{x:16,y:height/2,transform:`rotate(-90 16 ${height/2})`,"text-anchor":"middle",class:"graph-axis-title"},"y"));
+      if(selectedPoint&&selectedPoint.x>=view.xmin&&selectedPoint.x<=view.xmax&&selectedPoint.y>=view.ymin&&selectedPoint.y<=view.ymax){
+        const sx=px(selectedPoint.x),sy=py(selectedPoint.y),label=`(${fmt(selectedPoint.x)}, ${fmt(selectedPoint.y)})`,lx=Math.min(width-pad.right-125,Math.max(pad.left+4,sx+10)),ly=Math.max(pad.top+18,sy-10);
+        svg.append(node("line",{x1:sx,y1:pad.top,x2:sx,y2:height-pad.bottom,class:"graph-coordinate-guide"}),node("line",{x1:pad.left,y1:sy,x2:width-pad.right,y2:sy,class:"graph-coordinate-guide"}),node("circle",{cx:sx,cy:sy,r:5,class:"graph-coordinate-point"}),node("rect",{x:lx-4,y:ly-16,width:Math.min(125,label.length*7+10),height:23,rx:5,class:"graph-coordinate-label-bg"}),node("text",{x:lx+1,y:ly,"text-anchor":"start",class:"graph-coordinate-label"},label));
+      }
     };
+    svg.addEventListener("click",event=>{
+      if(drag||pointers.size)return;
+      const rect=svg.getBoundingClientRect(),sx=(event.clientX-rect.left)/rect.width*width,sy=(event.clientY-rect.top)/rect.height*height;
+      if(sx<pad.left||sx>width-pad.right||sy<pad.top||sy>height-pad.bottom)return;
+      let nearest=null,best=Infinity;
+      sampled.forEach(p=>{if(!Number.isFinite(p.x)||!Number.isFinite(p.y))return;const dx=pad.left+(p.x-view.xmin)/(view.xmax-view.xmin)*plotW-sx,dy=pad.top+(view.ymax-p.y)/(view.ymax-view.ymin)*plotH-sy,d=dx*dx+dy*dy;if(d<best){best=d;nearest=p;}});
+      if(nearest&&best<=Math.max(22,rect.width*.035)**2){selectedPoint={x:nearest.x,y:nearest.y};render();}
+    });
     const zoomAt=(cx,cy,factor)=>{
       const xRatio=(cx-view.xmin)/(view.xmax-view.xmin),yRatio=(cy-view.ymin)/(view.ymax-view.ymin);
       const nextXSpan=Math.max(1e-8,Math.min(1e9,(view.xmax-view.xmin)*factor));
@@ -447,7 +459,7 @@
     const node=(tag,attrs={},value)=>{const el=document.createElementNS(svgNS,tag);Object.entries(attrs).forEach(([k,v])=>el.setAttribute(k,String(v)));if(value!==undefined)el.textContent=value;return el;};
     const fmt=v=>Math.abs(v)<1e-9?"0":Math.abs(v)>=1e4||Math.abs(v)<1e-3?v.toExponential(1):Number(v.toPrecision(4)).toString();
     const niceStep=range=>{const raw=range/8,power=Math.pow(10,Math.floor(Math.log10(Math.max(raw,1e-12)))),fraction=raw/power;return(fraction<1.5?1:fraction<3.5?2:fraction<7.5?5:10)*power;};
-    let currentSegments=segments,requestTimer=null,requestVersion=0,drag=null,lastPinch=0;
+    let currentSegments=segments,requestTimer=null,requestVersion=0,drag=null,lastPinch=0,selectedPoint=null;
     const pointers=new Map();
     const render=()=>{
       svg.replaceChildren();
@@ -462,7 +474,19 @@
       if(d){const clipId="relation-clip-"+Math.random().toString(36).slice(2),defs=node("defs"),clip=node("clipPath",{id:clipId});clip.append(node("rect",{x:pad.left,y:pad.top,width:plotW,height:plotH}));defs.append(clip);svg.append(defs,node("path",{d,class:"graph-curve","clip-path":"url(#"+clipId+")"}));}
       svg.append(node("text",{x:(pad.left+width-pad.right)/2,y:height-8,"text-anchor":"middle",class:"graph-axis-title"},"x"));
       svg.append(node("text",{x:16,y:height/2,transform:"rotate(-90 16 "+(height/2)+")","text-anchor":"middle",class:"graph-axis-title"},"y"));
+      if(selectedPoint&&selectedPoint.x>=view.xmin&&selectedPoint.x<=view.xmax&&selectedPoint.y>=view.ymin&&selectedPoint.y<=view.ymax){
+        const sx=px(selectedPoint.x),sy=py(selectedPoint.y),label="("+fmt(selectedPoint.x)+", "+fmt(selectedPoint.y)+")",lx=Math.min(width-pad.right-125,Math.max(pad.left+4,sx+10)),ly=Math.max(pad.top+18,sy-10);
+        svg.append(node("line",{x1:sx,y1:pad.top,x2:sx,y2:height-pad.bottom,class:"graph-coordinate-guide"}),node("line",{x1:pad.left,y1:sy,x2:width-pad.right,y2:sy,class:"graph-coordinate-guide"}),node("circle",{cx:sx,cy:sy,r:5,class:"graph-coordinate-point"}),node("rect",{x:lx-4,y:ly-16,width:Math.min(125,label.length*7+10),height:23,rx:5,class:"graph-coordinate-label-bg"}),node("text",{x:lx+1,y:ly,"text-anchor":"start",class:"graph-coordinate-label"},label));
+      }
     };
+    svg.addEventListener("click",event=>{
+      if(drag||pointers.size)return;
+      const rect=svg.getBoundingClientRect(),sx=(event.clientX-rect.left)/rect.width*width,sy=(event.clientY-rect.top)/rect.height*height;
+      if(sx<pad.left||sx>width-pad.right||sy<pad.top||sy>height-pad.bottom)return;
+      let nearest=null,best=Infinity;
+      currentSegments.forEach(q=>{if(![q.x1,q.y1,q.x2,q.y2].every(Number.isFinite))return;const ax=pad.left+(q.x1-view.xmin)/(view.xmax-view.xmin)*plotW,ay=pad.top+(view.ymax-q.y1)/(view.ymax-view.ymin)*plotH,bx=pad.left+(q.x2-view.xmin)/(view.xmax-view.xmin)*plotW,by=pad.top+(view.ymax-q.y2)/(view.ymax-view.ymin)*plotH,dx=bx-ax,dy=by-ay,den=dx*dx+dy*dy,t=den?Math.max(0,Math.min(1,((sx-ax)*dx+(sy-ay)*dy)/den)):0,pxs=ax+t*dx,pys=ay+t*dy,dist=(pxs-sx)**2+(pys-sy)**2;if(dist<best){best=dist;nearest={x:q.x1+t*(q.x2-q.x1),y:q.y1+t*(q.y2-q.y1)};}});
+      if(nearest&&best<=Math.max(22,rect.width*.035)**2){selectedPoint=nearest;render();}
+    });
     const scheduleResample=()=>{
       if(!relation)return;
       if(requestTimer!==null)clearTimeout(requestTimer);
