@@ -2,7 +2,7 @@
 import ast
 import operator
 from sympy import (
-    Matrix, Symbol, Integer, Rational, Float, sin, cos, tan, asin, acos, atan,
+    Matrix, Symbol, Integer, Rational, Float, sin, cos, tan, sec, csc, cot, asin, acos, atan,
     sinh, cosh, tanh, sqrt, log, exp, pi, E, eye, zeros, simplify, sympify,
 )
 from sympy.matrices.exceptions import NonInvertibleMatrixError
@@ -10,7 +10,8 @@ from sympy.matrices.exceptions import NonInvertibleMatrixError
 MAX_DIMENSION = 8
 MAX_CELLS = 64
 _ALLOWED_FUNCTIONS = {
-    "sin": sin, "cos": cos, "tan": tan, "asin": asin, "acos": acos, "atan": atan,
+    "sin": sin, "cos": cos, "tan": tan, "sec": sec, "csc": csc, "cosec": csc, "cot": cot,
+    "asin": asin, "acos": acos, "atan": atan,
     "sinh": sinh, "cosh": cosh, "tanh": tanh, "sqrt": sqrt, "log": log,
     "ln": log, "exp": exp, "abs": abs,
 }
