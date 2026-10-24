@@ -26,6 +26,13 @@ def _reciprocal(function, label):
     return evaluate
 
 
+def _tangent(value):
+    denominator = math.cos(value)
+    if math.isclose(denominator, 0.0, abs_tol=1e-15):
+        raise ValueError("tan is undefined for this angle.")
+    return math.sin(value) / denominator
+
+
 def _cotangent(value):
     denominator = math.sin(value)
     if math.isclose(denominator, 0.0, abs_tol=1e-15):
@@ -34,7 +41,7 @@ def _cotangent(value):
 
 
 _FUNCTIONS = {
-    "sin": math.sin, "cos": math.cos, "tan": math.tan,
+    "sin": math.sin, "cos": math.cos, "tan": _tangent,
     "sec": _reciprocal(math.cos, "sec"), "csc": _reciprocal(math.sin, "csc"),
     "cosec": _reciprocal(math.sin, "cosec"), "cot": _cotangent,
     "asin": math.asin, "acos": math.acos, "atan": math.atan,
