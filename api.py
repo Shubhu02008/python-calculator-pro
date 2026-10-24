@@ -31,6 +31,7 @@ from engine import (
     expand_binomial,
     list_supported_units,
     sample_function,
+    sample_relation,
     solve_equation,
     calculate_bmi,
     calculate_compound_interest,
@@ -172,6 +173,25 @@ class GraphSampleRequest(RequestModel):
     @field_validator("x_min", "x_max")
     @classmethod
     def bounds_must_be_finite(cls, value):
+        return _validate_finite_number(value, "Graph bound")
+
+
+class GraphRelationRequest(RequestModel):
+    relation: str = Field(min_length=1, max_length=10_000)
+    x_min: Number
+    x_max: Number
+    y_min: Number
+    y_max: Number
+    grid_size: StrictInt = Field(default=80, ge=20, le=150)
+
+    @field_validator("relation")
+    @classmethod
+    def relation_must_not_be_blank(cls, value):
+        return _nonblank_text(value, "Relation")
+
+    @field_validator("x_min", "x_max", "y_min", "y_max")
+    @classmethod
+    def relation_bounds_must_be_finite(cls, value):
         return _validate_finite_number(value, "Graph bound")
 
 
@@ -710,6 +730,22 @@ def sample_graph_function(request: GraphSampleRequest):
     )
     return {
         "points": [{"x": x_value, "y": y_value} for x_value, y_value in points]
+    }
+
+
+@app.post("/api/v1/graph/relation")
+def sample_graph_relation(request: GraphRelationRequest):
+    """Return independent contour segments for an implicit equation F(x,y)=0."""
+    segments = sample_relation(
+        request.relation, request.x_min, request.x_max,
+        request.y_min, request.y_max, grid_size=request.grid_size,
+    )
+    return {
+        "segments": segments,
+        "bounds": {
+            "x_min": request.x_min, "x_max": request.x_max,
+            "y_min": request.y_min, "y_max": request.y_max,
+        },
     }
 
 @app.post("/api/v1/currency/convert")
