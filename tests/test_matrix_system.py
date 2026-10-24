@@ -68,3 +68,13 @@ def test_matrix_check_answer_api():
     assert correct.json() == {"correct": True}
     assert incorrect.status_code == 200
     assert incorrect.json() == {"correct": False}
+
+
+
+def test_matrix_entries_support_reciprocal_trigonometric_functions():
+    result = calculate_matrix({
+        "operation": "add",
+        "matrix": [["sec(0)", "csc(pi/2)"]],
+        "matrix_b": [["1", "1"]],
+    })
+    assert result["result"] == [["2", "2"]]
