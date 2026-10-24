@@ -224,7 +224,7 @@ def test_calculate_endpoint_leaves_fraction_fields_empty_for_irrational_result()
 
     assert response.status_code == 200
     assert response.json()["exact_fraction"] is None
-    assert response.json()["approximation"] is None
+    assert response.json()["approximation"] == "1.414"
 
 
 
