@@ -944,6 +944,17 @@
     }
     const reference=formulaReferenceCard(title);if(reference)workspace.append(reference);
   }
+  const startCalculating = $("#start-calculating");
+  if (startCalculating) startCalculating.addEventListener("click", event => {
+    event.preventDefault();
+    document.body.classList.add("calculator-open");
+    history.replaceState(null, "", "#calculator");
+    window.scrollTo({top:0,behavior:"smooth"});
+    renderTool("Scientific Calculator");
+  });
+  if (window.location.hash === "#calculator") document.body.classList.add("calculator-open");
+  const homeYear = $("#home-year");
+  if (homeYear) homeYear.textContent = String(new Date().getFullYear());
   navItems.forEach(item=>item.addEventListener("click",()=>renderTool(item.dataset.tool)));
   renderTool(activeTool);checkApi();
 })();
