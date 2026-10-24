@@ -226,7 +226,9 @@
     } else if(isRecord(result)&&Array.isArray(result.segments)){
       heading("Equation graph");
       const bounds=result.bounds||{};
-      container.append(drawRelationGraph(result.segments,bounds));
+      const graphForm=document.querySelector(".tool-form");
+      const relation=activeTool==="Graphing Calculator"&&graphForm?val(graphForm,"expression").replace(/[−–]/g,"-").trim():null;
+      container.append(drawRelationGraph(result.segments,bounds,relation));
       row("curve_segments",result.segments.length);
     } else if(isRecord(result)&&Array.isArray(result.points)){
       const finite=result.points.filter(point=>point&&point.y!==null&&point.y!==undefined&&Number.isFinite(Number(point.x))&&Number.isFinite(Number(point.y)));
@@ -429,37 +431,71 @@
     makeControl("Reset","Reset graph view",()=>{Object.assign(view,initialView);render();scheduleResample();});
     render();figure.append(controls,svg,caption);return figure;
   }
-  function drawRelationGraph(segments,bounds={}) {
+  function drawRelationGraph(segments,bounds={},relation=null) {
     const figure=document.createElement("figure");figure.className="graph-figure";
-    const width=900,height=520,pad={left:68,right:24,top:24,bottom:54};
-    const plotW=width-pad.left-pad.right,plotH=height-pad.top-pad.bottom;
+    const width=900,height=520,pad={left:68,right:24,top:24,bottom:54},plotW=width-pad.left-pad.right,plotH=height-pad.top-pad.bottom;
     if(!segments.length){const msg=document.createElement("figcaption");msg.textContent="No real curve was found in this viewing window. Try a wider x/y range.";figure.append(msg);return figure;}
     let xmin=Number(bounds.x_min),xmax=Number(bounds.x_max),ymin=Number(bounds.y_min),ymax=Number(bounds.y_max);
     if(![xmin,xmax,ymin,ymax].every(Number.isFinite)||xmin>=xmax||ymin>=ymax){xmin=-10;xmax=10;ymin=-10;ymax=10;}
-    // Preserve equal units per pixel so circles and conics keep their true shape.
-    const cx=(xmin+xmax)/2,cy=(ymin+ymax)/2;
-    const scale=Math.max((xmax-xmin)/plotW,(ymax-ymin)/plotH);
-    const xSpan=scale*plotW,ySpan=scale*plotH;
-    xmin=cx-xSpan/2;xmax=cx+xSpan/2;ymin=cy-ySpan/2;ymax=cy+ySpan/2;
-    const px=x=>pad.left+(x-xmin)/(xmax-xmin)*plotW;
-    const py=y=>pad.top+(ymax-y)/(ymax-ymin)*plotH;
+    const cx=(xmin+xmax)/2,cy=(ymin+ymax)/2,scale=Math.max((xmax-xmin)/plotW,(ymax-ymin)/plotH);
+    const xSpan=scale*plotW,ySpan=scale*plotH,view={xmin:cx-xSpan/2,xmax:cx+xSpan/2,ymin:cy-ySpan/2,ymax:cy+ySpan/2},initialView={...view};
     const svgNS="http://www.w3.org/2000/svg",svg=document.createElementNS(svgNS,"svg");
-    svg.setAttribute("viewBox",`0 0 ${width} ${height}`);svg.setAttribute("role","img");svg.setAttribute("aria-label","Implicit equation graph with equal axis scale.");
+    svg.setAttribute("viewBox","0 0 "+width+" "+height);svg.setAttribute("role","img");
+    svg.setAttribute("aria-label","Interactive implicit equation graph. Drag to pan; pinch or scroll to zoom.");svg.style.touchAction="none";
+    const controls=document.createElement("div");controls.className="graph-controls";controls.setAttribute("aria-label","Graph controls");
+    const caption=document.createElement("figcaption");caption.textContent="Drag to move the graph; pinch or scroll to zoom. Use +/− or Reset. The curve resamples as you move.";
     const node=(tag,attrs={},value)=>{const el=document.createElementNS(svgNS,tag);Object.entries(attrs).forEach(([k,v])=>el.setAttribute(k,String(v)));if(value!==undefined)el.textContent=value;return el;};
     const fmt=v=>Math.abs(v)<1e-9?"0":Math.abs(v)>=1e4||Math.abs(v)<1e-3?v.toExponential(1):Number(v.toPrecision(4)).toString();
     const niceStep=range=>{const raw=range/8,power=Math.pow(10,Math.floor(Math.log10(Math.max(raw,1e-12)))),fraction=raw/power;return(fraction<1.5?1:fraction<3.5?2:fraction<7.5?5:10)*power;};
-    const xs=niceStep(xmax-xmin),ys=niceStep(ymax-ymin);
-    for(let x=Math.ceil(xmin/xs)*xs,count=0;x<=xmax&&count<100;x+=xs,count++){const X=px(x);svg.append(node("line",{x1:X,y1:pad.top,x2:X,y2:height-pad.bottom,class:"graph-grid"}));svg.append(node("text",{x:X,y:height-pad.bottom+22,"text-anchor":"middle",class:"graph-label"},fmt(x)));}
-    for(let y=Math.ceil(ymin/ys)*ys,count=0;y<=ymax&&count<100;y+=ys,count++){const Y=py(y);svg.append(node("line",{x1:pad.left,y1:Y,x2:width-pad.right,y2:Y,class:"graph-grid"}));svg.append(node("text",{x:pad.left-10,y:Y+4,"text-anchor":"end",class:"graph-label"},fmt(y)));}
-    if(xmin<=0&&xmax>=0)svg.append(node("line",{x1:px(0),y1:pad.top,x2:px(0),y2:height-pad.bottom,class:"graph-axis"}));
-    if(ymin<=0&&ymax>=0)svg.append(node("line",{x1:pad.left,y1:py(0),x2:width-pad.right,y2:py(0),class:"graph-axis"}));
-    let d="";
-    segments.forEach(s=>{if(![s.x1,s.y1,s.x2,s.y2].every(Number.isFinite))return;d+=`M${px(s.x1).toFixed(2)},${py(s.y1).toFixed(2)}L${px(s.x2).toFixed(2)},${py(s.y2).toFixed(2)} `;});
-    if(d)svg.append(node("path",{d,class:"graph-curve"}));
-    svg.append(node("text",{x:(pad.left+width-pad.right)/2,y:height-8,"text-anchor":"middle",class:"graph-axis-title"},"x"));
-    svg.append(node("text",{x:16,y:height/2,transform:`rotate(-90 16 ${height/2})`,"text-anchor":"middle",class:"graph-axis-title"},"y"));
-    const caption=document.createElement("figcaption");caption.textContent="Implicit equation contour; x and y use the same scale. Increase the viewing range to see more of the relation.";
-    figure.append(svg,caption);return figure;
+    let currentSegments=segments,requestTimer=null,requestVersion=0,drag=null,lastPinch=0;
+    const pointers=new Map();
+    const render=()=>{
+      svg.replaceChildren();
+      const px=x=>pad.left+(x-view.xmin)/(view.xmax-view.xmin)*plotW,py=y=>pad.top+(view.ymax-y)/(view.ymax-view.ymin)*plotH;
+      const xs=niceStep(view.xmax-view.xmin),ys=niceStep(view.ymax-view.ymin);
+      for(let x=Math.ceil(view.xmin/xs)*xs,count=0;x<=view.xmax&&count<100;x+=xs,count++){const X=px(x);svg.append(node("line",{x1:X,y1:pad.top,x2:X,y2:height-pad.bottom,class:"graph-grid"}));svg.append(node("text",{x:X,y:height-pad.bottom+22,"text-anchor":"middle",class:"graph-label"},fmt(x)));}
+      for(let y=Math.ceil(view.ymin/ys)*ys,count=0;y<=view.ymax&&count<100;y+=ys,count++){const Y=py(y);svg.append(node("line",{x1:pad.left,y1:Y,x2:width-pad.right,y2:Y,class:"graph-grid"}));svg.append(node("text",{x:pad.left-10,y:Y+4,"text-anchor":"end",class:"graph-label"},fmt(y)));}
+      if(view.xmin<=0&&view.xmax>=0)svg.append(node("line",{x1:px(0),y1:pad.top,x2:px(0),y2:height-pad.bottom,class:"graph-axis"}));
+      if(view.ymin<=0&&view.ymax>=0)svg.append(node("line",{x1:pad.left,y1:py(0),x2:width-pad.right,y2:py(0),class:"graph-axis"}));
+      let d="";
+      currentSegments.forEach(q=>{if(![q.x1,q.y1,q.x2,q.y2].every(Number.isFinite))return;d+="M"+px(q.x1).toFixed(2)+","+py(q.y1).toFixed(2)+"L"+px(q.x2).toFixed(2)+","+py(q.y2).toFixed(2)+" ";});
+      if(d){const clipId="relation-clip-"+Math.random().toString(36).slice(2),defs=node("defs"),clip=node("clipPath",{id:clipId});clip.append(node("rect",{x:pad.left,y:pad.top,width:plotW,height:plotH}));defs.append(clip);svg.append(defs,node("path",{d,class:"graph-curve","clip-path":"url(#"+clipId+")"}));}
+      svg.append(node("text",{x:(pad.left+width-pad.right)/2,y:height-8,"text-anchor":"middle",class:"graph-axis-title"},"x"));
+      svg.append(node("text",{x:16,y:height/2,transform:"rotate(-90 16 "+(height/2)+")","text-anchor":"middle",class:"graph-axis-title"},"y"));
+    };
+    const scheduleResample=()=>{
+      if(!relation)return;
+      if(requestTimer!==null)clearTimeout(requestTimer);
+      requestTimer=setTimeout(async()=>{
+        const version=++requestVersion;
+        try{const response=await api("/api/v1/graph/relation",{relation:relation,x_min:view.xmin,x_max:view.xmax,y_min:view.ymin,y_max:view.ymax,grid_size:100});if(version!==requestVersion||!Array.isArray(response.segments))return;currentSegments=response.segments;render();}
+        catch{/* Keep the last valid curve visible if resampling fails. */}
+      },140);
+    };
+    const zoomAt=(x,y,factor)=>{
+      const xr=(x-view.xmin)/(view.xmax-view.xmin),yr=(y-view.ymin)/(view.ymax-view.ymin),nextX=Math.max(1e-7,Math.min(1e9,(view.xmax-view.xmin)*factor)),nextY=nextX*plotH/plotW;
+      view.xmin=x-xr*nextX;view.xmax=view.xmin+nextX;view.ymin=y-yr*nextY;view.ymax=view.ymin+nextY;render();scheduleResample();
+    };
+    const pointAt=event=>{const rect=svg.getBoundingClientRect();return{x:view.xmin+(event.clientX-rect.left)/rect.width*(view.xmax-view.xmin),y:view.ymax-(event.clientY-rect.top)/rect.height*(view.ymax-view.ymin)};};
+    svg.addEventListener("pointerdown",event=>{
+      if(event.pointerType==="mouse"&&event.button!==0)return;event.preventDefault();try{svg.setPointerCapture(event.pointerId);}catch{}
+      pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+      if(pointers.size===1)drag={x:event.clientX,y:event.clientY,...view};else if(pointers.size===2){const p=[...pointers.values()];lastPinch=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y);drag=null;}
+    });
+    svg.addEventListener("pointermove",event=>{
+      if(!pointers.has(event.pointerId))return;pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+      if(pointers.size>=2){const p=[...pointers.values()],distance=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y);if(lastPinch>0&&distance>0){const rect=svg.getBoundingClientRect(),mx=(p[0].x+p[1].x)/2,my=(p[0].y+p[1].y)/2;zoomAt(view.xmin+(mx-rect.left)/rect.width*(view.xmax-view.xmin),view.ymax-(my-rect.top)/rect.height*(view.ymax-view.ymin),lastPinch/distance);}lastPinch=distance;return;}
+      if(!drag)return;const rect=svg.getBoundingClientRect(),dx=(event.clientX-drag.x)/rect.width*(drag.xmax-drag.xmin),dy=(event.clientY-drag.y)/rect.height*(drag.ymax-drag.ymin);
+      view.xmin=drag.xmin-dx;view.xmax=drag.xmax-dx;view.ymin=drag.ymin+dy;view.ymax=drag.ymax+dy;render();scheduleResample();
+    });
+    const endPointer=event=>{pointers.delete(event.pointerId);if(pointers.size<2)lastPinch=0;if(!pointers.size)drag=null;};
+    svg.addEventListener("pointerup",endPointer);svg.addEventListener("pointercancel",endPointer);svg.addEventListener("lostpointercapture",endPointer);
+    svg.addEventListener("wheel",event=>{event.preventDefault();const p=pointAt(event);zoomAt(p.x,p.y,event.deltaY<0?.82:1.22);},{passive:false});
+    const addControl=(label,aria,action)=>{const b=document.createElement("button");b.type="button";b.className="graph-control-button";b.textContent=label;b.setAttribute("aria-label",aria);b.addEventListener("click",action);controls.append(b);};
+    addControl("−","Zoom out",()=>zoomAt((view.xmin+view.xmax)/2,(view.ymin+view.ymax)/2,1.25));
+    addControl("+","Zoom in",()=>zoomAt((view.xmin+view.xmax)/2,(view.ymin+view.ymax)/2,.8));
+    addControl("Reset","Reset graph view",()=>{Object.assign(view,initialView);render();scheduleResample();});
+    render();figure.append(controls,svg,caption);return figure;
   }
   function equationGraphExpression(raw) {
     const normalized=String(raw).replaceAll("²","^2").replaceAll("³","^3").replace(/[−–]/g,"-").replace(/[×·]/g,"*").replaceAll("÷","/");
