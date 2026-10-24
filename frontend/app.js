@@ -204,9 +204,15 @@
   function csvNumbers(form,name) { const values=val(form,name).split(/[\s,;]+/).filter(Boolean).map(Number);if(!values.length||values.some(v=>!Number.isFinite(v)))throw new Error("Enter one or more valid numbers separated by commas or spaces.");return values; }
   function matrixValue(form,name) {
     const raw=val(form,name);if(!raw)throw new Error("Enter matrix "+name.replace("matrix","").trim()+".");
-    const rows=raw.split(/\n|;/).map(row=>row.trim()).filter(Boolean).map(row=>row.split(/[,\s]+/).filter(Boolean).map(token=>{
-      if(!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:\/\d+)?$/.test(token))throw new Error("Matrix cells must be numbers or simple fractions such as 3/4.");return token;
-    }));
+    const rows=raw.split(/\n|;/).map(row=>row.trim()).filter(Boolean).map(row=>{
+      // Commas let symbolic cells contain spaces, e.g. "x + 1, y"; numeric
+      // matrices may still use the compact whitespace-separated format.
+      const cells=row.includes(",")?row.split(","):row.split(/\s+/);
+      return cells.map(token=>token.trim()).filter(Boolean).map(token=>{
+        if(!/^[A-Za-z_π0-9.+*/^()\-]+$/.test(token))throw new Error("Use numeric values or safe matrix expressions such as x+1, sqrt(2), or 3/4. Separate symbolic cells with commas.");
+        return token;
+      });
+    });
     if(!rows.length||rows.some(row=>row.length!==rows[0].length))throw new Error("Each matrix must be rectangular with the same number of values per row.");
     if(rows.length>8||rows[0].length>8)throw new Error("Matrix dimensions are limited to 8 × 8 by the API.");
     return rows;
