@@ -168,11 +168,15 @@ def calculate_emi(principal, annual_rate, tenure_months):
         raise ValueError("Tenure must be from 1 to 1200 months.")
     monthly_rate = float(annual / Decimal("1200"))
     principal_float = float(p)
+    if not math.isfinite(principal_float):
+        raise ValueError("Principal is outside the supported numerical range.")
     if monthly_rate == 0:
         emi = principal_float / tenure_months
     else:
-        factor = (1 + monthly_rate) ** tenure_months
-        emi = principal_float * monthly_rate * factor / (factor - 1)
+        # Algebraically equivalent to r(1+r)^n / ((1+r)^n-1), but
+        # avoids overflow in (1+r)^n for large rates or long tenures.
+        discount_factor = (1 + monthly_rate) ** (-tenure_months)
+        emi = principal_float * monthly_rate / (1 - discount_factor)
     total = emi * tenure_months
     return {
         "principal": _money(p),
