@@ -13,7 +13,7 @@
   const descriptions = {
     "Scientific Calculator": "A precise space for everyday maths and advanced expressions.",
     "Equations": "Solve polynomial equations and inspect their mathematical roots.",
-    "Graphing Calculator": "Sample and plot a function over a range of x-values.",
+    "Graphing Calculator": "Plot functions and implicit equations on the coordinate plane.",
     "Calculus": "Calculate derivatives, integrals, definite integrals, and limits.",
     "Matrix Calculator": "Run matrix arithmetic and linear algebra operations.",
     "Statistics": "Summarize a dataset with descriptive statistical measures.",
@@ -223,6 +223,11 @@
       if(Number.isInteger(result.degree))row("total_degree",result.degree);
       result.relations.forEach(relation=>{const expression=document.createElement("p");expression.className="result-expression";expression.textContent=relation;container.append(expression);});
       if(Array.isArray(result.variables)&&result.variables.length){const variables=document.createElement("p");variables.className="field-help";variables.textContent="Variables: "+result.variables.join(", ")+". This is one equation in multiple variables, not a system of equations.";container.append(variables);}
+    } else if(isRecord(result)&&Array.isArray(result.segments)){
+      heading("Equation graph");
+      const bounds=result.bounds||{};
+      container.append(drawRelationGraph(result.segments,bounds));
+      row("curve_segments",result.segments.length);
     } else if(isRecord(result)&&Array.isArray(result.points)){
       const finite=result.points.filter(point=>point&&point.y!==null&&point.y!==undefined&&Number.isFinite(Number(point.x))&&Number.isFinite(Number(point.y)));
       const graphHeading=heading(activeTool==="Graphing Calculator"?"Function graph":"Graph");
@@ -423,6 +428,38 @@
     makeControl("+","Zoom in",()=>zoomAt((view.xmin+view.xmax)/2,(view.ymin+view.ymax)/2,.8));
     makeControl("Reset","Reset graph view",()=>{Object.assign(view,initialView);render();scheduleResample();});
     render();figure.append(controls,svg,caption);return figure;
+  }
+  function drawRelationGraph(segments,bounds={}) {
+    const figure=document.createElement("figure");figure.className="graph-figure";
+    const width=900,height=520,pad={left:68,right:24,top:24,bottom:54};
+    const plotW=width-pad.left-pad.right,plotH=height-pad.top-pad.bottom;
+    if(!segments.length){const msg=document.createElement("figcaption");msg.textContent="No real curve was found in this viewing window. Try a wider x/y range.";figure.append(msg);return figure;}
+    let xmin=Number(bounds.x_min),xmax=Number(bounds.x_max),ymin=Number(bounds.y_min),ymax=Number(bounds.y_max);
+    if(![xmin,xmax,ymin,ymax].every(Number.isFinite)||xmin>=xmax||ymin>=ymax){xmin=-10;xmax=10;ymin=-10;ymax=10;}
+    // Preserve equal units per pixel so circles and conics keep their true shape.
+    const cx=(xmin+xmax)/2,cy=(ymin+ymax)/2;
+    const scale=Math.max((xmax-xmin)/plotW,(ymax-ymin)/plotH);
+    const xSpan=scale*plotW,ySpan=scale*plotH;
+    xmin=cx-xSpan/2;xmax=cx+xSpan/2;ymin=cy-ySpan/2;ymax=cy+ySpan/2;
+    const px=x=>pad.left+(x-xmin)/(xmax-xmin)*plotW;
+    const py=y=>pad.top+(ymax-y)/(ymax-ymin)*plotH;
+    const svgNS="http://www.w3.org/2000/svg",svg=document.createElementNS(svgNS,"svg");
+    svg.setAttribute("viewBox",`0 0 ${width} ${height}`);svg.setAttribute("role","img");svg.setAttribute("aria-label","Implicit equation graph with equal axis scale.");
+    const node=(tag,attrs={},value)=>{const el=document.createElementNS(svgNS,tag);Object.entries(attrs).forEach(([k,v])=>el.setAttribute(k,String(v)));if(value!==undefined)el.textContent=value;return el;};
+    const fmt=v=>Math.abs(v)<1e-9?"0":Math.abs(v)>=1e4||Math.abs(v)<1e-3?v.toExponential(1):Number(v.toPrecision(4)).toString();
+    const niceStep=range=>{const raw=range/8,power=Math.pow(10,Math.floor(Math.log10(Math.max(raw,1e-12)))),fraction=raw/power;return(fraction<1.5?1:fraction<3.5?2:fraction<7.5?5:10)*power;};
+    const xs=niceStep(xmax-xmin),ys=niceStep(ymax-ymin);
+    for(let x=Math.ceil(xmin/xs)*xs,count=0;x<=xmax&&count<100;x+=xs,count++){const X=px(x);svg.append(node("line",{x1:X,y1:pad.top,x2:X,y2:height-pad.bottom,class:"graph-grid"}));svg.append(node("text",{x:X,y:height-pad.bottom+22,"text-anchor":"middle",class:"graph-label"},fmt(x)));}
+    for(let y=Math.ceil(ymin/ys)*ys,count=0;y<=ymax&&count<100;y+=ys,count++){const Y=py(y);svg.append(node("line",{x1:pad.left,y1:Y,x2:width-pad.right,y2:Y,class:"graph-grid"}));svg.append(node("text",{x:pad.left-10,y:Y+4,"text-anchor":"end",class:"graph-label"},fmt(y)));}
+    if(xmin<=0&&xmax>=0)svg.append(node("line",{x1:px(0),y1:pad.top,x2:px(0),y2:height-pad.bottom,class:"graph-axis"}));
+    if(ymin<=0&&ymax>=0)svg.append(node("line",{x1:pad.left,y1:py(0),x2:width-pad.right,y2:py(0),class:"graph-axis"}));
+    let d="";
+    segments.forEach(s=>{if(![s.x1,s.y1,s.x2,s.y2].every(Number.isFinite))return;d+=`M${px(s.x1).toFixed(2)},${py(s.y1).toFixed(2)}L${px(s.x2).toFixed(2)},${py(s.y2).toFixed(2)} `;});
+    if(d)svg.append(node("path",{d,class:"graph-curve"}));
+    svg.append(node("text",{x:(pad.left+width-pad.right)/2,y:height-8,"text-anchor":"middle",class:"graph-axis-title"},"x"));
+    svg.append(node("text",{x:16,y:height/2,transform:`rotate(-90 16 ${height/2})`,"text-anchor":"middle",class:"graph-axis-title"},"y"));
+    const caption=document.createElement("figcaption");caption.textContent="Implicit equation contour; x and y use the same scale. Increase the viewing range to see more of the relation.";
+    figure.append(svg,caption);return figure;
   }
   function equationGraphExpression(raw) {
     const normalized=String(raw).replaceAll("²","^2").replaceAll("³","^3").replace(/[−–]/g,"-").replace(/[×·]/g,"*").replaceAll("÷","/");
@@ -829,7 +866,19 @@
         if(!equation.includes("="))throw new Error("Enter an equation with an equals sign, for example x^2 + y = 5.");
         return api("/api/v1/equations/solve",{equation, equation_type:mode});
       }
-      case "Graphing Calculator": {const x_min=number(form,"x_min"),x_max=number(form,"x_max"),points=integer(form,"points");if(x_min>=x_max)throw new Error("Maximum x must be greater than minimum x.");if(points<2||points>2000)throw new Error("Sample points must be between 2 and 2,000.");let expression=val(form,"expression").replace(/[−–]/g,"-").trim();if(/^\s*(?:x\s*=\s*y|y\s*=\s*x)\s*$/i.test(expression))expression="x";return api("/api/v1/graph/sample",{expression,x_min,x_max,points});}
+      case "Graphing Calculator": {
+        const x_min=number(form,"x_min"),x_max=number(form,"x_max"),points=integer(form,"points");
+        const y_min=number(form,"y_min"),y_max=number(form,"y_max");
+        if(x_min>=x_max)throw new Error("Maximum x must be greater than minimum x.");
+        if(y_min>=y_max)throw new Error("Maximum y must be greater than minimum y.");
+        if(points<2||points>2000)throw new Error("Sample points must be between 2 and 2,000.");
+        const expression=val(form,"expression").replace(/[−–]/g,"-").trim();
+        if(!expression)throw new Error("Enter a function or equation to graph.");
+        if(/\by\b/i.test(expression)||expression.includes("=")){
+          return api("/api/v1/graph/relation",{relation:expression,x_min,x_max,y_min,y_max,grid_size:Math.max(40,Math.min(120,Math.round(Math.sqrt(points)*4)))});
+        }
+        return api("/api/v1/graph/sample",{expression,x_min,x_max,points});
+      }
       case "Calculus": {const operation=val(form,"operation"),payload={operation,expression:val(form,"expression"),variable:val(form,"variable"),order:integer(form,"order"),direction:val(form,"direction"),point:val(form,"point")||"0"};if(operation==="definite_integral"){payload.lower=val(form,"lower");payload.upper=val(form,"upper");}if(operation==="integral"){delete payload.point;delete payload.direction;}return api("/api/v1/calculus",payload);}
       case "Matrix Calculator": {
         const operation=val(form,"operation"),payload={operation,steps:val(form,"steps")==="true"};
@@ -872,7 +921,7 @@
         ["system","System of equations"],
         ["binomial","Binomial theorem / expansion"]
       ])]],["Single equation",[txt("equation","Equation","","e.g. xy + yz = 3x^2yz","Use an equals sign. General polynomial mode accepts mixed terms and any degree in x, y, and z.")]],["System of equations",[area("system_equations","Equations (one per line)","x + y = 5\ny - x = 1","Enter each equation on a separate line.")]],["Binomial expansion",[txt("expression","Binomial expression","","e.g. (x + 2)^3")]]];break;
-      case "Graphing Calculator":spec=[["Function",[txt("expression","Function of x","","e.g. sin(x) or x^2 - 4"),num("x_min","Minimum x","-10"),num("x_max","Maximum x","10"),num("points","Sample points","401","Choose 2–2,000 points. More samples can make curves smoother.")]]];break;
+      case "Graphing Calculator":spec=[["Function or equation",[txt("expression","Function or equation","","e.g. sin(x), y = x^2, or y^2 = 18x"),num("x_min","Minimum x","-10"),num("x_max","Maximum x","10"),num("y_min","Minimum y","-10"),num("y_max","Maximum y","10"),num("points","Sample points","401","Functions use 2–2,000 samples; implicit equations use a contour grid.")]]];break;
       case "Calculus":spec=[["Calculus operation",[sel("operation","Operation",selectOptions.calculusOperation),sel("variable","Variable",options(["x","y","z","t"])),num("order","Derivative order","1"),txt("expression","Expression","","e.g. x^3 + sin(x)"),txt("lower","Lower bound","0"),txt("upper","Upper bound","1"),txt("point","Limit point","0"),sel("direction","Limit direction",options(["both","plus","minus"]))]]];break;
       case "Matrix Calculator":spec=[["Matrix operation",[sel("operation","Matrix operation",selectOptions.matrixOperation),area("matrix_a","Matrix A","1, 2\n3, 4","Rows separated by new lines; values separated by commas."),area("matrix_b","Matrix B","5, 6\n7, 8","Required for add, subtract, multiply, and compare."),txt("scalar","Scalar","2"),num("power","Power","2"),num("size","Size for identity/zero","3"),num("row","Row (1-based)","1"),num("column","Column (1-based)","1"),area("vector","Vector b","5, 11","For solving Ax = b; values separated by commas."),sel("method","Inverse method",[["","Default"],["adjoint","Adjoint"],["gauss_jordan","Gauss–Jordan"]]),sel("steps","Step-by-step working",[["false","Off"],["true","On"]])]]];break;
       case "Statistics":spec=[["Dataset",[sel("operation","Statistic",selectOptions.statsOperation),area("values","Values","12, 15, 18, 18, 21","Separate observations with commas, spaces, or new lines.")]]];break;
@@ -902,7 +951,7 @@
     if(title==="Graphing Calculator"){
       const expression=form.elements.expression;
       expression.setAttribute("aria-describedby","graph-expression-help");
-      const help=document.createElement("small");help.className="field-help";help.id="graph-expression-help";help.textContent="Enter a function of x, such as x^2, sin(x), or 1/x. Press Calculate to draw the graph below.";
+      const help=document.createElement("small");help.className="field-help";help.id="graph-expression-help";help.textContent="Enter y = f(x) or an implicit equation such as y^2 = 18x, x^2 + y^2 = 25, or x = y. The graphing engine plots both branches and conic sections."
       expression.closest(".field").append(help);
     }
     if(title==="Unit Converter"){
