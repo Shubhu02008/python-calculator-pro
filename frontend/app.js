@@ -163,7 +163,7 @@
     const keypad=document.createElement("div");keypad.className="math-keypad";keypad.setAttribute("aria-label","Math input keypad");
     const pages=[
       [["x","x"],["y","y"],["z","z"],["π","pi"],["e","e"],["√(","sqrt("],["sin(","sin("],["cos(","cos("],["tan(","tan("],["log(","log("],["ln(","ln("],["7","7"],["8","8"],["9","9"],["÷","/"],["4","4"],["5","5"],["6","6"],["×","*"],["1","1"],["2","2"],["3","3"],["−","-"],["0","0"],[".","."],["(","("],[")",")"],["^","^"],["+","+"],["=","="],["⌫","BACKSPACE"],["Clear","CLEAR"]],
-      [["sin⁻¹","asin("],["cos⁻¹","acos("],["tan⁻¹","atan("],["sinh","sinh("],["cosh","cosh("],["tanh","tanh("],["abs","abs("],["exp","exp("],["√","sqrt("],["∛","cbrt("],["n!","factorial("],["%","%"],["mod","%"],["∞","oo"],[",",","],["⌫","BACKSPACE"],["Clear","CLEAR"]]
+      [["sin⁻¹","asin("],["cos⁻¹","acos("],["tan⁻¹","atan("],["sec","sec("],["csc","csc("],["cot","cot("],["cosec","cosec("],["sinh","sinh("],["cosh","cosh("],["tanh","tanh("],["abs","abs("],["exp","exp("],["√","sqrt("],["∛","cbrt("],["n!","factorial("],["%","%"],["mod","%"],["∞","oo"],[",",","],["⌫","BACKSPACE"],["Clear","CLEAR"]]
     ];
     const switcher=document.createElement("div");switcher.className="keypad-page-switcher";
     const keysWrap=document.createElement("div");keysWrap.className="math-keypad-keys";
