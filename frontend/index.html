@@ -19,9 +19,9 @@
   "url": "https://python-calculator-pro-site.onrender.com/"
 }
 </script>
-  <link rel="stylesheet" href="./styles.css?v=home-page-1">
+  <link rel="stylesheet" href="./styles.css?v=home-page-2">
   <script src="./config.js" defer></script>
-  <script src="./app.js?v=home-page-1" defer></script>
+  <script src="./app.js?v=home-page-2" defer></script>
 </head>
 <body>
   <main class="home-page" id="home-page">
@@ -33,15 +33,22 @@
       <div class="home-orbit home-orbit-one" aria-hidden="true">π</div><div class="home-orbit home-orbit-two" aria-hidden="true">√x</div>
       <div class="home-eyebrow"><span></span> A STUDENT-BUILT CALCULATION WORKSPACE</div>
       <h1 id="home-title">Math made <span>clearer.</span><br>Calculations made simpler.</h1>
-      <p class="home-lead">One place for scientific calculations, equations, graphs, calculus, matrices, statistics, and everyday conversions.</p>
+      <p class="home-lead">One place for scientific calculations, equations, calculus, matrices, statistics, and everyday conversions.</p>
       <div class="home-creator">Created by <strong>Shubhankar Sinha</strong></div>
       <a class="home-start-button" href="#calculator" id="start-calculating">Let’s start calculating <span aria-hidden="true">→</span></a>
       <p class="home-note">Free to use. Built to support learning and problem-solving.</p>
       <div class="home-preview" aria-label="Examples of supported math tools">
         <div class="preview-top"><span></span><span></span><span></span><small>CALCULATION WORKSPACE</small></div>
-        <div class="preview-equation">f(x) = x² + 2x + 1</div>
-        <div class="preview-result"><span>EXPRESSION</span><span>RESULT</span><strong>(x + 1)²</strong><strong>Factored form</strong></div>
-        <div class="preview-tools"><span>∑ Scientific</span><span>⌁ Graphing</span><span>∫ Calculus</span><span>▦ Matrices</span></div>
+        <div class="preview-mode-label" id="preview-mode-label">SCIENTIFIC CALCULATION</div>
+        <div class="preview-equation" id="preview-equation" aria-live="polite">sin(30°)</div>
+        <div class="preview-result"><span>EXAMPLE</span><span>RESULT</span><strong id="preview-answer">0.5</strong><strong id="preview-detail">Trigonometric ratio</strong></div>
+        <div class="preview-tools" role="group" aria-label="Choose a maths example">
+          <button type="button" class="preview-tool is-selected" data-preview="scientific" aria-pressed="true">∑ Scientific</button>
+          <button type="button" class="preview-tool" data-preview="equations" aria-pressed="false">x² Equations</button>
+          <button type="button" class="preview-tool" data-preview="calculus" aria-pressed="false">∫ Calculus</button>
+          <button type="button" class="preview-tool" data-preview="matrices" aria-pressed="false">▦ Matrices</button>
+        </div>
+        <p class="preview-hint">Select a mode to preview a sample calculation.</p>
       </div>
     </section>
     <section class="home-about" id="about">
