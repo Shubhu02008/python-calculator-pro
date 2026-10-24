@@ -14,6 +14,7 @@ _SYMBOLS = {name: sp.Symbol(name, real=True) for name in ("x", "y", "z", "t")}
 _SYMBOLS.update({"pi": sp.pi, "e": sp.E})
 _FUNCTIONS = {
     "sin": sp.sin, "cos": sp.cos, "tan": sp.tan,
+    "sec": sp.sec, "csc": sp.csc, "cosec": sp.csc, "cot": sp.cot,
     "asin": sp.asin, "acos": sp.acos, "atan": sp.atan,
     "sinh": sp.sinh, "cosh": sp.cosh, "tanh": sp.tanh,
     "sqrt": sp.sqrt, "log": sp.log, "ln": sp.log, "log10": lambda x: sp.log(x, 10),
