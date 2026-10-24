@@ -120,3 +120,13 @@ def test_statistics_rejects_variance_that_overflows():
 def test_statistics_rejects_non_finite_range_result():
     with pytest.raises(ValueError, match="outside the supported numeric range"):
         calculate_statistics("range", [-1e308, 1e308])
+
+
+
+def test_calculus_supports_reciprocal_trigonometric_functions():
+    secant = calculate_calculus("derivative", "sec(x)")
+    cosecant = calculate_calculus("derivative", "cosec(x)")
+    cotangent = calculate_calculus("derivative", "cot(x)")
+    assert secant["result"] == "sec(x)*tan(x)"
+    assert cosecant["result"] == "-cot(x)*csc(x)"
+    assert cotangent["result"] == "-1/sin(x)**2"
