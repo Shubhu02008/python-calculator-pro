@@ -981,6 +981,14 @@
   if (window.location.hash === "#calculator") document.body.classList.add("calculator-open");
   const homeYear = $("#home-year");
   if (homeYear) homeYear.textContent = String(new Date().getFullYear());
+  const sidebarBrand = $(".sidebar .brand");
+  if (sidebarBrand) sidebarBrand.addEventListener("click", event => {
+    event.preventDefault();
+    document.body.classList.remove("calculator-open");
+    history.replaceState(null, "", window.location.pathname + window.location.search);
+    window.scrollTo({top:0,behavior:"smooth"});
+    setDrawer(false);
+  });
   navItems.forEach(item=>item.addEventListener("click",()=>renderTool(item.dataset.tool)));
   renderTool(activeTool);checkApi();
 })();
