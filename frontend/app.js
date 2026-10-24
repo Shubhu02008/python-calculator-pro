@@ -61,12 +61,17 @@
     const dot = document.createElement("span"); dot.className = connected ? "status-dot" : "status-dot status-dot-muted";
     const label = document.createElement("span"); label.textContent = message; apiStatus.append(dot,label);
   }
-  async function api(path, body) {
+  async function api(path, body, {timeoutMs=15000} = {}) {
     if (!API_BASE_URL) throw new Error("The calculator API URL is missing. Reload the site after the latest Render deployment; if the problem continues, check the frontend API_BASE_URL setting.");
-    const options = body === undefined ? {method:"GET"} : {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)};
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    const options = body === undefined ? {method:"GET",signal:controller.signal} : {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body),signal:controller.signal};
     let response;
     try { response = await fetch(API_BASE_URL + path, options); }
-    catch { throw new Error("Could not reach the calculator API. Check that the backend is running and the API URL/CORS settings are correct."); }
+    catch (error) {
+      if (error && error.name === "AbortError") throw new Error("The calculator API took too long to respond. Please retry; if this continues, check the backend logs.");
+      throw new Error("Could not reach the calculator API. Check that the backend is running and the API URL/CORS settings are correct.");
+    } finally { clearTimeout(timeout); }
     let payload;
     try { payload = await response.json(); } catch { throw new Error("The API returned an unreadable response."); }
     if (!response.ok) {
@@ -199,9 +204,15 @@
   function csvNumbers(form,name) { const values=val(form,name).split(/[\s,;]+/).filter(Boolean).map(Number);if(!values.length||values.some(v=>!Number.isFinite(v)))throw new Error("Enter one or more valid numbers separated by commas or spaces.");return values; }
   function matrixValue(form,name) {
     const raw=val(form,name);if(!raw)throw new Error("Enter matrix "+name.replace("matrix","").trim()+".");
-    const rows=raw.split(/\n|;/).map(row=>row.trim()).filter(Boolean).map(row=>row.split(/[,\s]+/).filter(Boolean).map(token=>{
-      if(!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:\/\d+)?$/.test(token))throw new Error("Matrix cells must be numbers or simple fractions such as 3/4.");return token;
-    }));
+    const rows=raw.split(/\n|;/).map(row=>row.trim()).filter(Boolean).map(row=>{
+      // Commas let symbolic cells contain spaces, e.g. "x + 1, y"; numeric
+      // matrices may still use the compact whitespace-separated format.
+      const cells=row.includes(",")?row.split(","):row.split(/\s+/);
+      return cells.map(token=>token.trim()).filter(Boolean).map(token=>{
+        if(!/^[A-Za-z_π0-9.+*/^()\-]+$/.test(token))throw new Error("Use numeric values or safe matrix expressions such as x+1, sqrt(2), or 3/4. Separate symbolic cells with commas.");
+        return token;
+      });
+    });
     if(!rows.length||rows.some(row=>row.length!==rows[0].length))throw new Error("Each matrix must be rectangular with the same number of values per row.");
     if(rows.length>8||rows[0].length>8)throw new Error("Matrix dimensions are limited to 8 × 8 by the API.");
     return rows;
@@ -363,10 +374,10 @@
       if(requestTimer!==null)clearTimeout(requestTimer);
       requestTimer=setTimeout(async()=>{
         const version=++requestVersion,lo=view.xmin,hi=view.xmax;
-        try{const result=await api("/api/v1/graph/sample",{expression:options.expression,x_min:lo,x_max:hi,points:1001});
+        try{const result=await api("/api/v1/graph/sample",{expression:options.expression,x_min:lo,x_max:hi,points:1001},{timeoutMs:10000});
           if(version!==requestVersion||!Array.isArray(result.points))return;
-          sampled=result.points.map(p=>({x:Number(p.x),y:p.y===null?null:Number(p.y)}));render();
-        }catch{/* Keep the last valid curve visible if resampling temporarily fails. */}
+          sampled=result.points.map(p=>({x:Number(p.x),y:p.y===null?null:Number(p.y)}));caption.textContent="Coordinates stay true to scale. Drag to pan; pinch, scroll, or use +/− to zoom. The graph resamples as you move.";render();
+        }catch(error){if(version===requestVersion)caption.textContent="Graph refresh failed: "+error.message+" The last valid curve is still shown.";}
       },110);
     };
     const render=()=>{
@@ -492,8 +503,8 @@
       if(requestTimer!==null)clearTimeout(requestTimer);
       requestTimer=setTimeout(async()=>{
         const version=++requestVersion;
-        try{const response=await api("/api/v1/graph/relation",{relation:relation,x_min:view.xmin,x_max:view.xmax,y_min:view.ymin,y_max:view.ymax,grid_size:100});if(version!==requestVersion||!Array.isArray(response.segments))return;currentSegments=response.segments;render();}
-        catch{/* Keep the last valid curve visible if resampling fails. */}
+        try{const response=await api("/api/v1/graph/relation",{relation:relation,x_min:view.xmin,x_max:view.xmax,y_min:view.ymin,y_max:view.ymax,grid_size:100},{timeoutMs:10000});if(version!==requestVersion||!Array.isArray(response.segments))return;currentSegments=response.segments;caption.textContent="Coordinates stay true to scale. Drag to pan; pinch, scroll, or use +/− to zoom. The graph resamples as you move.";render();}
+        catch(error){if(version===requestVersion)caption.textContent="Graph refresh failed: "+error.message+" The last valid curve is still shown.";}
       },140);
     };
     const zoomAt=(x,y,factor)=>{
@@ -568,6 +579,7 @@
   }
   function transformDegreeTrig(expression) {
     expression=expression.replace(/π/g,"pi");
+    expression=expression.replace(/\b(sin|cos|tan|sec|csc|cosec|cot)\s+([+-]?(?:\d+(?:\.\d*)?|\.\d+))\b/gi,"$1($2)");
     if(angleMode!=="DEG")return expression;
     const names=new Set(["sin","cos","tan","sec","csc","cosec","cot"]);
     const inverseNames=new Set(["asin","acos","atan"]);

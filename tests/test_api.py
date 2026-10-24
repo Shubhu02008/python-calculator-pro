@@ -1,4 +1,5 @@
 from fastapi.testclient import TestClient
+import pytest
 
 from api import app
 
@@ -223,7 +224,7 @@ def test_calculate_endpoint_leaves_fraction_fields_empty_for_irrational_result()
 
     assert response.status_code == 200
     assert response.json()["exact_fraction"] is None
-    assert response.json()["approximation"] is None
+    assert response.json()["approximation"] == "1.414"
 
 
 
@@ -450,3 +451,21 @@ def test_implicit_graph_endpoint_plots_circle():
     )
     assert response.status_code == 200, response.json()
     assert len(response.json()["segments"]) > 100
+
+
+def test_calculate_returns_approximation_for_irrational_results():
+    response = client.post("/api/v1/calculate", json={"expression": "sqrt(2)"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["result"] == pytest.approx(2 ** 0.5)
+    assert body["approximation"] == "1.414"
+    assert body["exact_fraction"] is None
+
+
+def test_calculate_returns_exact_fraction_for_common_degree_trig_value():
+    response = client.post("/api/v1/calculate", json={"expression": "sin(radians(30))"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["result"] == pytest.approx(0.5)
+    assert body["exact_fraction"] == "1/2"
+    assert body["approximation"] == "0.5"
