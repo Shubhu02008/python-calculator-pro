@@ -17,8 +17,26 @@ _CONSTANTS = {
     "e": math.e,
     "tau": math.tau,
 }
+def _reciprocal(function, label):
+    def evaluate(value):
+        denominator = function(value)
+        if math.isclose(denominator, 0.0, abs_tol=1e-15):
+            raise ValueError(f"{label} is undefined for this angle.")
+        return 1.0 / denominator
+    return evaluate
+
+
+def _cotangent(value):
+    denominator = math.sin(value)
+    if math.isclose(denominator, 0.0, abs_tol=1e-15):
+        raise ValueError("cot is undefined for this angle.")
+    return math.cos(value) / denominator
+
+
 _FUNCTIONS = {
     "sin": math.sin, "cos": math.cos, "tan": math.tan,
+    "sec": _reciprocal(math.cos, "sec"), "csc": _reciprocal(math.sin, "csc"),
+    "cosec": _reciprocal(math.sin, "cosec"), "cot": _cotangent,
     "asin": math.asin, "acos": math.acos, "atan": math.atan,
     "sinh": math.sinh, "cosh": math.cosh, "tanh": math.tanh,
     "sqrt": math.sqrt, "cbrt": math.cbrt, "abs": abs,
