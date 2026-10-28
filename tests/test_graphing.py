@@ -2,7 +2,7 @@ import math
 
 import pytest
 
-from graphing import evaluate_function, sample_function
+from graphing import evaluate_function, sample_function, evaluate_surface, sample_surface
 
 
 @pytest.mark.parametrize(
@@ -122,3 +122,10 @@ def test_sample_relation_plots_circle_and_rejects_bad_ranges():
     assert len(segments) > 100
     with pytest.raises(ValueError, match="less than"):
         sample_relation("x = y", 1, 1, -2, 2)
+
+
+def test_surface_samples_are_a_grid():
+    rows = sample_surface("x^2+y^2", -1, 1, -1, 1, grid_size=9)
+    assert len(rows) == 9
+    assert len(rows[0]) == 9
+    assert rows[4][4]["z"] == pytest.approx(0)
