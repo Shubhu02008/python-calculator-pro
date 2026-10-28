@@ -30,6 +30,12 @@ try {
     ] }) });
   });
 
+  await page.route("**/api/v1/calculus", async route => {
+    const body = route.request().postDataJSON();
+    const results = { derivative: "2*x", integral: "x^3/3", definite_integral: "1/3", limit: "1" };
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ operation: body.operation, expression: body.expression, result: results[body.operation] }) });
+  });
+
   await page.goto("http://127.0.0.1:8000/studio.html");
   try { await page.locator("#graph-status").getByText(/Plotted 2 function\(s\)/).waitFor({ timeout: 5000 }); } catch (error) { throw new Error(`Initial plot failed. Status: ${await page.locator("#graph-status").innerText()}; page errors: ${pageErrors.join(" | ")}; ${error.message}`); }
   assert.ok(graphRequests >= 2, "default functions should call the graph API");
@@ -102,6 +108,17 @@ try {
   await page.locator("#plot").click();
   await page.getByText(/Plotted 1 implicit relation/).waitFor({ timeout: 3000 });
   assert.equal(await page.locator("#graph path").count(), 1, "implicit relation should render disconnected contour segments");
+  await page.locator(".tab[data-view='cas']").click();
+  await page.locator("#cas-operation").selectOption("derivative");
+  await page.locator("#cas-expression").fill("x^2");
+  await page.locator("#cas-run").click();
+  await page.getByText("2*x", { exact: true }).waitFor({ timeout: 2000 });
+  await page.locator("#cas-operation").selectOption("definite_integral");
+  await page.locator("#cas-expression").fill("x^2");
+  await page.locator("#cas-lower").fill("0");
+  await page.locator("#cas-upper").fill("1");
+  await page.locator("#cas-run").click();
+  await page.getByText("1/3", { exact: true }).waitFor({ timeout: 2000 });
   console.log("Advanced Math Studio browser smoke tests passed.");
 } finally {
   await browser.close();
