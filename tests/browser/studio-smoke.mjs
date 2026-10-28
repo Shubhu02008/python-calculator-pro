@@ -24,6 +24,12 @@ try {
     await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ points }) });
   });
 
+  await page.route("**/api/v1/graph/relation", async route => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ segments: [
+      { x1: -2, y1: 0, x2: 2, y2: 0 }, { x1: 0, y1: -2, x2: 0, y2: 2 }
+    ] }) });
+  });
+
   await page.goto("http://127.0.0.1:8000/studio.html");
   try { await page.locator("#graph-status").getByText(/Plotted 2 function\(s\)/).waitFor({ timeout: 5000 }); } catch (error) { throw new Error(`Initial plot failed. Status: ${await page.locator("#graph-status").innerText()}; page errors: ${pageErrors.join(" | ")}; ${error.message}`); }
   assert.ok(graphRequests >= 2, "default functions should call the graph API");
@@ -91,6 +97,11 @@ try {
   await page.locator(".function-row input").first().fill("1");
   await page.locator("#plot").click();
   await page.getByText(/Plotted 1 polar curve/).waitFor({ timeout: 3000 });
+  await page.locator("#graph-mode").selectOption("implicit");
+  await page.locator(".function-row input").first().fill("x^2+y^2=25");
+  await page.locator("#plot").click();
+  await page.getByText(/Plotted 1 implicit relation/).waitFor({ timeout: 3000 });
+  assert.equal(await page.locator("#graph path").count(), 1, "implicit relation should render disconnected contour segments");
   console.log("Advanced Math Studio browser smoke tests passed.");
 } finally {
   await browser.close();
