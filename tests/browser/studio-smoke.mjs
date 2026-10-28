@@ -169,6 +169,16 @@ try {
   await page.locator('#geometry-canvas [data-point-index="1"]').click();
   await page.getByText("Perpendicular bisector constructed.").waitFor({ timeout: 2000 });
   assert.equal(await page.locator('#geometry-canvas line[stroke="#52d6a5"]').count(), 1, "perpendicular bisector should render");
+  await page.locator("#geometry-tool").selectOption("parallel_line");
+  await page.locator('#geometry-canvas [data-point-index="0"]').click();
+  await page.locator('#geometry-canvas [data-point-index="1"]').click();
+  await page.locator('#geometry-canvas [data-point-index="2"]').click();
+  await page.getByText("Parallel line constructed.").waitFor({ timeout: 2000 });
+  await page.locator("#geometry-tool").selectOption("perpendicular_line");
+  await page.locator('#geometry-canvas [data-point-index="0"]').click();
+  await page.locator('#geometry-canvas [data-point-index="1"]').click();
+  await page.locator('#geometry-canvas [data-point-index="2"]').click();
+  await page.getByText("Perpendicular line constructed.").waitFor({ timeout: 2000 });
   await page.locator(".tab[data-view='surface']").click();
   await page.locator("#surface-plot").click();
   await page.getByText(/Rendered a 3 × 3 surface grid/).waitFor({ timeout: 2000 });
