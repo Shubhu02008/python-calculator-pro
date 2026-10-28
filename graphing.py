@@ -103,6 +103,48 @@ def sample_function(expression, x_min, x_max, points=101):
     return samples
 
 
+def evaluate_surface(expression, x_value, y_value):
+    """Evaluate a two-variable expression through the safe calculator parser."""
+    if not isinstance(expression, str) or not expression.strip():
+        raise ValueError("Surface expression must be non-empty text.")
+    if not math.isfinite(float(x_value)) or not math.isfinite(float(y_value)):
+        raise ValueError("Surface coordinates must be finite.")
+    text = _VARIABLE_X.sub("(" + repr(float(x_value)) + ")", expression)
+    text = _VARIABLE_Y.sub("(" + repr(float(y_value)) + ")", text)
+    result = calculate(text)
+    if isinstance(result, bool) or not isinstance(result, Real) or not math.isfinite(result):
+        raise ValueError("Surface expression must produce a finite real result.")
+    return float(result)
+
+
+def sample_surface(expression, x_min, x_max, y_min, y_max, grid_size=25):
+    """Sample a bounded z=f(x,y) grid; undefined values are represented by None."""
+    values = (x_min, x_max, y_min, y_max)
+    if any(isinstance(v, bool) or not isinstance(v, Real) or not math.isfinite(v) for v in values):
+        raise ValueError("Surface bounds must be finite real numbers.")
+    if x_min >= x_max or y_min >= y_max:
+        raise ValueError("Surface minimum bounds must be smaller than their maximums.")
+    if isinstance(grid_size, bool) or not isinstance(grid_size, int) or not 8 <= grid_size <= 60:
+        raise ValueError("grid_size must be an integer from 8 to 60.")
+    xs = [float(x_min) + (float(x_max)-float(x_min))*i/(grid_size-1) for i in range(grid_size)]
+    ys = [float(y_min) + (float(y_max)-float(y_min))*j/(grid_size-1) for j in range(grid_size)]
+    rows = []
+    for y in ys:
+        row = []
+        for x in xs:
+            try:
+                z = evaluate_surface(expression, x, y)
+            except ValueError as exc:
+                message = str(exc).lower()
+                if any(word in message for word in ("domain", "divide by zero", "complex result", "finite real result", "outside the supported range")):
+                    z = None
+                else:
+                    raise
+            row.append({"x": x, "y": y, "z": z})
+        rows.append(row)
+    return rows
+
+
 def evaluate_relation(relation, x_value, y_value):
     """Evaluate an implicit relation F(x, y)=0 at one real coordinate."""
     if not isinstance(relation, str) or not relation.strip():

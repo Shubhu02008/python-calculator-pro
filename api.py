@@ -33,6 +33,7 @@ from engine import (
     list_supported_units,
     sample_function,
     sample_relation,
+    sample_surface,
     solve_equation,
     calculate_bmi,
     calculate_compound_interest,
@@ -195,6 +196,25 @@ class GraphRelationRequest(RequestModel):
     def relation_bounds_must_be_finite(cls, value):
         return _validate_finite_number(value, "Graph bound")
 
+
+
+class GraphSurfaceRequest(RequestModel):
+    expression: str = Field(min_length=1, max_length=10_000)
+    x_min: Number
+    x_max: Number
+    y_min: Number
+    y_max: Number
+    grid_size: StrictInt = Field(default=25, ge=8, le=60)
+
+    @field_validator("expression")
+    @classmethod
+    def surface_expression_must_not_be_blank(cls, value):
+        return _nonblank_text(value, "Surface expression")
+
+    @field_validator("x_min", "x_max", "y_min", "y_max")
+    @classmethod
+    def surface_bounds_must_be_finite(cls, value):
+        return _validate_finite_number(value, "Surface bound")
 
 
 class CurrencyConversionRequest(RequestModel):
@@ -752,6 +772,16 @@ def sample_graph_relation(request: GraphRelationRequest):
             "y_min": request.y_min, "y_max": request.y_max,
         },
     }
+
+@app.post("/api/v1/graph/surface")
+def sample_graph_surface(request: GraphSurfaceRequest):
+    """Return a bounded grid for a z=f(x,y) surface."""
+    rows = sample_surface(
+        request.expression, request.x_min, request.x_max,
+        request.y_min, request.y_max, grid_size=request.grid_size,
+    )
+    return {"rows": rows}
+
 
 @app.post("/api/v1/currency/convert")
 def currency_convert(request: CurrencyConversionRequest):

@@ -28,6 +28,7 @@ from unit_conversion import list_supported_units as _list_supported_units
 from graphing import evaluate_function as _evaluate_function
 from graphing import sample_function as _sample_function
 from graphing import sample_relation as _sample_relation
+from graphing import sample_surface as _sample_surface
 
 from calculator_tools import (
     calculate_bmi as _calculate_bmi,
@@ -318,6 +319,14 @@ def sample_relation(relation, x_min, x_max, y_min, y_max, grid_size=80):
     return _run(lambda: _sample_relation(
         relation, x_min, x_max, y_min, y_max, grid_size=grid_size
     ))
+
+
+def sample_surface(expression, x_min, x_max, y_min, y_max, grid_size=25):
+    """Return a bounded grid for a z=f(x,y) surface."""
+    if not isinstance(expression, str):
+        raise CalculatorError("Surface expression must be text.")
+    checked = tuple(_finite_number(value, label="surface bound") for value in (x_min, x_max, y_min, y_max))
+    return _run(lambda: _sample_surface(expression, *checked, grid_size=grid_size))
 
 
 def solve_equation(equation):
