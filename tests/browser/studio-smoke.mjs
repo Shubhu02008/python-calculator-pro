@@ -79,6 +79,17 @@ try {
 
   await page.setViewportSize({ width: 390, height: 844 });
   assert.ok(await page.locator("#sheet-table").isVisible(), "spreadsheet should remain visible on a mobile viewport");
+  await page.locator(".tab[data-view='graph']").click();
+  await page.locator("#graph-mode").selectOption("parametric");
+  await page.locator(".function-row").nth(2).locator(".remove").click();
+  await page.locator(".function-row").nth(1).locator(".remove").click();
+  await page.locator(".function-row input").first().fill("cos(x)\\x3bsin(x)");
+  await page.locator("#plot").click();
+  await page.getByText(/Plotted 1 parametric curve/).waitFor({ timeout: 3000 });
+  await page.locator("#graph-mode").selectOption("polar");
+  await page.locator(".function-row input").first().fill("1");
+  await page.locator("#plot").click();
+  await page.getByText(/Plotted 1 polar curve/).waitFor({ timeout: 3000 });
   console.log("Advanced Math Studio browser smoke tests passed.");
 } finally {
   await browser.close();
