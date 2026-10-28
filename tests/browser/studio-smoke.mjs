@@ -5,7 +5,7 @@ const browser = await chromium.launch({ headless: true });
 try {
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
   const pageErrors = [];
-  page.on("pageerror", error => pageErrors.push(error.message));
+  page.on("pageerror", error => pageErrors.push(error.stack || error.message));
   let graphRequests = 0;
   const graphExpressions = [];
   await page.route("**/api/v1/graph/sample", async (route) => {
