@@ -148,10 +148,10 @@ try {
   await page.locator(".tab[data-view='stats']").click();
   await page.locator("#stats-run").click();
   await page.getByText("Statistic calculated.").waitFor({ timeout: 2000 });
-  await page.getByText("3", { exact: true }).waitFor({ timeout: 2000 });
+  await page.locator("#stats-result").getByText("3", { exact: true }).waitFor({ timeout: 2000 });
   await page.locator("#probability-run").click();
   await page.getByText("Calculation complete.").waitFor({ timeout: 2000 });
-  await page.getByText("0.3333333333333333", { exact: true }).waitFor({ timeout: 2000 });
+  await page.locator("#probability-result").getByText("0.3333333333333333", { exact: true }).waitFor({ timeout: 2000 });
   console.log("Advanced Math Studio browser smoke tests passed.");
 } finally {
   await browser.close();
