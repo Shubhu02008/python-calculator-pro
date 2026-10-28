@@ -60,6 +60,9 @@ try {
   await page.locator('#sheet-table [data-r="0"][data-c="2"]').fill("=SUM(A1:B2)");
   await page.locator('#sheet-table [data-r="0"][data-c="2"]').dispatchEvent("change");
   await page.getByText("Cell C1 = 10").waitFor({ timeout: 2000 });
+  await page.locator('#sheet-table [data-r="0"][data-c="3"]').fill("=D1");
+  await page.locator('#sheet-table [data-r="0"][data-c="3"]').dispatchEvent("change");
+  await page.getByText(/Formula error: Circular reference/).waitFor({ timeout: 2000 });
   await page.getByRole("button", { name: "Plot selected columns" }).click();
   await page.locator("#sheet-status").getByText(/Plotted 2 numeric data pairs/).waitFor({ timeout: 2000 });
   assert.equal(await page.locator("#sheet-chart path").count(), 1, "spreadsheet points should render as a curve");
