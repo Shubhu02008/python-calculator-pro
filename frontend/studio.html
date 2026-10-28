@@ -91,8 +91,10 @@ graph.addEventListener("wheel",event=>{
 },{passive:false});
 
 // Numerical tracing and feature detection over the sampled curves.
+const interpolationCache=new WeakMap();
 function interpolateAt(points,x){
-  const valid=points.filter(p=>Number.isFinite(p.x)&&Number.isFinite(p.y)).sort((a,b)=>a.x-b.x);
+  let valid=interpolationCache.get(points);
+  if(!valid){valid=points.filter(p=>Number.isFinite(p.x)&&Number.isFinite(p.y)).sort((a,b)=>a.x-b.x);interpolationCache.set(points,valid)}
   if(!valid.length||x<valid[0].x||x>valid[valid.length-1].x)return null;
   let lo=0,hi=valid.length-1;
   while(lo<hi){const mid=(lo+hi)>>1;if(valid[mid].x<x)lo=mid+1;else hi=mid}
@@ -119,13 +121,14 @@ function findNumericalFeatures(){
   const results=[];
   const roots=[];
   const extrema=[];
-  const clean=s=>s.points.filter(p=>Number.isFinite(p.x)&&Number.isFinite(p.y)&&p.x>=v.xmin&&p.x<=v.xmax);
+  const clean=s=>s.points.filter(p=>Number.isFinite(p.x)&&Number.isFinite(p.y)&&p.x>=v.xmin&&p.x<=v.xmax&&p.y>=v.ymin&&p.y<=v.ymax);
   const addUnique=(arr,item,tol)=>{if(!arr.some(a=>Math.abs(a.x-item.x)<tol))arr.push(item)};
   for(const s of seriesCache){
     const pts=clean(s),tol=(v.xmax-v.xmin)/Math.max(pts.length,1)*1.25;
+    if(pts.length&&pts[0].y===0)addUnique(roots,{x:pts[0].x,label:s.expression+" root"},tol);
     for(let i=1;i<pts.length;i++){
       const a=pts[i-1],b=pts[i];
-      if(a.y===0)addUnique(roots,{x:a.x,label:s.expression+" root"},tol);
+      if(b.y===0)addUnique(roots,{x:b.x,label:s.expression+" root"},tol);
       if((a.y<0&&b.y>0)||(a.y>0&&b.y<0)){const x=a.x-a.y*(b.x-a.x)/(b.y-a.y);addUnique(roots,{x,label:s.expression+" root"},tol)}
     }
     for(let i=1;i<pts.length-1;i++){
