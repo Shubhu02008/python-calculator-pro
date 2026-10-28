@@ -33,6 +33,8 @@ Advanced Math Studio is the foundation for replacing the current Graphing Calcul
 - Browser tests for graph controls and API error handling.
 
 ### M2 — Graph analysis and expression objects
+
+**Implemented in the current working branch:** an x-coordinate trace readout with interpolated values for each plotted curve, plus sample-based candidate detection for roots, local extrema, and pairwise intersections. Results are explicitly approximate and limited to the current sampled viewport. These tools do not yet provide symbolic proofs or guarantee detection of tangential roots.
 - Trace/cursor readout and function value at a chosen x.
 - Numerical root, intersection, and extrema candidates with clear approximation labels.
 - Sliders and parameter dependencies.
