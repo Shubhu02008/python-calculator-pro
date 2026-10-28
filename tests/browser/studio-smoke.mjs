@@ -145,6 +145,11 @@ try {
   await page.locator("#surface-plot").click();
   await page.getByText(/Rendered a 3 × 3 surface grid/).waitFor({ timeout: 2000 });
   assert.ok(await page.locator("#surface-canvas path").count() >= 3, "3D wireframe should render rows and columns");
+  const originalSurfacePath = await page.locator("#surface-canvas path").first().getAttribute("d");
+  await page.locator("#surface-yaw").evaluate(el => { el.value = "90"; el.dispatchEvent(new Event("input", { bubbles: true })); });
+  const rotatedSurfacePath = await page.locator("#surface-canvas path").first().getAttribute("d");
+  assert.notEqual(rotatedSurfacePath, originalSurfacePath, "rotation should change the projected surface");
+  await page.locator("#surface-reset-view").click();
   await page.locator(".tab[data-view='stats']").click();
   await page.locator("#stats-run").click();
   await page.getByText("Statistic calculated.").waitFor({ timeout: 2000 });
