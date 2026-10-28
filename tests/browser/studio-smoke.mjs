@@ -5,7 +5,7 @@ const browser = await chromium.launch({ headless: true });
 try {
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
   const pageErrors = [];
-  page.on("pageerror", error => pageErrors.push(error.message));
+  page.on("pageerror", error => pageErrors.push(error.stack || error.message));
   let graphRequests = 0;
   const graphExpressions = [];
   await page.route("**/api/v1/graph/sample", async (route) => {
@@ -29,8 +29,9 @@ try {
   assert.ok(graphRequests >= 2, "default functions should call the graph API");
   assert.equal(await page.locator("#graph path").count(), 2, "both default function curves should render");
   assert.ok(graphExpressions.some(expression => expression.includes("(1)") && expression.includes("x^2") && expression.includes("(0)")), "parameterized expressions should be substituted before API requests");
-  const updatedSliderRequest = page.waitForRequest(request => {
-    if (!request.url().includes("/api/v1/graph/sample")) return false;
+  const updatedSliderRequest = page.waitForResponse(response => {
+    const request = response.request();
+    if (!response.url().includes("/api/v1/graph/sample")) return false;
     try { const expression = request.postDataJSON().expression; return expression.includes("(2)") && expression.includes("x^2"); } catch { return false; }
   }, { timeout: 5000 });
   await page.locator('#parameters [data-param-slider]').first().evaluate(el => { el.value = "2"; el.dispatchEvent(new Event("input", { bubbles: true })); });
@@ -56,7 +57,13 @@ try {
   await page.locator('#sheet-table [data-r="0"][data-c="0"]').fill("1");
   await page.locator('#sheet-table [data-r="0"][data-c="1"]').fill("2");
   await page.locator('#sheet-table [data-r="1"][data-c="0"]').fill("3");
-  await page.locator('#sheet-table [data-r="1"][data-c="1"]').fill("4");
+  await page.locator('#sheet-table [data-r="1"][data-c="1"]').fill("=A2+1");
+  await page.locator('#sheet-table [data-r="0"][data-c="2"]').fill("=SUM(A1:B2)");
+  await page.locator('#sheet-table [data-r="0"][data-c="2"]').dispatchEvent("change");
+  await page.getByText("Cell C1 = 10").waitFor({ timeout: 2000 });
+  await page.locator('#sheet-table [data-r="0"][data-c="3"]').fill("=D1");
+  await page.locator('#sheet-table [data-r="0"][data-c="3"]').dispatchEvent("change");
+  await page.getByText(/Formula error: Circular reference/).waitFor({ timeout: 2000 });
   await page.getByRole("button", { name: "Plot selected columns" }).click();
   await page.locator("#sheet-status").getByText(/Plotted 2 numeric data pairs/).waitFor({ timeout: 2000 });
   assert.equal(await page.locator("#sheet-chart path").count(), 1, "spreadsheet points should render as a curve");
