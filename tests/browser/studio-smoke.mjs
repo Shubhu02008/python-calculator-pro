@@ -83,7 +83,7 @@ try {
   await page.locator("#graph-mode").selectOption("parametric");
   await page.locator(".function-row").nth(2).locator(".remove").click();
   await page.locator(".function-row").nth(1).locator(".remove").click();
-  await page.locator(".function-row input").first().fill("cos(x)\\x3bsin(x)");
+  await page.locator(".function-row input").first().fill("cos(x)"+String.fromCharCode(59)+"sin(x)");
   await page.locator("#plot").click();
   await page.getByText(/Plotted 1 parametric curve/).waitFor({ timeout: 3000 });
   await page.locator("#graph-mode").selectOption("polar");
