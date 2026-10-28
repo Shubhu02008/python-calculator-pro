@@ -90,6 +90,8 @@ try {
   await page.locator('#sheet-table [data-r="0"][data-c="2"]').fill("=SUM(A1:B2)");
   await page.locator('#sheet-table [data-r="0"][data-c="2"]').dispatchEvent("change");
   await page.getByText("Cell C1 = 10").waitFor({ timeout: 2000 });
+  assert.equal(await page.locator('#sheet-table [data-result-for="1,1"]').innerText(), "4", "formula cell should show its evaluated value");
+  assert.equal(await page.locator('#sheet-table [data-result-for="0,2"]').innerText(), "10", "range formula should show its evaluated value");
   await page.locator('#sheet-table [data-r="0"][data-c="3"]').fill("=D1");
   await page.locator('#sheet-table [data-r="0"][data-c="3"]').dispatchEvent("change");
   await page.getByText(/Formula error: Circular reference/).waitFor({ timeout: 2000 });
