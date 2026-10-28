@@ -21,14 +21,14 @@ try {
   });
 
   await page.goto("http://127.0.0.1:8000/studio.html");
-  await page.getByText("Plotted 2 function(s).").waitFor({ timeout: 5000 });
+  await page.locator("#graph-status").getByText(/Plotted 2 function\(s\)/).waitFor({ timeout: 5000 });
   assert.ok(graphRequests >= 2, "default functions should call the graph API");
   assert.equal(await page.locator("#graph path").count(), 2, "both default function curves should render");
 
   await page.getByRole("button", { name: "+ Add function" }).click();
   await page.locator(".function-row").nth(2).locator("input").fill("cos(x)");
   await page.locator("#plot").click();
-  await page.getByText("Plotted 3 function(s).").waitFor({ timeout: 5000 });
+  await page.locator("#graph-status").getByText(/Plotted 3 function\(s\)/).waitFor({ timeout: 5000 });
   assert.equal(await page.locator("#graph path").count(), 3, "adding a function should render a third curve");
 
   await page.locator("#xmin").fill("10");
@@ -36,7 +36,7 @@ try {
   await page.locator("#plot").click();
   await page.getByText(/minimum must be smaller/).waitFor({ timeout: 2000 });
 
-  await page.getByRole("button", { name: "Spreadsheet" }).click();
+  await page.getByRole("button", { name: /Spreadsheet/ }).click();
   assert.equal(await page.locator("#sheet-table tbody tr").count(), 12);
   assert.equal(await page.locator("#x-col").inputValue(), "0");
   assert.equal(await page.locator("#y-col").inputValue(), "1", "spreadsheet Y column should default to B");
@@ -46,7 +46,7 @@ try {
   await page.locator('#sheet-table [data-r="1"][data-c="0"]').fill("3");
   await page.locator('#sheet-table [data-r="1"][data-c="1"]').fill("4");
   await page.getByRole("button", { name: "Plot selected columns" }).click();
-  await page.getByText(/Plotted 2 numeric data pairs/).waitFor({ timeout: 2000 });
+  await page.locator("#sheet-status").getByText(/Plotted 2 numeric data pairs/).waitFor({ timeout: 2000 });
   assert.equal(await page.locator("#sheet-chart path").count(), 1, "spreadsheet points should render as a curve");
 
   await page.setViewportSize({ width: 390, height: 844 });
