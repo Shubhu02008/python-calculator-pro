@@ -108,6 +108,11 @@ try {
   await page.getByRole("button", { name: "Plot selected columns" }).click();
   await page.getByText(/Quadratic regression:.*R² =/).waitFor({ timeout: 2000 });
 
+  await page.locator("#import-data").setInputFiles({ name: "sample.csv", mimeType: "text/csv", buffer: Buffer.from(["x,y","1,2","3,4",""].join(String.fromCharCode(10))) });
+  await page.getByText(/Imported 2 data rows and 2 columns/).waitFor({ timeout: 2000 });
+  assert.equal(await page.locator('#sheet-table [data-head="0"]').inputValue(), "x");
+  assert.equal(await page.locator('#sheet-table [data-r="0"][data-c="0"]').inputValue(), "1");
+  assert.equal(await page.locator('#sheet-table [data-r="1"][data-c="1"]').inputValue(), "4");
   await page.setViewportSize({ width: 390, height: 844 });
   assert.ok(await page.locator("#sheet-table").isVisible(), "spreadsheet should remain visible on a mobile viewport");
   await page.locator(".tab[data-view='graph']").click();
