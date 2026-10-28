@@ -7,9 +7,11 @@ try {
   const pageErrors = [];
   page.on("pageerror", error => pageErrors.push(error.message));
   let graphRequests = 0;
+  const graphExpressions = [];
   await page.route("**/api/v1/graph/sample", async (route) => {
     graphRequests += 1;
     const body = route.request().postDataJSON();
+    graphExpressions.push(body.expression);
     const count = Math.min(body.points || 101, 801);
     const points = Array.from({ length: count }, (_, i) => {
       const x = body.x_min + (body.x_max - body.x_min) * i / (count - 1);
@@ -26,6 +28,15 @@ try {
   try { await page.locator("#graph-status").getByText(/Plotted 2 function\(s\)/).waitFor({ timeout: 5000 }); } catch (error) { throw new Error(`Initial plot failed. Status: ${await page.locator("#graph-status").innerText()}; page errors: ${pageErrors.join(" | ")}; ${error.message}`); }
   assert.ok(graphRequests >= 2, "default functions should call the graph API");
   assert.equal(await page.locator("#graph path").count(), 2, "both default function curves should render");
+  assert.ok(graphExpressions.some(expression => expression.includes("(1)") && expression.includes("x^2") && expression.includes("(0)")), "parameterized expressions should be substituted before API requests");
+  const requestsBeforeSlider = graphRequests;
+  await page.locator('#parameters [data-param-name="a"]').fill("a");
+  await page.locator('#parameters [data-param-slider]').first().evaluate(el => { el.value = "2"; el.dispatchEvent(new Event("input", { bubbles: true })); });
+  await page.waitForFunction(() => document.querySelector("#graph-status")?.textContent.includes("Plotted 2 function(s)") && window.__unused === undefined, null, { timeout: 5000 }).catch(() => {});
+  await page.waitForFunction(() => Number(document.querySelector('#parameters [data-param-slider]')?.value) === 2);
+  await page.waitForTimeout(250);
+  assert.ok(graphRequests > requestsBeforeSlider, "moving a parameter slider should replot the curves");
+  assert.ok(graphExpressions.some(expression => expression.includes("(2)") && expression.includes("x^2")), "updated slider values should reach the graph API");
 
   await page.getByRole("button", { name: "+ Add function" }).click();
   await page.locator(".function-row").nth(2).locator("input").fill("cos(x)");
