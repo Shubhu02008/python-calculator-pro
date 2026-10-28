@@ -4,6 +4,8 @@ import { chromium } from "playwright";
 const browser = await chromium.launch({ headless: true });
 try {
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  const pageErrors = [];
+  page.on("pageerror", error => pageErrors.push(error.message));
   let graphRequests = 0;
   await page.route("**/api/v1/graph/sample", async (route) => {
     graphRequests += 1;
@@ -21,7 +23,7 @@ try {
   });
 
   await page.goto("http://127.0.0.1:8000/studio.html");
-  await page.locator("#graph-status").getByText(/Plotted 2 function\(s\)/).waitFor({ timeout: 5000 });
+  try { await page.locator("#graph-status").getByText(/Plotted 2 function\(s\)/).waitFor({ timeout: 5000 }); } catch (error) { throw new Error(`Initial plot failed. Status: ${await page.locator("#graph-status").innerText()}; page errors: ${pageErrors.join(" | ")}; ${error.message}`); }
   assert.ok(graphRequests >= 2, "default functions should call the graph API");
   assert.equal(await page.locator("#graph path").count(), 2, "both default function curves should render");
 
