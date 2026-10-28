@@ -37,6 +37,58 @@ function draw(svg,series,view){const W=900,H=560,p={l:70,r:24,t:22,b:55},pw=W-p.
 function summarize(series,view){const first=series[0];if(!first)return;const pts=first.points.filter(p=>Number.isFinite(p.y)&&p.x>=view.xmin&&p.x<=view.xmax);if(!pts.length){$("#analysis").innerHTML='<span class="muted">No finite samples in this view.</span>';return}const min=pts.reduce((a,b)=>b.y<a.y?b:a),max=pts.reduce((a,b)=>b.y>a.y?b:a),near=pts.filter(p=>Math.abs(p.y)<(view.ymax-view.ymin)/Math.max(pts.length,1)*1.5);$("#analysis").innerHTML=[["Min sample",min.y.toPrecision(6)+" at x="+min.x.toPrecision(5)],["Max sample",max.y.toPrecision(6)+" at x="+max.x.toPrecision(5)],["Samples",String(pts.length)],["Near x-axis",String(near.length)]].map(([a,b])=>'<div class="stat"><small>'+a+'</small><strong>'+esc(b)+'</strong></div>').join("")}
 function renderValues(series){const first=series[0];if(!first){$("#values-table").innerHTML="";return}const rows=first.points.filter((_,i)=>i%Math.max(1,Math.ceil(first.points.length/40))===0).slice(0,40);$("#values-table").innerHTML="<thead><tr><th>x</th><th>y</th></tr></thead><tbody>"+rows.map(p=>"<tr><td>"+p.x.toPrecision(5)+"</td><td>"+(Number.isFinite(p.y)?p.y.toPrecision(7):"—")+"</td></tr>").join("")+"</tbody>"}
 async function plotFunctions(){const requestId=++plotRequestId,status=$("#graph-status");status.textContent="Calculating samples…";try{const v=rangeValues(),rows=Array.from(document.querySelectorAll(".function-row")).map(row=>({expression:row.querySelector("input").value.trim(),color:row.dataset.color||colors[0]})).filter(r=>r.expression);if(!rows.length)throw Error("Add at least one expression.");const sampled=await Promise.all(rows.map(async r=>({...r,points:await sample(r.expression,v.xmin,v.xmax)})));if(requestId!==plotRequestId)return;seriesCache=sampled;lastSeries=sampled;draw($("#graph"),sampled,v);renderValues(sampled);summarize(sampled,v);$("#graph-legend").innerHTML=sampled.map(s=>'<div class="stat"><small style="color:'+s.color+'">● '+esc(s.expression)+'</small><strong>'+s.points.filter(p=>Number.isFinite(p.y)).length+' valid points</strong></div>').join("");status.textContent="Plotted "+sampled.length+" function(s). Undefined regions are left as gaps."}catch(e){if(requestId===plotRequestId)status.textContent=e.message||"Unable to plot this graph."}}
+
+// Interactive graph navigation: drag to pan and use the wheel/pinch trackpad to zoom.
+let dragState=null, zoomTimer=null;
+function setGraphView(v){
+  $("#xmin").value=Number(v.xmin.toPrecision(7));
+  $("#xmax").value=Number(v.xmax.toPrecision(7));
+  $("#ymin").value=Number(v.ymin.toPrecision(7));
+  $("#ymax").value=Number(v.ymax.toPrecision(7));
+}
+function graphCoordinates(event){
+  const rect=$("#graph").getBoundingClientRect();
+  return {x:(event.clientX-rect.left)/rect.width*900,y:(event.clientY-rect.top)/rect.height*560};
+}
+const graph=$("#graph");
+graph.style.touchAction="none";
+graph.style.cursor="grab";
+graph.addEventListener("pointerdown",event=>{
+  if(event.button!==0)return;
+  const view=rangeValues(),pos=graphCoordinates(event);
+  dragState={id:event.pointerId,start:pos,view,moved:false};
+  graph.setPointerCapture(event.pointerId);
+  graph.style.cursor="grabbing";
+});
+graph.addEventListener("pointermove",event=>{
+  if(!dragState||dragState.id!==event.pointerId)return;
+  const pos=graphCoordinates(event),dx=pos.x-dragState.start.x,dy=pos.y-dragState.start.y;
+  if(Math.abs(dx)+Math.abs(dy)>3)dragState.moved=true;
+  if(!dragState.moved)return;
+  const v=dragState.view,pw=806,ph=483;
+  const sx=-dx/pw*(v.xmax-v.xmin),sy=dy/ph*(v.ymax-v.ymin);
+  const shifted={xmin:v.xmin+sx,xmax:v.xmax+sx,ymin:v.ymin+sy,ymax:v.ymax+sy};
+  setGraphView(shifted);
+  draw(graph,seriesCache,shifted);
+});
+function finishPan(event){
+  if(!dragState||dragState.id!==event.pointerId)return;
+  const moved=dragState.moved;
+  dragState=null;graph.style.cursor="grab";
+  if(moved)plotFunctions();
+}
+graph.addEventListener("pointerup",finishPan);
+graph.addEventListener("pointercancel",finishPan);
+graph.addEventListener("wheel",event=>{
+  event.preventDefault();
+  let v;try{v=rangeValues()}catch{return}
+  const factor=Math.exp(Math.max(-1,Math.min(1,event.deltaY*0.0015)));
+  const xMid=(v.xmin+v.xmax)/2,yMid=(v.ymin+v.ymax)/2;
+  const next={xmin:xMid+(v.xmin-xMid)*factor,xmax:xMid+(v.xmax-xMid)*factor,ymin:yMid+(v.ymin-yMid)*factor,ymax:yMid+(v.ymax-yMid)*factor};
+  setGraphView(next);
+  draw(graph,seriesCache,next);
+  clearTimeout(zoomTimer);zoomTimer=setTimeout(()=>plotFunctions(),180);
+},{passive:false});
 function csv(rows){return rows.map(r=>r.map(v=>{const s=String(v??"");return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s}).join(",")).join("\r\n")}
 function download(name,content,type="text/csv"){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([content],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 $("#add-function").addEventListener("click",()=>addFunction("sin(x)"));$("#plot").addEventListener("click",plotFunctions);$("#reset-view").addEventListener("click",()=>{$("#xmin").value=-10;$("#xmax").value=10;$("#ymin").value=-10;$("#ymax").value=10;plotFunctions()});$("#save-csv").addEventListener("click",()=>{if(!lastSeries.length)return;const rows=[["function","x","y"]];lastSeries.forEach(s=>s.points.forEach(p=>rows.push([s.expression,p.x,p.y??""] )));download("graph-samples.csv",csv(rows))});
