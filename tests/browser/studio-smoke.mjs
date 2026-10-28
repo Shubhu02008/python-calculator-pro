@@ -67,6 +67,8 @@ try {
   await page.getByRole("button", { name: "Plot selected columns" }).click();
   await page.locator("#sheet-status").getByText(/Plotted 2 numeric data pairs/).waitFor({ timeout: 2000 });
   assert.equal(await page.locator("#sheet-chart path").count(), 1, "spreadsheet points should render as a curve");
+  await page.locator('#sheet-table [data-r="2"][data-c="0"]').fill("5");
+  await page.locator('#sheet-table [data-r="2"][data-c="1"]').fill("8");
   await page.locator("#regression-mode").selectOption("linear");
   await page.getByRole("button", { name: "Plot selected columns" }).click();
   await page.getByText(/Linear regression:.*R² =/).waitFor({ timeout: 2000 });
