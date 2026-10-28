@@ -36,6 +36,11 @@ try {
     await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ operation: body.operation, expression: body.expression, result: results[body.operation] }) });
   });
 
+  await page.route("**/api/v1/graph/surface", async route => {
+    const rows = Array.from({ length: 3 }, (_, j) => Array.from({ length: 3 }, (_, i) => ({ x: i - 1, y: j - 1, z: (i - 1) ** 2 + (j - 1) ** 2 })));
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ rows }) });
+  });
+
   await page.goto("http://127.0.0.1:8000/studio.html");
   try { await page.locator("#graph-status").getByText(/Plotted 2 function\(s\)/).waitFor({ timeout: 5000 }); } catch (error) { throw new Error(`Initial plot failed. Status: ${await page.locator("#graph-status").innerText()}; page errors: ${pageErrors.join(" | ")}; ${error.message}`); }
   assert.ok(graphRequests >= 2, "default functions should call the graph API");
@@ -128,6 +133,10 @@ try {
   await page.locator("#geometry-canvas").click({ position: { x: 220, y: 160 } });
   await page.getByText("Segment constructed.").waitFor({ timeout: 2000 });
   assert.equal(await page.locator('#geometry-canvas line[stroke="#69a4ff"]').count(), 1, "segment construction should render");
+  await page.locator(".tab[data-view='surface']").click();
+  await page.locator("#surface-plot").click();
+  await page.getByText(/Rendered a 3 × 3 surface grid/).waitFor({ timeout: 2000 });
+  assert.ok(await page.locator("#surface-canvas path").count() >= 3, "3D wireframe should render rows and columns");
   console.log("Advanced Math Studio browser smoke tests passed.");
 } finally {
   await browser.close();
