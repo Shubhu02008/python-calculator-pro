@@ -49,6 +49,10 @@ try {
     await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ operation: "simple", result: 1 / 3 }) });
   });
 
+  await page.route("**/api/v1/equations/solve", async route => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ status: "solved", solutions: [{ real: 2, imaginary: 0 }, { real: -2, imaginary: 0 }], message: null }) });
+  });
+
   await page.goto("http://127.0.0.1:8000/studio.html");
   try { await page.locator("#graph-status").getByText(/Plotted 2 function\(s\)/).waitFor({ timeout: 5000 }); } catch (error) { throw new Error(`Initial plot failed. Status: ${await page.locator("#graph-status").innerText()}; page errors: ${pageErrors.join(" | ")}; ${error.message}`); }
   assert.ok(graphRequests >= 2, "default functions should call the graph API");
@@ -126,6 +130,10 @@ try {
   await page.locator("#cas-expression").fill("x^2");
   await page.locator("#cas-run").click();
   await page.getByText("2*x", { exact: true }).waitFor({ timeout: 2000 });
+  await page.locator("#cas-operation").selectOption("solve_equation");
+  await page.locator("#cas-expression").fill("x^2=4");
+  await page.locator("#cas-run").click();
+  await page.locator("#cas-result-value").getByText(/x1 = 2/).waitFor({ timeout: 2000 });
   await page.locator("#cas-operation").selectOption("definite_integral");
   await page.locator("#cas-expression").fill("x^2");
   await page.locator("#cas-lower").fill("0");
