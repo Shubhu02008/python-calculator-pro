@@ -67,6 +67,13 @@ try {
   await page.getByRole("button", { name: "Plot selected columns" }).click();
   await page.locator("#sheet-status").getByText(/Plotted 2 numeric data pairs/).waitFor({ timeout: 2000 });
   assert.equal(await page.locator("#sheet-chart path").count(), 1, "spreadsheet points should render as a curve");
+  await page.locator("#regression-mode").selectOption("linear");
+  await page.getByRole("button", { name: "Plot selected columns" }).click();
+  await page.getByText(/Linear regression:.*R² =/).waitFor({ timeout: 2000 });
+  assert.equal(await page.locator("#sheet-chart path").count(), 2, "linear regression should overlay a fitted line");
+  await page.locator("#regression-mode").selectOption("quadratic");
+  await page.getByRole("button", { name: "Plot selected columns" }).click();
+  await page.getByText(/Quadratic regression:.*R² =/).waitFor({ timeout: 2000 });
 
   await page.setViewportSize({ width: 390, height: 844 });
   assert.ok(await page.locator("#sheet-table").isVisible(), "spreadsheet should remain visible on a mobile viewport");
