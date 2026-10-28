@@ -85,7 +85,7 @@ try {
   await page.locator(".function-row").nth(1).locator(".remove").click();
   await page.locator(".function-row input").first().fill("cos(x)"+String.fromCharCode(59)+"sin(x)");
   await page.locator("#plot").click();
-  await page.getByText(/Plotted 1 parametric curve/).waitFor({ timeout: 3000 });
+  try { await page.getByText(/Plotted 1 parametric curve/).waitFor({ timeout: 3000 }); } catch { throw new Error("Parametric plot failed: "+await page.locator("#graph-status").innerText()); }
   await page.locator("#graph-mode").selectOption("polar");
   await page.locator(".function-row input").first().fill("1");
   await page.locator("#plot").click();
