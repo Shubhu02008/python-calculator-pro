@@ -119,6 +119,15 @@ try {
   await page.locator("#cas-upper").fill("1");
   await page.locator("#cas-run").click();
   await page.getByText("1/3", { exact: true }).waitFor({ timeout: 2000 });
+  await page.locator(".tab[data-view='geometry']").click();
+  await page.locator("#geometry-tool").selectOption("point");
+  await page.locator("#geometry-canvas").click({ position: { x: 80, y: 80 } });
+  await page.getByText(/Point A added/).waitFor({ timeout: 2000 });
+  await page.locator("#geometry-tool").selectOption("segment");
+  await page.locator("#geometry-canvas").click({ position: { x: 120, y: 120 } });
+  await page.locator("#geometry-canvas").click({ position: { x: 220, y: 160 } });
+  await page.getByText("Segment constructed.").waitFor({ timeout: 2000 });
+  assert.equal(await page.locator('#geometry-canvas line[stroke="#69a4ff"]').count(), 1, "segment construction should render");
   console.log("Advanced Math Studio browser smoke tests passed.");
 } finally {
   await browser.close();
