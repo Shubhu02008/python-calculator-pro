@@ -29,8 +29,9 @@ try {
   assert.ok(graphRequests >= 2, "default functions should call the graph API");
   assert.equal(await page.locator("#graph path").count(), 2, "both default function curves should render");
   assert.ok(graphExpressions.some(expression => expression.includes("(1)") && expression.includes("x^2") && expression.includes("(0)")), "parameterized expressions should be substituted before API requests");
-  const updatedSliderRequest = page.waitForResponse(request => {
-    if (!request.url().includes("/api/v1/graph/sample")) return false;
+  const updatedSliderRequest = page.waitForResponse(response => {
+    const request = response.request();
+    if (!response.url().includes("/api/v1/graph/sample")) return false;
     try { const expression = request.postDataJSON().expression; return expression.includes("(2)") && expression.includes("x^2"); } catch { return false; }
   }, { timeout: 5000 });
   await page.locator('#parameters [data-param-slider]').first().evaluate(el => { el.value = "2"; el.dispatchEvent(new Event("input", { bubbles: true })); });
