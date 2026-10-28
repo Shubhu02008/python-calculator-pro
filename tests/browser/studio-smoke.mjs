@@ -185,6 +185,13 @@ try {
   await page.locator("#probability-run").click();
   await page.locator("#probability-status").getByText("Calculation complete.", { exact: true }).waitFor({ timeout: 2000 });
   await page.locator("#probability-result").getByText("0.3333333333333333", { exact: true }).waitFor({ timeout: 2000 });
+  const workspaceDownloadPromise = page.waitForEvent("download");
+  await page.locator("#save-workspace").click();
+  const workspaceDownload = await workspaceDownloadPromise;
+  assert.equal(workspaceDownload.suggestedFilename(), "math-studio-workspace.json");
+  const workspacePath = await workspaceDownload.path();
+  await page.locator("#load-workspace").setInputFiles(workspacePath);
+  await page.locator("#workspace-status").getByText("Workspace loaded successfully.", { exact: true }).waitFor({ timeout: 3000 });
   console.log("Advanced Math Studio browser smoke tests passed.");
 } finally {
   await browser.close();
