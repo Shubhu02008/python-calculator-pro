@@ -150,7 +150,7 @@ try {
   await page.getByText("Statistic calculated.").waitFor({ timeout: 2000 });
   await page.locator("#stats-result").getByText("3", { exact: true }).waitFor({ timeout: 2000 });
   await page.locator("#probability-run").click();
-  await page.getByText("Calculation complete.").waitFor({ timeout: 2000 });
+  await page.locator("#probability-status").getByText("Calculation complete.", { exact: true }).waitFor({ timeout: 2000 });
   await page.locator("#probability-result").getByText("0.3333333333333333", { exact: true }).waitFor({ timeout: 2000 });
   console.log("Advanced Math Studio browser smoke tests passed.");
 } finally {
