@@ -41,6 +41,10 @@ Advanced Math Studio is the foundation for replacing the current Graphing Calcul
 - Parametric and polar functions; improve implicit relation rendering.
 - Shared graph state between the existing calculator route and Studio.
 
+### M3 — Sliders and linked expressions
+
+**Initial parameter-slider slice implemented:** expressions can reference named parameters such as `a` and `b`; parameter sliders substitute their current numeric values before the existing graph API is called and automatically replot after changes. The current UI supports up to eight uniquely named parameters, with values ranging from -10 to 10 in 0.1 steps. Parameters are local to the Studio session and are not yet saved or shared with spreadsheet cells. The browser smoke test now checks that slider changes send updated expressions to the API.
+
 ### M3 — Symbolic mathematics integration
 - Reuse and test existing SymPy-backed API operations.
 - Add simplification/factorization and calculus operations where absent.
