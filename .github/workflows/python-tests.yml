@@ -35,4 +35,19 @@ jobs:
       - name: Check frontend JavaScript syntax
         run: node --check frontend/app.js
 
+      - name: Check Advanced Math Studio JavaScript syntax
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          html = Path("frontend/studio.html").read_text(encoding="utf-8")
+          scripts = re.findall(r"<script(?:\s[^>]*)?>(.*?)</script>", html, re.IGNORECASE | re.DOTALL)
+          inline_scripts = [script for script in scripts if script.strip()]
+          if len(inline_scripts) != 1:
+              raise SystemExit(f"Expected one inline Studio script, found {len(inline_scripts)}")
+          Path("/tmp/studio-inline.js").write_text(inline_scripts[0], encoding="utf-8")
+          PY
+          node --check /tmp/studio-inline.js
+
       - run: python -m pytest -q
