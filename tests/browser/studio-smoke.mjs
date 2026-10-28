@@ -80,6 +80,7 @@ try {
   await page.setViewportSize({ width: 390, height: 844 });
   assert.ok(await page.locator("#sheet-table").isVisible(), "spreadsheet should remain visible on a mobile viewport");
   await page.locator(".tab[data-view='graph']").click();
+  await page.locator("#reset-view").click();
   await page.locator("#graph-mode").selectOption("parametric");
   await page.locator(".function-row").nth(2).locator(".remove").click();
   await page.locator(".function-row").nth(1).locator(".remove").click();
