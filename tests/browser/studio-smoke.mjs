@@ -191,7 +191,7 @@ try {
   assert.equal(workspaceDownload.suggestedFilename(), "math-studio-workspace.json");
   const workspacePath = await workspaceDownload.path();
   await page.locator("#load-workspace").setInputFiles(workspacePath);
-  await page.getByText("Workspace loaded successfully.").waitFor({ timeout: 3000 });
+  await page.locator("#workspace-status").getByText("Workspace loaded successfully.", { exact: true }).waitFor({ timeout: 3000 });
   console.log("Advanced Math Studio browser smoke tests passed.");
 } finally {
   await browser.close();
