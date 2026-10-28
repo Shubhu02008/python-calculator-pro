@@ -51,3 +51,24 @@ jobs:
           node --check /tmp/studio-inline.js
 
       - run: python -m pytest -q
+
+  studio-browser-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm install --no-save playwright
+      - run: npx playwright install --with-deps chromium
+      - name: Run Advanced Math Studio browser smoke tests
+        run: |
+          python -m http.server 8000 --directory frontend >/tmp/studio-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:8000/studio.html >/dev/null; then break; fi
+            sleep 1
+          done
+          node tests/browser/studio-smoke.mjs
