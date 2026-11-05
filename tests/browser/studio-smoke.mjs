@@ -249,6 +249,10 @@ try {
   await page.waitForFunction(() => window.__bmiRequestCaptured === true, null, { timeout: 3000 }).catch(() => {});
   assert.ok(bmiPayload, "BMI request should be sent");
   assert.ok(Math.abs(bmiPayload.height_m - 1.7526) < 1e-10, "5 ft 9 in should convert to 1.7526 metres");
+  await page.locator('[name="height_inches"]').fill("12");
+  await page.locator('.tool-form button[type="submit"]').click();
+  await page.getByText("Enter a non-negative feet value and inches from 0 to less than 12.", { exact: true }).waitFor({ timeout: 2000 });
+  assert.ok(Math.abs(bmiPayload.height_m - 1.7526) < 1e-10, "invalid inch values must not overwrite the valid BMI request");
   await page.locator('[name="height_unit"]').selectOption("metric");
   assert.ok(await page.locator('[name="height_cm"]').isVisible(), "centimetre height input should return when switching back");
   assert.ok(await page.locator('[name="height_feet"]').isHidden(), "feet input should hide in metric mode");
