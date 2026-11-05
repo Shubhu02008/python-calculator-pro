@@ -8,6 +8,7 @@ try {
   page.on("pageerror", error => pageErrors.push(error.stack || error.message));
   let graphRequests = 0;
   const graphExpressions = [];
+  const relationRequests = [];
   await page.route("**/api/v1/graph/sample", async (route) => {
     graphRequests += 1;
     const body = route.request().postDataJSON();
@@ -25,6 +26,7 @@ try {
   });
 
   await page.route("**/api/v1/graph/relation", async route => {
+    relationRequests.push(route.request().postDataJSON());
     await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ segments: [
       { x1: -2, y1: 0, x2: 2, y2: 0 }, { x1: 0, y1: -2, x2: 0, y2: 2 }
     ] }) });
@@ -127,6 +129,15 @@ try {
   await page.locator(".function-row input").first().fill("1");
   await page.locator("#plot").click();
   await page.getByText(/Plotted 1 polar curve/).waitFor({ timeout: 3000 });
+  await page.locator("#graph-mode").selectOption("cartesian");
+  await page.locator(".function-row input").first().fill("y^2=18*x");
+  await page.locator("#plot").click();
+  await page.getByText(/Plotted 1 function/).waitFor({ timeout: 3000 });
+  assert.ok(relationRequests.some(request => request.relation === "y^2=18*x"), "Cartesian mode should route equations containing y and equals to the implicit relation API");
+  await page.locator(".function-row input").first().fill("x^2=4");
+  await page.locator("#plot").click();
+  await page.getByText(/Plotted 1 function/).waitFor({ timeout: 3000 });
+  assert.ok(graphExpressions.some(expression => expression.includes("x^2") && expression.includes("4")), "single-variable equations should be converted to a residual expression before sampling");
   await page.locator("#graph-mode").selectOption("implicit");
   await page.locator(".function-row input").first().fill("x^2+y^2=25");
   await page.locator("#plot").click();
@@ -189,6 +200,7 @@ try {
   assert.notEqual(rotatedSurfacePath, originalSurfacePath, "rotation should change the projected surface");
   await page.locator("#surface-reset-view").click();
   await page.locator(".tab[data-view='stats']").click();
+  await page.locator("#stats-values").fill("1 2 3");
   await page.locator("#stats-run").click();
   await page.getByText("Statistic calculated.").waitFor({ timeout: 2000 });
   await page.locator("#stats-result").getByText("3", { exact: true }).waitFor({ timeout: 2000 });
@@ -202,6 +214,30 @@ try {
   const workspacePath = await workspaceDownload.path();
   await page.locator("#load-workspace").setInputFiles(workspacePath);
   await page.locator("#workspace-status").getByText("Workspace loaded successfully.", { exact: true }).waitFor({ timeout: 3000 });
+  await page.addInitScript(() => { window.CALCULATOR_API_BASE_URL = "http://127.0.0.1:8000"; });
+  await page.route("**/healthz", route => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ status: "ok" }) }));
+  await page.route("**/api/v1/capabilities", route => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ unit_dimensions: [] }) }));
+  let bmiPayload = null;
+  await page.route("**/api/v1/health/bmi", async route => {
+    bmiPayload = route.request().postDataJSON();
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ bmi: 22.86, category: "Normal weight" }) });
+  });
+  await page.goto("http://127.0.0.1:8000/index.html");
+  await page.locator("#start-calculating").click();
+  await page.locator('#sidebar [data-tool="Advanced Maths Studio"]').click();
+  assert.equal(await page.locator("#workspace-title").innerText(), "Advanced Maths Studio");
+  assert.ok(await page.locator("#sidebar").isVisible(), "calculator sidebar should remain visible when Studio opens");
+  assert.ok(await page.getByTitle("Advanced Maths Studio").isVisible(), "Studio should be embedded in the calculator workspace");
+  await page.locator('#sidebar [data-tool="BMI Calculator"]').click();
+  await page.locator('[name="height_unit"]').selectOption("imperial");
+  assert.ok(await page.locator('[name="height_feet"]').isVisible(), "feet field should appear in imperial mode");
+  assert.ok(await page.locator('[name="height_inches"]').isVisible(), "inches field should appear in imperial mode");
+  await page.locator('[name="height_feet"]').fill("5");
+  await page.locator('[name="height_inches"]').fill("9");
+  await page.locator('.tool-form button[type="submit"]').click();
+  await page.waitForFunction(() => window.__bmiRequestCaptured === true, null, { timeout: 3000 }).catch(() => {});
+  assert.ok(bmiPayload, "BMI request should be sent");
+  assert.ok(Math.abs(bmiPayload.height_m - 1.7526) < 1e-10, "5 ft 9 in should convert to 1.7526 metres");
   console.log("Advanced Math Studio browser smoke tests passed.");
 } finally {
   await browser.close();
