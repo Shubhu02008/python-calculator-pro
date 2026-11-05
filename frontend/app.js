@@ -1127,11 +1127,6 @@
     const data = new FormData(feedbackForm);
     if (String(data.get("_honey") || "").trim()) return;
     const message = String(data.get("message") || "").trim();
-    if (message.length < 8) {
-      feedbackStatus.textContent = "Please add a little more detail so I can understand your feedback.";
-      feedbackStatus.className = "feedback-status is-error";
-      return;
-    }
     const submit = feedbackForm.querySelector('[type="submit"]');
     submit.disabled = true;
     submit.textContent = "Sending…";
