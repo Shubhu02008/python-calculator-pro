@@ -1147,12 +1147,21 @@
       _honey: ""
     };
     try {
-      const response = await fetch("https://formsubmit.co/ajax/" + encodeURIComponent(feedbackRecipient), {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Accept": "application/json" },
-        body: JSON.stringify(payload)
-      });
-      const result = await response.json().catch(() => ({}));
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 15000);
+      let response;
+      let result = {};
+      try {
+        response = await fetch("https://formsubmit.co/ajax/" + encodeURIComponent(feedbackRecipient), {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Accept": "application/json" },
+          body: JSON.stringify(payload),
+          signal: controller.signal
+        });
+        result = await response.json().catch(() => ({}));
+      } finally {
+        window.clearTimeout(timeout);
+      }
       if (!response.ok || result.success === "false" || result.success === false) {
         throw new Error(result.message || "The feedback service could not accept your message.");
       }
@@ -1160,7 +1169,9 @@
       feedbackStatus.textContent = "Thank you — your feedback has been sent. It will help shape the next improvements.";
       feedbackStatus.className = "feedback-status is-success";
     } catch (error) {
-      feedbackStatus.textContent = "Feedback could not be sent right now. Please try again in a moment.";
+      feedbackStatus.textContent = error && error.name === "AbortError"
+        ? "The feedback service did not respond within 15 seconds. Please try again; if this is your first submission, check the project owner's inbox for FormSubmit's activation email."
+        : "Feedback could not be sent. Please check your connection and try again. If this is your first submission, the project owner may need to activate FormSubmit by email.";
       feedbackStatus.className = "feedback-status is-error";
     } finally {
       submit.disabled = false;
