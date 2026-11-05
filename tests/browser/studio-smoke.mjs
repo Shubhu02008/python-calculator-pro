@@ -203,7 +203,7 @@ try {
   await page.locator("#stats-values").fill("1 2 3");
   await page.locator("#stats-run").click();
   await page.getByText("Statistic calculated.").waitFor({ timeout: 2000 });
-  await page.locator("#stats-result").getByText("3", { exact: true }).waitFor({ timeout: 2000 });
+  assert.equal(await page.locator("#stats-result .stat").nth(1).locator("strong").innerText(), "3", "statistics result should render in its result card");
   await page.locator("#probability-run").click();
   await page.locator("#probability-status").getByText("Calculation complete.", { exact: true }).waitFor({ timeout: 2000 });
   await page.locator("#probability-result").getByText("0.3333333333333333", { exact: true }).waitFor({ timeout: 2000 });
