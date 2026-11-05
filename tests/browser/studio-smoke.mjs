@@ -228,8 +228,10 @@ try {
   assert.equal(await page.locator("#workspace-title").innerText(), "Advanced Maths Studio");
   assert.ok(await page.locator("#sidebar").isVisible(), "calculator sidebar should remain visible when Studio opens");
   assert.ok(await page.getByTitle("Advanced Maths Studio").isVisible(), "Studio should be embedded in the calculator workspace");
+  await page.setViewportSize({ width: 390, height: 844 });
   assert.ok(await page.locator("#sidebar .tool-nav").isVisible(), "mobile calculator navigation should remain visible while Studio is open");
   assert.equal(await page.locator("#sidebar .tool-nav").evaluate(el => getComputedStyle(el).overflowX), "auto", "mobile calculator navigation should remain horizontally scrollable");
+  await page.setViewportSize({ width: 1280, height: 900 });
   await page.locator('#sidebar [data-tool="Equations"]').click();
   await page.locator('[name="equation_mode"]').selectOption("quadratic");
   await page.locator('[name="equation"]').fill("y^2=18*x");
