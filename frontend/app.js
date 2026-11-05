@@ -1108,6 +1108,66 @@
     });
   }));
 
+  const feedbackDialog = $("#feedback-dialog");
+  const feedbackForm = $("#feedback-form");
+  const feedbackStatus = $("#feedback-status");
+  const feedbackOpeners = $("[data-open-feedback]");
+  const feedbackClosers = $("[data-close-feedback]");
+  const feedbackRecipient = "shubhankarsinha24@gmail.com";
+  feedbackOpeners.forEach(button => button.addEventListener("click", () => {
+    if (feedbackDialog && typeof feedbackDialog.showModal === "function") feedbackDialog.showModal();
+  }));
+  feedbackClosers.forEach(button => button.addEventListener("click", () => feedbackDialog?.close()));
+  if (feedbackDialog) feedbackDialog.addEventListener("click", event => {
+    if (event.target === feedbackDialog) feedbackDialog.close();
+  });
+  if (feedbackForm) feedbackForm.addEventListener("submit", async event => {
+    event.preventDefault();
+    if (!feedbackForm.reportValidity()) return;
+    const data = new FormData(feedbackForm);
+    if (String(data.get("_honey") || "").trim()) return;
+    const message = String(data.get("message") || "").trim();
+    if (message.length < 8) {
+      feedbackStatus.textContent = "Please add a little more detail so I can understand your feedback.";
+      feedbackStatus.className = "feedback-status is-error";
+      return;
+    }
+    const submit = feedbackForm.querySelector('[type="submit"]');
+    submit.disabled = true;
+    submit.textContent = "Sending…";
+    feedbackStatus.textContent = "Sending your feedback…";
+    feedbackStatus.className = "feedback-status";
+    const payload = {
+      category: String(data.get("category") || "General feedback"),
+      message,
+      _replyto: String(data.get("email") || "").trim(),
+      _subject: "Python Calculator Pro — " + String(data.get("category") || "Feedback"),
+      _template: "table",
+      _captcha: "false",
+      _honey: ""
+    };
+    try {
+      const response = await fetch("https://formsubmit.co/ajax/" + encodeURIComponent(feedbackRecipient), {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || result.success === "false" || result.success === false) {
+        throw new Error(result.message || "The feedback service could not accept your message.");
+      }
+      feedbackForm.reset();
+      feedbackStatus.textContent = "Thank you — your feedback has been sent. It will help shape the next improvements.";
+      feedbackStatus.className = "feedback-status is-success";
+    } catch (error) {
+      feedbackStatus.textContent = "Feedback could not be sent right now. Please try again in a moment.";
+      feedbackStatus.className = "feedback-status is-error";
+    } finally {
+      submit.disabled = false;
+      submit.innerHTML = 'Send feedback <span aria-hidden="true">→</span>';
+    }
+  });
+
   const studioHomeLink = $("#open-studio-from-home");
   if (studioHomeLink) studioHomeLink.addEventListener("click", event => { event.preventDefault(); document.body.classList.add("calculator-open"); history.replaceState(null, "", "#calculator"); window.scrollTo({top:0,behavior:"smooth"}); renderTool("Advanced Maths Studio"); });
   const startCalculating = $("#start-calculating");
