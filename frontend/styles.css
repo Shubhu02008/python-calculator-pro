@@ -331,7 +331,7 @@ body:not(.calculator-open) .app-shell{display:none}
 
 
 /* Feedback entry points and accessible feedback dialog */
-.home-feedback-link{display:block;margin:13px auto 0;padding:8px 12px;border:0;background:transparent;color:#a9c7ff;font:600 13px/1.5 inherit;text-decoration:underline;text-underline-offset:4px;cursor:pointer}
+.home-feedback-link{display:block;margin:13px auto 0;padding:8px 12px;border:0;background:transparent;color:#a9c7ff;font-family:inherit;font-size:13px;font-weight:600;line-height:1.5;text-decoration:underline;text-underline-offset:4px;cursor:pointer}
 .home-feedback-link:hover{color:#fff}
 .feedback-nav-item{margin-top:7px}
 .feedback-dialog{width:min(560px,calc(100vw - 28px));max-width:none;max-height:calc(100dvh - 28px);padding:0;border:1px solid #314665;border-radius:20px;background:#101a2b;color:#eaf1ff;box-shadow:0 28px 90px #0009;overflow:auto}
@@ -358,3 +358,6 @@ body:not(.calculator-open) .app-shell{display:none}
 .feedback-submit{border:1px solid #76a6ff;background:linear-gradient(135deg,#4388ff,#2e65d0);color:#fff}
 .feedback-submit:disabled{opacity:.6;cursor:wait}
 @media(max-width:900px){.feedback-nav-item{flex:0 0 auto;width:auto;white-space:nowrap}.sidebar .feedback-nav-item{margin-top:4px}}
+
+.topbar-feedback-button{min-height:34px;padding:0 12px;border:1px solid var(--border-color,#344763);border-radius:9px;background:var(--panel,#142138);color:var(--text,#eaf1ff);font-size:11px;font-weight:700;cursor:pointer}.topbar-feedback-button:hover{border-color:#78aaff;color:#a9c7ff}
+@media(max-width:520px){.topbar-feedback-button{min-height:31px;padding:0 9px;font-size:10px}}
