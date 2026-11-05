@@ -997,7 +997,7 @@
     angleToggle.hidden=title!=="Scientific Calculator";
     navItems.forEach(item=>{const selected=item.dataset.tool===title;item.classList.toggle("is-active",selected);if(selected)item.setAttribute("aria-current","page");else item.removeAttribute("aria-current");});
     setDrawer(false);if(title==="Scientific Calculator"){scientificWorkspace();return;}
-    if(title==="Advanced Maths Studio"){const frame=document.createElement("iframe");frame.className="advanced-studio-frame";frame.title="Advanced Maths Studio";frame.src="./studio.html";frame.loading="eager";frame.referrerPolicy="strict-origin-when-cross-origin";frame.style.cssText="display:block;width:100%;height:1600px;min-height:1100px;border:1px solid var(--border-color,#26364e);border-radius:16px;background:#080d18";workspace.replaceChildren(frame);return;}
+    if(title==="Advanced Maths Studio"){const frame=document.createElement("iframe");frame.className="advanced-studio-frame";frame.title="Advanced Maths Studio";frame.src="./studio.html";frame.loading="eager";frame.referrerPolicy="strict-origin-when-cross-origin";frame.style.cssText="display:block;width:100%;height:calc(100vh - 190px);min-height:850px;border:0;border-radius:12px;background:#080d18";workspace.replaceChildren(frame);return;}
     let spec=[];
     switch(title){
       case "Equations":spec=[["Equation type",[sel("equation_mode","Choose a tool",[
@@ -1076,7 +1076,7 @@
     if(title==="Discount & GST Calculator"){
       const op=form.elements.operation;const update=()=>{const discount=op.value==="discount";form.elements.price.closest(".field").querySelector(".field-label").textContent=discount?"Price":"Amount";form.elements.discount_percent.closest(".field").hidden=!discount;form.elements.gst_rate.closest(".field").hidden=discount;form.elements.inclusive.closest(".field").hidden=discount;};op.addEventListener("change",update);update();
     }
-    if(title==="BMI Calculator"){const unit=form.elements.height_unit,update=()=>{const imperial=unit.value==="imperial";form.elements.height_m.closest(".field").hidden=imperial;form.elements.height_feet.closest(".field").hidden=!imperial;form.elements.height_inches.closest(".field").hidden=!imperial;};unit.addEventListener("change",update);update();}
+    if(title==="BMI Calculator"){const unit=form.elements.height_unit,metric=form.elements.height_m.closest(".field"),feet=form.elements.height_feet.closest(".field"),inches=form.elements.height_inches.closest(".field"),update=()=>{const imperial=unit.value==="imperial";metric.style.display=imperial?"none":"";feet.style.display=imperial?"":"none";inches.style.display=imperial?"":"none";};unit.addEventListener("change",update);update();}
     if(title==="Date Calculator"){
       const op=form.elements.operation;const update=()=>{form.elements.days.closest(".field").hidden=op.value==="difference";form.elements.other_date.closest(".field").hidden=op.value!=="difference";};op.addEventListener("change",update);update();
     }
