@@ -241,6 +241,7 @@ try {
   assert.ok(relationRequests.some(request => request.relation === "y^2 = 18*x"), "equation solver should graph the full parabola relation, not a y=0 slice");
   await page.locator('#sidebar [data-tool="BMI Calculator"]').click();
   await page.locator('[name="height_unit"]').selectOption("imperial");
+  assert.ok(await page.locator('[name="height_m"]').isHidden(), "metric height should hide in imperial mode");
   assert.ok(await page.locator('[name="height_feet"]').isVisible(), "feet field should appear in imperial mode");
   assert.ok(await page.locator('[name="height_inches"]').isVisible(), "inches field should appear in imperial mode");
   await page.locator('[name="height_feet"]').fill("5");
@@ -249,6 +250,9 @@ try {
   await page.waitForFunction(() => window.__bmiRequestCaptured === true, null, { timeout: 3000 }).catch(() => {});
   assert.ok(bmiPayload, "BMI request should be sent");
   assert.ok(Math.abs(bmiPayload.height_m - 1.7526) < 1e-10, "5 ft 9 in should convert to 1.7526 metres");
+  await page.locator('[name="height_unit"]').selectOption("metric");
+  assert.ok(await page.locator('[name="height_m"]').isVisible(), "metric height should return when metric mode is selected");
+  assert.ok(await page.locator('[name="height_feet"]').isHidden(), "feet field should hide in metric mode");
   console.log("Advanced Math Studio browser smoke tests passed.");
 } finally {
   await browser.close();
