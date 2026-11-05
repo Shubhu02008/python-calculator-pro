@@ -224,6 +224,7 @@ try {
   });
   await page.goto("http://127.0.0.1:8000/index.html");
   await page.locator("#start-calculating").click();
+  await page.locator("[data-open-drawer]").click();
   await page.locator('#sidebar [data-tool="Advanced Maths Studio"]').click();
   assert.equal(await page.locator("#workspace-title").innerText(), "Advanced Maths Studio");
   assert.ok(await page.locator("#sidebar").isVisible(), "calculator sidebar should remain visible when Studio opens");
@@ -236,6 +237,7 @@ try {
   await page.locator('.tool-form button[type="submit"]').click();
   await page.getByText("Equation graph", { exact: true }).waitFor({ timeout: 3000 });
   assert.ok(relationRequests.some(request => request.relation === "y^2=18*x"), "equation solver should request the full parabola relation instead of sampling y as zero");
+  await page.locator("[data-open-drawer]").click();
   await page.locator('#sidebar [data-tool="BMI Calculator"]').click();
   await page.locator('[name="height_unit"]').selectOption("imperial");
   assert.ok(await page.locator('[name="height_feet"]').isVisible(), "feet field should appear in imperial mode");
