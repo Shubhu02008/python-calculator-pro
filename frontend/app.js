@@ -993,11 +993,11 @@
 
   function renderTool(title) {
     if(title==="Quadratic & Polynomial Solver" || title==="Binomial Expansion") title="Equations";
-    activeTool=title;pageTitle.textContent=title;workspaceTitle.textContent=title;workspaceSubtitle.textContent=descriptions[title]||"";
+    activeTool=title;document.body.classList.toggle("studio-active",title==="Advanced Maths Studio");pageTitle.textContent=title;workspaceTitle.textContent=title;workspaceSubtitle.textContent=descriptions[title]||"";
     angleToggle.hidden=title!=="Scientific Calculator";
     navItems.forEach(item=>{const selected=item.dataset.tool===title;item.classList.toggle("is-active",selected);if(selected)item.setAttribute("aria-current","page");else item.removeAttribute("aria-current");});
     setDrawer(false);if(title==="Scientific Calculator"){scientificWorkspace();return;}
-    if(title==="Advanced Maths Studio"){const frame=document.createElement("iframe");frame.className="advanced-studio-frame";frame.title="Advanced Maths Studio";frame.src="./studio.html";frame.loading="eager";frame.referrerPolicy="strict-origin-when-cross-origin";frame.style.cssText="display:block;width:100%;height:1600px;min-height:1100px;border:1px solid var(--border-color,#26364e);border-radius:16px;background:#080d18";workspace.replaceChildren(frame);return;}
+    if(title==="Advanced Maths Studio"){const frame=document.createElement("iframe");frame.className="advanced-studio-frame";frame.title="Advanced Maths Studio";frame.src="./studio.html";frame.loading="eager";frame.referrerPolicy="strict-origin-when-cross-origin";frame.style.cssText="display:block;width:100%;height:calc(100vh - 150px);min-height:1100px;border:0;border-radius:12px;background:#080d18";workspace.replaceChildren(frame);return;}
     let spec=[];
     switch(title){
       case "Equations":spec=[["Equation type",[sel("equation_mode","Choose a tool",[
