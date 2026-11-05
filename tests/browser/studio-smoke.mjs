@@ -233,6 +233,7 @@ try {
   assert.ok(await page.locator("#sidebar").isVisible(), "calculator sidebar should remain visible when Studio opens");
   assert.ok(await page.getByTitle("Advanced Maths Studio").isVisible(), "Studio should be embedded in the calculator workspace");
   assert.equal(await page.locator(".home-nav-link[href=\"./studio.html\"]").count(), 0, "landing navigation must not bypass the calculator shell");
+  assert.equal(await page.locator(".home-nav-link[href=\"#start-calculating\"]").count(), 1, "landing navigation should lead into the calculator launch flow");
   await page.locator('#sidebar [data-tool="Equations"]').click();
   await page.locator('[name="equation_mode"]').selectOption("multivariable_quadratic");
   await page.locator('[name="equation"]').fill("y^2 = 18*x");
