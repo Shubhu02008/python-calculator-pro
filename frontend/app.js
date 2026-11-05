@@ -13,6 +13,7 @@
   const descriptions = {
     "Scientific Calculator": "A precise space for everyday maths and advanced expressions.",
     "Equations": "Solve polynomial equations and inspect their mathematical roots.",
+    "Advanced Maths Studio": "Explore graphing, spreadsheets, symbolic mathematics, geometry, 3D surfaces, statistics, and probability in the calculator workspace.",
     "Graphing Calculator": "Plot functions and implicit equations on the coordinate plane.",
     "Calculus": "Calculate derivatives, integrals, definite integrals, and limits.",
     "Matrix Calculator": "Run matrix arithmetic and linear algebra operations.",
@@ -37,6 +38,7 @@
     "Scientific Calculator": {kind:"scientific"},
     "Equations": {kind:"equation"},
     "Graphing Calculator": {kind:"graph"},
+    "Advanced Maths Studio": {kind:"studio"},
     "Calculus": {kind:"calculus"},
     "Matrix Calculator": {kind:"matrix"},
     "Statistics": {kind:"statistics"},
@@ -538,8 +540,9 @@
     // A 2D graph of a multivariable relation is a slice: hold y and z at zero,
     // then plot the left-minus-right residual against x. Its zero crossings
     // show solutions along that slice, not the entire higher-dimensional set.
-    const expression=(parts.length===2?"("+parts[0]+")-("+parts[1]+")":parts[0])
-      .replace(/\by\b/gi,"0").replace(/\bz\b/gi,"0");
+    const hasY=/\by\b/i.test(normalized);
+    if(hasY)return {relation:normalized};
+    const expression=(parts.length===2?"("+parts[0]+")-("+parts[1]+")":parts[0]).replace(/\bz\b/gi,"0");
     if(!/^[0-9xX+*/^().\s-]+$/.test(expression))return null;
     return expression;
   }
@@ -561,13 +564,15 @@
     }
     let raw=val(form,"equation");
     if(mode==="system")raw=val(form,"system_equations").split(/\n+/).map(line=>line.trim()).filter(Boolean)[0]||"";
-    const expression=equationGraphExpression(raw);
-    if(!expression){const msg=document.createElement("p");msg.className="field-help";msg.textContent="This equation could not be plotted with the current 2D graph engine. The equation result is still available above.";section.append(msg);return;}
+    const graphExpression=equationGraphExpression(raw);
+    if(!graphExpression){const msg=document.createElement("p");msg.className="field-help";msg.textContent="This equation could not be plotted with the current 2D graph engine. The equation result is still available above.";section.append(msg);return;}
     let x_min,x_max;
     try{x_min=number(form,"graph_x_min");x_max=number(form,"graph_x_max");}
     catch{ x_min=-10; x_max=10; }
     if(!Number.isFinite(x_min)||!Number.isFinite(x_max)||x_min>=x_max){x_min=-10;x_max=10;}
     try{
+      if(graphExpression.relation){const bounds={x_min,x_max,y_min:-10,y_max:10};const sampled=await api("/api/v1/graph/relation",{relation:graphExpression.relation,...bounds,grid_size:100});if(Array.isArray(sampled.segments)&&sampled.segments.length){section.append(drawRelationGraph(sampled.segments,bounds,graphExpression.relation));const caption=document.createElement("p");caption.className="field-help";caption.textContent="The complete 2D relation is plotted, including both branches where present.";section.append(caption);}else{const msg=document.createElement("p");msg.className="field-help";msg.textContent="No visible curve segments were found in this viewing range.";section.append(msg);}return;}
+      const expression=graphExpression;
       const sampled=await api("/api/v1/graph/sample",{expression,x_min,x_max,points:401});
       if(Array.isArray(sampled.points)&&sampled.points.length) {
         section.append(drawGraph(sampled.points,{expression,xMin:x_min,xMax:x_max}));
@@ -980,7 +985,7 @@
       case "Unit Converter": {const mode=val(form,"conversion_type");if(mode==="currency")return api("/api/v1/currency/convert",{amount:number(form,"amount"),from_currency:val(form,"from_currency").toUpperCase(),to_currency:val(form,"to_currency").toUpperCase()});if(mode==="base")return api("/api/v1/numbers/convert-base",{value:val(form,"base_value"),from_base:integer(form,"from_base"),to_base:integer(form,"to_base")});return api("/api/v1/units/convert",{value:number(form,"value"),from_unit:val(form,"from_unit"),to_unit:val(form,"to_unit")});}
       case "Finance & Loan EMI": {const op=val(form,"operation");if(op==="simple-interest")return api("/api/v1/finance/simple-interest",{principal:number(form,"principal"),annual_rate:number(form,"annual_rate"),years:number(form,"years")});if(op==="compound-interest")return api("/api/v1/finance/compound-interest",{principal:number(form,"principal"),annual_rate:number(form,"annual_rate"),years:number(form,"years"),compounding_per_year:integer(form,"compounding_per_year")});return api("/api/v1/finance/emi",{principal:number(form,"principal"),annual_rate:number(form,"annual_rate"),tenure_months:integer(form,"tenure_months")});}
       case "Discount & GST Calculator": {if(val(form,"operation")==="discount")return api("/api/v1/discount/calculate",{price:number(form,"price"),discount_percent:number(form,"discount_percent")});return api("/api/v1/gst/calculate",{amount:number(form,"price"),gst_rate:number(form,"gst_rate"),inclusive:val(form,"inclusive")==="true"});}
-      case "BMI Calculator": return api("/api/v1/health/bmi",{weight_kg:number(form,"weight_kg"),height_m:number(form,"height_m")});
+      case "BMI Calculator": {const unit=val(form,"height_unit");let height_m;if(unit==="imperial"){const feet=number(form,"height_feet"),inches=number(form,"height_inches");if(feet<0||inches<0||inches>=12)throw new Error("Enter a non-negative feet value and inches from 0 to less than 12.");height_m=(feet*12+inches)*0.0254;}else{height_m=number(form,"height_m");}if(height_m<=0)throw new Error("Height must be greater than zero.");return api("/api/v1/health/bmi",{weight_kg:number(form,"weight_kg"),height_m});}
       case "Date Calculator": {const operation=val(form,"operation"),payload={operation,date:val(form,"date"),days:integer(form,"days")||0};if(operation==="difference")payload.other_date=val(form,"other_date");return api("/api/v1/dates/calculate",payload);}
       default: throw new Error("This tool is not configured yet.");
     }
@@ -992,6 +997,7 @@
     angleToggle.hidden=title!=="Scientific Calculator";
     navItems.forEach(item=>{const selected=item.dataset.tool===title;item.classList.toggle("is-active",selected);if(selected)item.setAttribute("aria-current","page");else item.removeAttribute("aria-current");});
     setDrawer(false);if(title==="Scientific Calculator"){scientificWorkspace();return;}
+    if(title==="Advanced Maths Studio"){const frame=document.createElement("iframe");frame.className="advanced-studio-frame";frame.title="Advanced Maths Studio";frame.src="./studio.html";frame.loading="eager";frame.referrerPolicy="strict-origin-when-cross-origin";frame.style.cssText="display:block;width:100%;height:1600px;min-height:1100px;border:1px solid var(--border-color,#26364e);border-radius:16px;background:#080d18";workspace.replaceChildren(frame);return;}
     let spec=[];
     switch(title){
       case "Equations":spec=[["Equation type",[sel("equation_mode","Choose a tool",[
@@ -1011,7 +1017,7 @@
       case "Unit Converter":{const dims=capabilities?.unit_dimensions||[],fallback=[{id:"length",units:["m","cm","km","mm","ft","in"]},{id:"mass",units:["kg","g","mg","lb","oz"]},{id:"temperature",units:["celsius","fahrenheit","kelvin"]},{id:"time",units:["s","min","h","day"]},{id:"volume",units:["L","mL"]}];const categories=dims.length?dims:fallback;const categoryOptions=categories.map(d=>[d.id,d.id.replaceAll("_"," ").replace(/\b\w/g,c=>c.toUpperCase())]);const initial=categories[0];const unitOptions=initial.units.map(unit=>[unit,String(unit).replaceAll("_"," ").replace(/\b\w/g,c=>c.toUpperCase())]);spec=[["Conversion type",[sel("conversion_type","What do you want to convert?",[["units","Physical units"],["currency","Currency"],["base","Number base"]])]],["Unit category",[sel("dimension","Unit category",categoryOptions)]],["Unit conversion",[num("value","Value","1"),sel("from_unit","From unit",unitOptions),sel("to_unit","To unit",unitOptions)]],["Currency conversion",[num("amount","Amount","100"),sel("from_currency","From currency",options(["INR","USD","EUR","GBP","JPY","CAD","AUD","CNY","SGD","AED"])),sel("to_currency","To currency",options(["USD","INR","EUR","GBP","JPY","CAD","AUD","CNY","SGD","AED"]))]],["Number base conversion",[txt("base_value","Integer value","255","e.g. 255 or FF"),num("from_base","From base","10"),num("to_base","To base","16")]]];break;}
       case "Finance & Loan EMI":spec=[["Finance calculation",[sel("operation","Calculation",selectOptions.financeOperation),num("principal","Principal / loan amount","100000"),num("annual_rate","Annual interest rate (%)","8.5"),num("years","Term (years)","5"),num("compounding_per_year","Compounds per year","12"),num("tenure_months","Loan tenure (months)","60")]]];break;
       case "Discount & GST Calculator":spec=[["Discount or GST",[sel("operation","Calculation",[["discount","Discount"],["gst","GST"]]),num("price","Price / amount","1000"),num("discount_percent","Discount (%)","10"),num("gst_rate","GST rate (%)","18"),sel("inclusive","GST amount includes tax?",[["false","No — add GST"],["true","Yes — extract GST"]])]]];break;
-      case "BMI Calculator":spec=[["Body measurements",[num("weight_kg","Weight (kg)","70"),num("height_m","Height (metres)","1.75")]]];break;
+      case "BMI Calculator":spec=[["Body measurements",[num("weight_kg","Weight (kg)","70"),sel("height_unit","Height unit",[["metric","Centimetres / metres"],["imperial","Feet and inches"]]),num("height_m","Height (metres)","1.75"),num("height_feet","Feet","5"),num("height_inches","Additional inches","9")]]];break;
       case "Date Calculator":spec=[["Date calculation",[sel("operation","Operation",selectOptions.dateOperation),field("date","Date",{type:"text",value:new Date().toISOString().slice(0,10),help:"Use YYYY-MM-DD."}),num("days","Number of days","7"),field("other_date","Second date",{type:"text",value:new Date().toISOString().slice(0,10),help:"Only used for date difference; YYYY-MM-DD."})]]];break;
     }
     const {form}=createPanel(title,descriptions[title]);addFields(form,spec);
@@ -1070,6 +1076,7 @@
     if(title==="Discount & GST Calculator"){
       const op=form.elements.operation;const update=()=>{const discount=op.value==="discount";form.elements.price.closest(".field").querySelector(".field-label").textContent=discount?"Price":"Amount";form.elements.discount_percent.closest(".field").hidden=!discount;form.elements.gst_rate.closest(".field").hidden=discount;form.elements.inclusive.closest(".field").hidden=discount;};op.addEventListener("change",update);update();
     }
+    if(title==="BMI Calculator"){const unit=form.elements.height_unit,update=()=>{const imperial=unit.value==="imperial";form.elements.height_m.closest(".field").hidden=imperial;form.elements.height_feet.closest(".field").hidden=!imperial;form.elements.height_inches.closest(".field").hidden=!imperial;};unit.addEventListener("change",update);update();}
     if(title==="Date Calculator"){
       const op=form.elements.operation;const update=()=>{form.elements.days.closest(".field").hidden=op.value==="difference";form.elements.other_date.closest(".field").hidden=op.value!=="difference";};op.addEventListener("change",update);update();
     }
