@@ -67,7 +67,8 @@
     <footer class="home-footer"><span>© <span id="home-year">2026</span> Python Calculator Pro · Created by <strong>Shubhankar Sinha</strong></span><nav aria-label="Site information"><a href="./privacy.html">Privacy Policy</a><a href="./about.html">About</a><a href="mailto:pythoncalculatorpro.contact@gmail.com">Contact</a></nav></footer>
   </main>
   <dialog class="feedback-dialog" id="feedback-dialog" aria-labelledby="feedback-title">
-    <form class="feedback-form" id="feedback-form">
+    <iframe name="feedback-submit-frame" id="feedback-submit-frame" title="Feedback submission" hidden></iframe>
+    <form class="feedback-form" id="feedback-form" method="POST" action="https://formsubmit.co/shubhankarsinha24@gmail.com" target="feedback-submit-frame">
       <div class="feedback-dialog-heading">
         <div><p class="feedback-eyebrow">YOUR VOICE MATTERS</p><h2 id="feedback-title">Help make this calculator better.</h2><p>What worked well? What felt confusing? What should I improve next?</p></div>
         <button class="feedback-close" type="button" data-close-feedback aria-label="Close feedback form">×</button>
@@ -84,7 +85,10 @@
       <textarea id="feedback-message" name="message" rows="5" maxlength="5000" placeholder="Tell me what happened or what would make the calculator more useful…" required></textarea>
       <label for="feedback-email">Your email (required, so I can follow up if needed)</label>
       <input id="feedback-email" name="email" type="email" maxlength="254" autocomplete="email" placeholder="you@example.com" required aria-required="true">
-      <div class="feedback-honeypot" aria-hidden="true"><label for="feedback-company">Leave this field empty</label><input id="feedback-company" name="_honey" tabindex="-1" autocomplete="off"></div>
+      <div class="feedback-honeypot" aria-hidden="true"><label for="feedback-company">Leave this field empty</label><input id="feedback-company" name="_honey" tabindex="-1" autocomplete="off">
+      <input type="hidden" name="_subject" value="Python Calculator Pro — feedback">
+      <input type="hidden" name="_template" value="table">
+      <input type="hidden" name="_captcha" value="false"></div>
       <p class="feedback-privacy">Your email is required so the project owner can contact you about a reported issue. Feedback is sent through FormSubmit to the project owner’s Gmail inbox. Please do not include passwords or sensitive personal information.</p>
       <p class="feedback-status" id="feedback-status" role="status" aria-live="polite"></p>
       <div class="feedback-actions"><button class="feedback-cancel" type="button" data-close-feedback>Cancel</button><button class="feedback-submit" type="submit">Send feedback <span aria-hidden="true">→</span></button></div>
