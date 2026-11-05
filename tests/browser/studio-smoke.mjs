@@ -222,6 +222,7 @@ try {
     bmiPayload = route.request().postDataJSON();
     await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ bmi: 22.86, category: "Normal weight" }) });
   });
+  await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("http://127.0.0.1:8000/index.html");
   await page.locator("#start-calculating").click();
   await page.locator('#sidebar [data-tool="Advanced Maths Studio"]').click();
