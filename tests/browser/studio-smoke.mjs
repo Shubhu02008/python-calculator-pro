@@ -236,7 +236,7 @@ try {
   await page.locator('[name="equation_mode"]').selectOption("quadratic");
   await page.locator('[name="equation"]').fill("y^2=18*x");
   await page.locator('.tool-form button[type="submit"]').click();
-  await page.getByText("Equation graph", { exact: true }).waitFor({ timeout: 3000 });
+  await page.getByText("Parabola / relation graph", { exact: true }).waitFor({ timeout: 3000 });
   assert.ok(relationRequests.some(request => request.relation === "y^2=18*x"), "equation solver should request the full parabola relation instead of sampling y as zero");
   await page.locator('#sidebar [data-tool="BMI Calculator"]').click();
   await page.locator('[name="height_unit"]').selectOption("imperial");
