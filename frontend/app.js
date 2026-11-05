@@ -1111,8 +1111,8 @@
   const feedbackDialog = $("#feedback-dialog");
   const feedbackForm = $("#feedback-form");
   const feedbackStatus = $("#feedback-status");
-  const feedbackOpeners = $("[data-open-feedback]");
-  const feedbackClosers = $("[data-close-feedback]");
+  const feedbackOpeners = $$("[data-open-feedback]");
+  const feedbackClosers = $$("[data-close-feedback]");
   const feedbackRecipient = "shubhankarsinha24@gmail.com";
   feedbackOpeners.forEach(button => button.addEventListener("click", () => {
     if (feedbackDialog && typeof feedbackDialog.showModal === "function") feedbackDialog.showModal();
