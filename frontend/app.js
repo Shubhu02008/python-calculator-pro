@@ -541,7 +541,7 @@
     // then plot the left-minus-right residual against x. Its zero crossings
     // show solutions along that slice, not the entire higher-dimensional set.
     const hasY=/\by\b/i.test(normalized);
-    if(hasY)return {relation:normalized};
+    if(hasY)return {relation:normalized.replace(/\bz\b/gi,"0")};
     const expression=(parts.length===2?"("+parts[0]+")-("+parts[1]+")":parts[0]).replace(/\bz\b/gi,"0");
     if(!/^[0-9xX+*/^().\s-]+$/.test(expression))return null;
     return expression;
@@ -555,7 +555,7 @@
       ?"The graph uses an automatic viewing range. You do not need to enter minimum or maximum values."
       :mode==="system"
       ?"The graph shows the first equation as a 2D slice; a full system may require multiple plots."
-      :"For equations with multiple variables, y and z are fixed at 0 and the equation residual is plotted against x. This is a 2D slice, not the full relation.";
+      :"The graph preserves the x-y relation (including both branches of a parabola); z is fixed at 0 when present.";
     section.append(note);container.append(section);
     if(mode==="binomial"){
       const message=document.createElement("p");message.className="field-help";
