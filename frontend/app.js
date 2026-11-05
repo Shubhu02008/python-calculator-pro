@@ -1111,9 +1111,11 @@
   const feedbackDialog = $("#feedback-dialog");
   const feedbackForm = $("#feedback-form");
   const feedbackStatus = $("#feedback-status");
+  const feedbackFrame = $("#feedback-submit-frame");
   const feedbackOpeners = $$("[data-open-feedback]");
   const feedbackClosers = $$("[data-close-feedback]");
-  const feedbackRecipient = "shubhankarsinha24@gmail.com";
+  let feedbackPending = false;
+  let feedbackTimeout = null;
   feedbackOpeners.forEach(button => button.addEventListener("click", () => {
     if (feedbackDialog && typeof feedbackDialog.showModal === "function") feedbackDialog.showModal();
   }));
@@ -1121,57 +1123,42 @@
   if (feedbackDialog) feedbackDialog.addEventListener("click", event => {
     if (event.target === feedbackDialog) feedbackDialog.close();
   });
-  if (feedbackForm) feedbackForm.addEventListener("submit", async event => {
-    event.preventDefault();
-    if (!feedbackForm.reportValidity()) return;
-    const data = new FormData(feedbackForm);
-    if (String(data.get("_honey") || "").trim()) return;
-    const message = String(data.get("message") || "").trim();
+  if (feedbackFrame) feedbackFrame.addEventListener("load", () => {
+    if (!feedbackPending) return;
+    feedbackPending = false;
+    window.clearTimeout(feedbackTimeout);
+    feedbackForm.reset();
+    const submit = feedbackForm.querySelector('[type="submit"]');
+    submit.disabled = false;
+    submit.innerHTML = 'Send feedback <span aria-hidden="true">→</span>';
+    feedbackStatus.textContent = "Your feedback form was submitted. If this is your first submission, the project owner may need to activate FormSubmit by email before messages are delivered.";
+    feedbackStatus.className = "feedback-status is-success";
+  });
+  if (feedbackForm) feedbackForm.addEventListener("submit", event => {
+    if (!feedbackForm.reportValidity()) {
+      event.preventDefault();
+      return;
+    }
+    const honey = feedbackForm.querySelector('[name="_honey"]');
+    if (honey && honey.value.trim()) {
+      event.preventDefault();
+      return;
+    }
     const submit = feedbackForm.querySelector('[type="submit"]');
     submit.disabled = true;
     submit.textContent = "Sending…";
     feedbackStatus.textContent = "Sending your feedback…";
     feedbackStatus.className = "feedback-status";
-    const payload = {
-      category: String(data.get("category") || "General feedback"),
-      message,
-      _replyto: String(data.get("email") || "").trim(),
-      _subject: "Python Calculator Pro — " + String(data.get("category") || "Feedback"),
-      _template: "table",
-      _captcha: "false",
-      _honey: ""
-    };
-    try {
-      const controller = new AbortController();
-      const timeout = window.setTimeout(() => controller.abort(), 15000);
-      let response;
-      let result = {};
-      try {
-        response = await fetch("https://formsubmit.co/ajax/" + encodeURIComponent(feedbackRecipient), {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Accept": "application/json" },
-          body: JSON.stringify(payload),
-          signal: controller.signal
-        });
-        result = await response.json().catch(() => ({}));
-      } finally {
-        window.clearTimeout(timeout);
-      }
-      if (!response.ok || result.success === "false" || result.success === false) {
-        throw new Error(result.message || "The feedback service could not accept your message.");
-      }
-      feedbackForm.reset();
-      feedbackStatus.textContent = "Thank you — your feedback has been sent. It will help shape the next improvements.";
-      feedbackStatus.className = "feedback-status is-success";
-    } catch (error) {
-      feedbackStatus.textContent = error && error.name === "AbortError"
-        ? "The feedback service did not respond within 15 seconds. Please try again; if this is your first submission, check the project owner's inbox for FormSubmit's activation email."
-        : "Feedback could not be sent. Please check your connection and try again. If this is your first submission, the project owner may need to activate FormSubmit by email.";
-      feedbackStatus.className = "feedback-status is-error";
-    } finally {
+    feedbackPending = true;
+    window.clearTimeout(feedbackTimeout);
+    feedbackTimeout = window.setTimeout(() => {
+      if (!feedbackPending) return;
+      feedbackPending = false;
       submit.disabled = false;
       submit.innerHTML = 'Send feedback <span aria-hidden="true">→</span>';
-    }
+      feedbackStatus.textContent = "The feedback service did not respond. Please check your connection and try again.";
+      feedbackStatus.className = "feedback-status is-error";
+    }, 20000);
   });
 
   const studioHomeLink = $("#open-studio-from-home");
