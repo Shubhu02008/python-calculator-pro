@@ -950,7 +950,7 @@
         if(mode==="system")return api("/api/v1/equations/system",{equations:val(form,"system_equations").split(/\n+/).map(line=>line.trim()).filter(Boolean)});
         const equation=val(form,"equation").replace(/[−–]/g,"-").trim();
         if(!equation.includes("="))throw new Error("Enter an equation with an equals sign, for example x^2 + y = 5.");
-        if(/\by\b/i.test(equation)){const graph=await api("/api/v1/graph/relation",{relation:equation,x_min:-10,x_max:10,y_min:-10,y_max:10,grid_size:100});return {...graph,relation:equation,graph_only:true,message:"This is a two-variable relation. Its curve is plotted below; use Advanced Maths Studio for further exploration."};}
+        if(/\by\b/i.test(equation)){const relation=equation.replace(/\bz\b/gi,"0");const graph=await api("/api/v1/graph/relation",{relation,x_min:-10,x_max:10,y_min:-10,y_max:10,grid_size:100});return {...graph,relation,graph_only:true,message:"This is a two-variable relation. Its curve is plotted below; any z terms are fixed at zero for this 2D view."};}
         return api("/api/v1/equations/solve",{equation, equation_type:mode});
       }
       case "Graphing Calculator": {
