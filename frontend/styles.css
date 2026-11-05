@@ -315,3 +315,16 @@ body:not(.calculator-open) .app-shell{display:none}
 .sidebar-cheese svg{display:block;width:17px;height:17px;overflow:visible;fill:none;stroke:#ffd84a;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 2px #ffcf32) drop-shadow(0 0 4px #ffb81c)}
 
 .graph-coordinate-guide{stroke:var(--blue-bright,#6ea3ff);stroke-width:1;stroke-dasharray:4 4;opacity:.75;pointer-events:none}.graph-coordinate-point{fill:var(--blue-bright,#6ea3ff);stroke:var(--panel,#0a1220);stroke-width:2;pointer-events:none}.graph-coordinate-label-bg{fill:var(--panel,#0a1220);stroke:var(--blue-bright,#6ea3ff);stroke-width:1;pointer-events:none}.graph-coordinate-label{fill:var(--text,#f5f7fb);font-size:13px;font-weight:600;pointer-events:none}
+
+
+/* Keep calculator navigation available while the Advanced Maths Studio is open. */
+@media(max-width:900px){
+  body.studio-active .sidebar{position:relative;inset:auto;width:100%;height:auto;min-height:0;transform:none;padding:10px 12px;box-shadow:none;border-right:0;border-bottom:1px solid var(--line);z-index:5}
+  body.studio-active .sidebar .brand{display:none}
+  body.studio-active .sidebar .nav-label{display:none}
+  body.studio-active .sidebar .tool-nav{display:flex;gap:7px;overflow-x:auto;overscroll-behavior-x:contain;padding:2px 0 6px;scrollbar-width:thin}
+  body.studio-active .sidebar .nav-item{flex:0 0 auto;width:auto;white-space:nowrap;padding:9px 12px}
+  body.studio-active .main-column{margin-left:0}
+  body.studio-active .mobile-scrim{display:none!important}
+  body.studio-active .workspace-content{max-width:none;padding-top:14px}
+}
