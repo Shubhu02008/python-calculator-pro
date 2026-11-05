@@ -148,7 +148,7 @@
         const expression=activeTool+" · "+inputs.map(el=>el.name+"="+el.value).join(", ");
         const displayedResult=typeof result==="object"?(result.result!==undefined?String(result.result):result.message||result.status||JSON.stringify(result)):String(result);
         saveHistory({expression,displayedResult,timestamp:new Date().toISOString(),tool:activeTool});
-        if(activeTool==="Equations") await appendEquationGraph(body,form,result);
+        if(activeTool==="Equations"&&!result.graph_only) await appendEquationGraph(body,form,result);
       }
       catch(error) { body.replaceChildren();const message=document.createElement("p");message.className="result-error";message.textContent=error.message;body.append(message); }
       finally { submit.disabled=false;submit.textContent=original;isBusy=false; }
@@ -237,10 +237,10 @@
       result.relations.forEach(relation=>{const expression=document.createElement("p");expression.className="result-expression";expression.textContent=relation;container.append(expression);});
       if(Array.isArray(result.variables)&&result.variables.length){const variables=document.createElement("p");variables.className="field-help";variables.textContent="Variables: "+result.variables.join(", ")+". This is one equation in multiple variables, not a system of equations.";container.append(variables);}
     } else if(isRecord(result)&&Array.isArray(result.segments)){
-      heading("Equation graph");
+      heading(activeTool==="Equations"?"Parabola / relation graph":"Equation graph");
       const bounds=result.bounds||{};
       const graphForm=document.querySelector(".tool-form");
-      const relation=activeTool==="Graphing Calculator"&&graphForm?val(graphForm,"expression").replace(/[−–]/g,"-").trim():null;
+      const relation=typeof result.relation==="string"?result.relation:activeTool==="Graphing Calculator"&&graphForm?val(graphForm,"expression").replace(/[−–]/g,"-").trim():null;
       container.append(drawRelationGraph(result.segments,bounds,relation));
       row("curve_segments",result.segments.length);
     } else if(isRecord(result)&&Array.isArray(result.points)){
@@ -949,8 +949,9 @@
         const mode=val(form,"equation_mode");
         if(mode==="binomial")return api("/api/v1/binomials/expand",{expression:val(form,"expression")});
         if(mode==="system")return api("/api/v1/equations/system",{equations:val(form,"system_equations").split(/\n+/).map(line=>line.trim()).filter(Boolean)});
-        const equation=val(form,"equation");
+        const equation=val(form,"equation").replace(/[−–]/g,"-").trim();
         if(!equation.includes("="))throw new Error("Enter an equation with an equals sign, for example x^2 + y = 5.");
+        if(/\by\b/i.test(equation)){const graph=await api("/api/v1/graph/relation",{relation:equation,x_min:-10,x_max:10,y_min:-10,y_max:10,grid_size:100});return {...graph,relation:equation,graph_only:true,message:"This is a two-variable relation. Its curve is plotted below; use Advanced Maths Studio for further exploration."};}
         return api("/api/v1/equations/solve",{equation, equation_type:mode});
       }
       case "Graphing Calculator": {
