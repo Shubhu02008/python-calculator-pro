@@ -52,7 +52,11 @@ try {
   });
 
   await page.route("**/api/v1/equations/solve", async route => {
-    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ status: "solved", solutions: [{ real: 2, imaginary: 0 }, { real: -2, imaginary: 0 }], message: null }) });
+    const request = route.request().postDataJSON();
+    const result = request.equation?.includes("y^2")
+      ? { status: "infinite_solutions", solutions: [], message: "One equation defines a curve.", variables: ["x", "y"], relations: ["y^2 = 18*x"], degree: 2 }
+      : { status: "solved", solutions: [{ real: 2, imaginary: 0 }, { real: -2, imaginary: 0 }], message: null };
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(result) });
   });
 
   await page.goto("http://127.0.0.1:8000/studio.html");
@@ -228,6 +232,13 @@ try {
   assert.equal(await page.locator("#workspace-title").innerText(), "Advanced Maths Studio");
   assert.ok(await page.locator("#sidebar").isVisible(), "calculator sidebar should remain visible when Studio opens");
   assert.ok(await page.getByTitle("Advanced Maths Studio").isVisible(), "Studio should be embedded in the calculator workspace");
+  assert.equal(await page.locator(".home-nav-link[href=\"./studio.html\"]").count(), 0, "landing navigation must not bypass the calculator shell");
+  await page.locator('#sidebar [data-tool="Equations"]').click();
+  await page.locator('[name="equation_mode"]').selectOption("multivariable_quadratic");
+  await page.locator('[name="equation"]').fill("y^2 = 18*x");
+  await page.locator('.tool-form button[type="submit"]').click();
+  await page.locator(".equation-graph-section svg").waitFor({ timeout: 3000 });
+  assert.ok(relationRequests.some(request => request.relation === "y^2 = 18*x"), "equation solver should graph the full parabola relation, not a y=0 slice");
   await page.locator('#sidebar [data-tool="BMI Calculator"]').click();
   await page.locator('[name="height_unit"]').selectOption("imperial");
   assert.ok(await page.locator('[name="height_feet"]').isVisible(), "feet field should appear in imperial mode");
