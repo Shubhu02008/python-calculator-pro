@@ -1108,6 +1108,8 @@
     });
   }));
 
+  const studioHomeLink = $("#open-studio-from-home");
+  if (studioHomeLink) studioHomeLink.addEventListener("click", event => { event.preventDefault(); document.body.classList.add("calculator-open"); history.replaceState(null, "", "#calculator"); window.scrollTo({top:0,behavior:"smooth"}); renderTool("Advanced Maths Studio"); });
   const startCalculating = $("#start-calculating");
   if (startCalculating) startCalculating.addEventListener("click", event => {
     event.preventDefault();
