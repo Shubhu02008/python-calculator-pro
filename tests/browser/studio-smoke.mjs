@@ -228,6 +228,8 @@ try {
   assert.equal(await page.locator("#workspace-title").innerText(), "Advanced Maths Studio");
   assert.ok(await page.locator("#sidebar").isVisible(), "calculator sidebar should remain visible when Studio opens");
   assert.ok(await page.getByTitle("Advanced Maths Studio").isVisible(), "Studio should be embedded in the calculator workspace");
+  assert.ok(await page.locator("#sidebar .tool-nav").isVisible(), "mobile calculator navigation should remain visible while Studio is open");
+  assert.equal(await page.locator("#sidebar .tool-nav").evaluate(el => getComputedStyle(el).overflowX), "auto", "mobile calculator navigation should remain horizontally scrollable");
   await page.locator('#sidebar [data-tool="BMI Calculator"]').click();
   await page.locator('[name="height_unit"]').selectOption("imperial");
   assert.ok(await page.locator('[name="height_feet"]').isVisible(), "feet field should appear in imperial mode");
@@ -238,6 +240,10 @@ try {
   await page.waitForFunction(() => window.__bmiRequestCaptured === true, null, { timeout: 3000 }).catch(() => {});
   assert.ok(bmiPayload, "BMI request should be sent");
   assert.ok(Math.abs(bmiPayload.height_m - 1.7526) < 1e-10, "5 ft 9 in should convert to 1.7526 metres");
+  await page.locator("#sidebar [data-tool=\"BMI Calculator\"]").click();
+  await page.locator('[name="height_unit"]').selectOption("metric");
+  assert.ok(await page.locator('[name="height_m"]').isVisible(), "metric height input should return when switching back");
+  assert.ok(await page.locator('[name="height_feet"]').isHidden(), "feet input should hide in metric mode");
   console.log("Advanced Math Studio browser smoke tests passed.");
 } finally {
   await browser.close();
