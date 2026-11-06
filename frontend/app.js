@@ -614,7 +614,7 @@
       if(requestTimer!==null)clearTimeout(requestTimer);
       requestTimer=setTimeout(async()=>{
         const version=++requestVersion,lo=view.xmin,hi=view.xmax;
-        try{const result=await api("/api/v1/graph/sample",{expression:options.expression,x_min:lo,x_max:hi,points:1001},{timeoutMs:10000});
+        try{const result=await api("/api/v1/graph/sample",{expression:options.expression,x_min:lo,x_max:hi,points:1001},{timeoutMs:API_TIMEOUT_MS});
           if(version!==requestVersion||!Array.isArray(result.points))return;
           sampled=result.points.map(p=>({x:Number(p.x),y:p.y===null?null:Number(p.y)}));caption.textContent="Coordinates stay true to scale. Drag to pan; pinch, scroll, or use +/− to zoom. The graph resamples as you move.";render();
         }catch(error){if(version===requestVersion)caption.textContent="Graph refresh failed: "+error.message+" The last valid curve is still shown.";}
@@ -743,7 +743,7 @@
       if(requestTimer!==null)clearTimeout(requestTimer);
       requestTimer=setTimeout(async()=>{
         const version=++requestVersion;
-        try{const response=await api("/api/v1/graph/relation",{relation:relation,x_min:view.xmin,x_max:view.xmax,y_min:view.ymin,y_max:view.ymax,grid_size:100},{timeoutMs:10000});if(version!==requestVersion||!Array.isArray(response.segments))return;currentSegments=response.segments;caption.textContent="Coordinates stay true to scale. Drag to pan; pinch, scroll, or use +/− to zoom. The graph resamples as you move.";render();}
+        try{const response=await api("/api/v1/graph/relation",{relation:relation,x_min:view.xmin,x_max:view.xmax,y_min:view.ymin,y_max:view.ymax,grid_size:100},{timeoutMs:API_TIMEOUT_MS});if(version!==requestVersion||!Array.isArray(response.segments))return;currentSegments=response.segments;caption.textContent="Coordinates stay true to scale. Drag to pan; pinch, scroll, or use +/− to zoom. The graph resamples as you move.";render();}
         catch(error){if(version===requestVersion)caption.textContent="Graph refresh failed: "+error.message+" The last valid curve is still shown.";}
       },140);
     };
