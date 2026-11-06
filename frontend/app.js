@@ -63,7 +63,8 @@
     const dot = document.createElement("span"); dot.className = connected ? "status-dot" : "status-dot status-dot-muted";
     const label = document.createElement("span"); label.textContent = message; apiStatus.append(dot,label);
   }
-  async function api(path, body, {timeoutMs=15000} = {}) {
+  const API_TIMEOUT_MS = 90000; // Allow Render free instances time to wake after idle periods.
+  async function api(path, body, {timeoutMs=API_TIMEOUT_MS} = {}) {
     if (!API_BASE_URL) throw new Error("The calculator API URL is missing. Reload the site after the latest Render deployment; if the problem continues, check the frontend API_BASE_URL setting.");
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
