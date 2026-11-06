@@ -21,6 +21,7 @@ from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, field
 
 from matrix_engine import calculate_matrix, interpret_matrix_instruction
 from matrix_learning import generate_matrix_practice, check_matrix_answer
+from advanced_math import explain_calculus
 
 from engine import (
     CalculatorError,
@@ -844,7 +845,7 @@ def date_calculate(request: DateCalculationRequest):
 @app.post("/api/v1/calculus")
 def calculus(request: CalculusRequest):
     """Differentiate, integrate, or calculate a symbolic limit."""
-    return calculate_calculus(
+    result = calculate_calculus(
         request.operation,
         request.expression,
         variable=request.variable,
@@ -854,6 +855,18 @@ def calculus(request: CalculusRequest):
         point=request.point,
         direction=request.direction,
     )
+    result["steps"] = explain_calculus(
+        request.operation,
+        request.expression,
+        variable=request.variable,
+        order=request.order,
+        lower=request.lower,
+        upper=request.upper,
+        point=request.point,
+        direction=request.direction,
+        result=result.get("result"),
+    )
+    return result
 
 
 @app.post("/api/v1/statistics")
