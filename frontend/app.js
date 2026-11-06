@@ -223,11 +223,18 @@
     if(!form || !result || typeof result!=="object") return [];
     const read=name=>{const el=form.elements.namedItem(name);return el?String(el.value).trim():"";};
     const n=name=>Number(read(name));
-    const clean=value=>Number.isFinite(Number(value))?Number(value).toPrecision(8).replace(/\.?0+$/,""):String(value);
+    const clean=value=>Number.isFinite(Number(value))?Number(value).toPrecision(8).replace(/(\.\d*?)0+$/,"$1").replace(/\.$/,""):String(value);
     const steps=[];
     const add=(title,detail)=>steps.push({title,detail:String(detail)});
     const operation=read("operation");
-    if(activeTool==="Equations"){
+    if(activeTool==="Scientific Calculator"){
+      const expression=read("expression");
+      add("1. Read the expression",expression);
+      add("2. Follow the order of operations","Evaluate brackets first, then powers and roots, then multiplication/division, and finally addition/subtraction. Functions such as sin, cos, and log are evaluated at their position in the expression.");
+      add("3. Check angle mode","Trigonometric inputs use the selected "+angleMode+" mode. In DEG mode, angles are interpreted in degrees; in RAD mode, they are interpreted in radians.");
+      if(result.exact_fraction)add("4. Exact form",String(result.exact_fraction));
+      add("Final result",String(result.result??result.value??"See answer above."));
+    } else if(activeTool==="Equations"){
       const mode=read("equation_mode");
       if(mode==="quadratic"||mode==="linear"||mode==="polynomial"){
         const equation=read("equation").replace(/[−–]/g,"-").replace(/\s+/g,"");
