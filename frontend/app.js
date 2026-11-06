@@ -143,7 +143,7 @@
       submit.disabled=true;submit.textContent="Calculating…";isBusy=true;form.querySelectorAll(".form-error").forEach(el=>el.remove());
       try {
         const result=await submitForm(form);
-        renderResult(body,result);
+        renderResult(body,result,form);
         const inputs=[...form.querySelectorAll("input,select,textarea")].filter(el=>el.name&&el.value&&!el.closest(".field")?.hidden);
         const expression=activeTool+" · "+inputs.map(el=>el.name+"="+el.value).join(", ");
         const displayedResult=typeof result==="object"?(result.result!==undefined?String(result.result):result.message||result.status||JSON.stringify(result)):String(result);
@@ -219,7 +219,191 @@
     if(rows.length>8||rows[0].length>8)throw new Error("Matrix dimensions are limited to 8 × 8 by the API.");
     return rows;
   }
-  function renderResult(container,result) {
+  function workedSolutionSteps(form,result) {
+    if(!form || !result || typeof result!=="object") return [];
+    const read=name=>{const el=form.elements.namedItem(name);return el?String(el.value).trim():"";};
+    const n=name=>Number(read(name));
+    const clean=value=>Number.isFinite(Number(value))?Number(value).toPrecision(8).replace(/\.?0+$/,""):String(value);
+    const steps=[];
+    const add=(title,detail)=>steps.push({title,detail:String(detail)});
+    const operation=read("operation");
+    if(activeTool==="Equations"){
+      const mode=read("equation_mode");
+      if(mode==="quadratic"||mode==="linear"||mode==="polynomial"){
+        const equation=read("equation").replace(/[−–]/g,"-").replace(/\s+/g,"");
+        const parts=equation.split("=");
+        if(parts.length===2){
+          const expression="("+parts[0]+")-("+parts[1]+")";
+          const terms=expression.match(/[+-]?[^+-]+/g)||[];
+          const coeff={0:0,1:0,2:0};
+          let valid=true;
+          for(const raw of terms){
+            const term=raw.replace(/\*/g,"");
+            const match=term.match(/^([+-]?)(?:(\d+(?:\.\d*)?|\.\d+))?(?:x(?:\^(\d+))?)?$/i);
+            if(!match){valid=false;break;}
+            const sign=match[1]==="-"?-1:1,hasX=/x/i.test(term),power=hasX?Number(match[3]||1):0;
+            if(power>2){valid=false;break;}
+            coeff[power]+=sign*(match[2]===undefined?(hasX?1:0):Number(match[2]));
+          }
+          if(valid){
+            const {0:c,1:b,2:a}=coeff;
+            add("1. Rearrange the equation",equation+" = 0");
+            if(mode==="quadratic"||a!==0){
+              add("2. Identify the coefficients","Compare ax² + bx + c = 0. Here a = "+clean(a)+", b = "+clean(b)+", c = "+clean(c)+".");
+              add("3. Write the quadratic formula","x = (−b ± √(b² − 4ac)) / 2a");
+              const d=b*b-4*a*c;
+              add("4. Calculate the discriminant","D = b² − 4ac = ("+clean(b)+")² − 4("+clean(a)+")("+clean(c)+") = "+clean(d)+".");
+              add("5. Substitute into the formula","x = (−("+clean(b)+") ± √("+clean(d)+")) / (2 × "+clean(a)+").");
+              if(Array.isArray(result.solutions)&&result.solutions.length){
+                const roots=result.solutions.map((s,i)=>"x"+(i+1)+" = "+clean(s.real)+(Math.abs(Number(s.imaginary||0))>1e-10?" "+(s.imaginary<0?"−":"+")+" "+clean(Math.abs(s.imaginary))+"i":"")).join("; ");
+                add("6. Final roots",roots);
+              } else add("6. Interpret the discriminant",d<0?"D is negative, so there are no real roots.":d===0?"D is zero, so the equation has one repeated real root.":"D is positive, so the equation has two real roots.");
+            }else{
+              add("2. Isolate x",clean(b)+"x + ("+clean(c)+") = 0");
+              add("3. Divide by the coefficient of x","x = −c / b = −("+clean(c)+") / "+clean(b)+".");
+              if(result.solutions?.length)add("4. Final answer","x = "+clean(result.solutions[0].real));
+            }
+          }
+        }
+      } else if(mode==="binomial"){
+        add("1. Identify the binomial","Start with "+read("expression")+".");
+        add("2. Apply the binomial theorem","(a + b)ⁿ = Σ C(n,r) aⁿ⁻ʳ bʳ, for r = 0 to n.");
+        add("3. Collect the terms","The symbolic engine expands each term and combines like terms.");
+        add("4. Expanded result",result.expansion||"See the result above.");
+      } else if(mode==="system"){
+        add("1. List the equations",read("system_equations").split(/\n+/).filter(Boolean).join(" ; "));
+        add("2. Solve simultaneously","The solver finds values that satisfy every equation at the same time.");
+        add("3. Check the solution","Substitute each returned variable value into every original equation.");
+      }
+    } else if(activeTool==="Unit Converter"){
+      const type=read("conversion_type");
+      if(type==="units"){
+        const value=n("value"),from=read("from_unit"),to=read("to_unit"),converted=Number(result.value);
+        add("1. Start with the given quantity",clean(value)+" "+from);
+        if(/celsius|fahrenheit|kelvin/i.test(from)||/celsius|fahrenheit|kelvin/i.test(to)){
+          const formulas={"celsius→fahrenheit":"°F = (°C × 9/5) + 32","fahrenheit→celsius":"°C = (°F − 32) × 5/9","celsius→kelvin":"K = °C + 273.15","kelvin→celsius":"°C = K − 273.15","fahrenheit→kelvin":"K = (°F − 32) × 5/9 + 273.15","kelvin→fahrenheit":"°F = (K − 273.15) × 9/5 + 32"};
+          add("2. Choose the conversion formula",formulas[(from+"→"+to).toLowerCase()]||"Temperature conversions use an offset as well as a scale factor.");
+        } else {
+          const factor=value!==0?converted/value:null;
+          add("2. Use the unit conversion factor",factor===null?"The input is zero, so the converted value is also zero.": "1 "+from+" = "+clean(factor)+" "+to);
+          add("3. Multiply by the conversion factor",clean(value)+" × "+(factor===null?"conversion factor":clean(factor))+" = "+clean(converted)+" "+to);
+        }
+        add("4. Final converted value",clean(converted)+" "+to);
+      } else if(type==="base"){
+        add("1. Interpret the source number",read("base_value")+" is written in base "+read("from_base")+".");
+        add("2. Convert to base 10","Expand each digit using its positional power: Σ digit × "+read("from_base")+"^position.");
+        add("3. Convert to the target base","Repeatedly divide the decimal integer by "+read("to_base")+" and read the remainders from last to first.");
+        add("4. Final representation",String(result.result??result.value??"See result")+" in base "+read("to_base")+".");
+      } else {
+        add("1. Read the exchange amount",read("amount")+" "+read("from_currency").toUpperCase()+".");
+        add("2. Apply the exchange rate","Multiply the amount by the provider's current "+read("from_currency").toUpperCase()+" → "+read("to_currency").toUpperCase()+" rate.");
+        add("3. Converted amount",String(result.converted_amount??result.result??JSON.stringify(result)));
+        add("Note","Currency rates can change; the displayed conversion uses the rate returned for this request.");
+      }
+    } else if(activeTool==="Finance & Loan EMI"){
+      const p=n("principal"),rate=n("annual_rate")/100;
+      if(operation==="simple-interest"){
+        const t=n("years"),interest=Number(result.interest),total=Number(result.total_amount);
+        add("1. Write the simple-interest formula","SI = (P × R × T) / 100");
+        add("2. Substitute the values","SI = ("+clean(p)+" × "+clean(n("annual_rate"))+" × "+clean(t)+") / 100");
+        add("3. Calculate the interest","SI = "+clean(interest));
+        add("4. Add the principal","A = P + SI = "+clean(p)+" + "+clean(interest)+" = "+clean(total));
+      } else if(operation==="compound-interest"){
+        const t=n("years"),freq=n("compounding_per_year"),total=Number(result.total_amount);
+        add("1. Write the compound-amount formula","A = P(1 + R/(100m))^(mt)");
+        add("2. Identify the values","P = "+clean(p)+", R = "+clean(n("annual_rate"))+"%, m = "+freq+" times/year, t = "+clean(t)+" years.");
+        add("3. Substitute","A = "+clean(p)+"(1 + "+clean(n("annual_rate"))+"/("+100*freq+"))^("+freq+" × "+clean(t)+")");
+        add("4. Calculate compound amount","A = "+clean(total));
+        add("5. Find compound interest","CI = A − P = "+clean(total)+" − "+clean(p)+" = "+clean(result.interest));
+      } else {
+        const months=n("tenure_months"),r=rate/12,emi=Number(result.monthly_emi);
+        add("1. Convert annual interest to a monthly rate","r = annual rate / 12 / 100 = "+clean(r));
+        add("2. Set the number of instalments","n = "+months+" months.");
+        add("3. Write the EMI formula","EMI = P × r × (1+r)ⁿ / ((1+r)ⁿ − 1)");
+        add("4. Substitute the values","EMI = "+clean(p)+" × "+clean(r)+" × (1+"+clean(r)+")^"+months+" / ((1+"+clean(r)+")^"+months+" − 1)");
+        add("5. Monthly instalment","EMI = "+clean(emi));
+        add("6. Total repayment and interest","Total = EMI × n = "+clean(result.total_payment)+"; interest = total − principal = "+clean(result.total_interest));
+      }
+    } else if(activeTool==="Discount & GST Calculator"){
+      const amount=n("price"),rate=n(read("operation")==="discount"?"discount_percent":"gst_rate");
+      if(read("operation")==="discount"){
+        add("1. Discount formula","Discount = Original price × Discount rate / 100");
+        add("2. Substitute","Discount = "+clean(amount)+" × "+clean(rate)+" / 100");
+        add("3. Calculate discount","Discount = "+clean(result.discount_amount));
+        add("4. Subtract from original price","Final price = "+clean(amount)+" − "+clean(result.discount_amount)+" = "+clean(result.final_price));
+      }else if(read("inclusive")==="true"){
+        add("1. Extract the pre-tax amount","Base = Inclusive amount / (1 + GST rate/100)");
+        add("2. Substitute","Base = "+clean(amount)+" / (1 + "+clean(rate)+"/100) = "+clean(result.base_amount));
+        add("3. Find the GST component","GST = Inclusive amount − Base = "+clean(result.gst_amount));
+      }else{
+        add("1. Calculate GST","GST = Amount × GST rate / 100");
+        add("2. Substitute","GST = "+clean(amount)+" × "+clean(rate)+" / 100 = "+clean(result.gst_amount));
+        add("3. Add tax to the base amount","Total = "+clean(amount)+" + "+clean(result.gst_amount)+" = "+clean(result.total_amount));
+      }
+    } else if(activeTool==="BMI Calculator"){
+      const weight=n("weight_kg"),height=read("height_unit")==="imperial"?(n("height_feet")*12+n("height_inches"))*0.0254:n("height_cm")/100;
+      add("1. Convert height to metres",read("height_unit")==="imperial"?"Height = (feet × 12 + inches) × 0.0254 = "+clean(height)+" m":"Height = centimetres / 100 = "+clean(height)+" m");
+      add("2. Write the BMI formula","BMI = weight (kg) / [height (m)]²");
+      add("3. Substitute the measurements","BMI = "+clean(weight)+" / ("+clean(height)+")²");
+      add("4. Calculate BMI","BMI = "+clean(result.bmi));
+      add("Interpretation","BMI is a screening measure, not a diagnosis. For people under 18, adult BMI category labels are not appropriate; age- and sex-specific growth charts are needed.");
+    } else if(activeTool==="Date Calculator"){
+      if(operation==="difference"){
+        add("1. Identify the two dates",read("date")+" and "+read("other_date")+".");
+        add("2. Calculate the elapsed calendar days","Subtract the earlier date from the later date using calendar-day arithmetic.");
+        add("3. Day difference",String(result.days_difference)+" days (signed); absolute difference = "+result.absolute_days+" days.");
+      }else{
+        add("1. Start with the date",read("date")+".");
+        add("2. Apply the day offset",operation==="add_days"?"Move forward by "+read("days")+" calendar days.":"Move backward by "+read("days")+" calendar days.");
+        add("3. Resulting date",String(result.result_date)+". Calendar months and leap years are handled automatically.");
+      }
+    } else if(activeTool==="Statistics"){
+      const values=read("values").split(/[\s,;]+/).filter(Boolean).map(Number),sorted=[...values].sort((a,b)=>a-b),mean=values.reduce((a,b)=>a+b,0)/values.length;
+      const label={mean:"Arithmetic mean",median:"Median",mode:"Mode",range:"Range",minimum:"Minimum",maximum:"Maximum",variance:"Sample variance",population_variance:"Population variance",standard_deviation:"Sample standard deviation",population_standard_deviation:"Population standard deviation",quartiles:"Quartiles"}[operation]||operation;
+      add("1. Prepare the data",values.join(", "));
+      if(operation==="mean"){add("2. Use the mean formula","Mean = sum of observations / number of observations");add("3. Substitute","Mean = ("+values.join(" + ")+") / "+values.length+" = "+clean(result.result));}
+      else if(operation==="median"){add("2. Sort the values",sorted.join(", "));add("3. Locate the middle value",values.length%2?"There are an odd number of values, so take the middle observation.":"There are an even number of values, so average the two middle observations.");add("4. Median",clean(result.result));}
+      else if(operation==="range"){add("2. Find maximum and minimum","Range = maximum − minimum = "+clean(Math.max(...values))+" − "+clean(Math.min(...values))+" = "+clean(result.result));}
+      else if(["variance","population_variance","standard_deviation","population_standard_deviation"].includes(operation)){add("2. Calculate the mean","Mean = "+clean(mean));add("3. Find each squared deviation","Calculate (xᵢ − mean)² for every observation, then add them.");add("4. Divide by the correct count",operation.includes("population")?"Population variance divides by N.":"Sample variance divides by n − 1.");add("5. Final "+label.toLowerCase(),clean(result.result));}
+      else {add("2. Apply the definition",operation==="mode"?"Find the value(s) occurring most often.":operation==="minimum"?"Choose the smallest observation.":operation==="maximum"?"Choose the largest observation.":"Split the ordered data into lower and upper halves and find their medians.");add("3. Result",JSON.stringify(result.result));}
+    } else if(activeTool==="Probability & Combinatorics"){
+      const v=key=>n(key);
+      if(operation==="simple"){add("1. Use the probability formula","P(E) = favourable outcomes / total outcomes");add("2. Substitute","P(E) = "+v("favorable")+" / "+v("total"));add("3. Calculate","P(E) = "+clean(result.result));}
+      else if(operation==="complement"){add("1. Use the complement rule","P(A′) = 1 − P(A)");add("2. Substitute","P(A′) = 1 − "+v("event_a")+" = "+clean(result.result));}
+      else if(operation==="conditional"){add("1. Use conditional probability","P(A | B) = P(A ∩ B) / P(B)");add("2. Substitute","P(A | B) = "+v("intersection")+" / "+v("event_b")+" = "+clean(result.result));}
+      else if(operation==="union"){add("1. Use the addition rule","P(A ∪ B) = P(A) + P(B) − P(A ∩ B)");add("2. Substitute","= "+v("event_a")+" + "+v("event_b")+" − "+v("intersection"));add("3. Calculate","P(A ∪ B) = "+clean(result.result));}
+      else if(operation==="permutation"||operation==="combination"){add("1. Identify n and r","n = "+v("n")+", r = "+v("r")+".");add("2. Write the formula",operation==="permutation"?"nPr = n! / (n − r)!":"nCr = n! / [r!(n − r)!]");add("3. Substitute","= "+(operation==="permutation"?"("+v("n")+"!)/("+v("n")+" − "+v("r")+")!":v("n")+"! / ["+v("r")+"! × ("+v("n")+" − "+v("r")+")!]"));add("4. Calculate",String(result.result));}
+      else {add("1. Use the binomial probability formula","P(X = k) = C(n,k) pᵏ (1−p)ⁿ⁻ᵏ");add("2. Identify values","n = "+v("n")+", k = "+v("k")+", p = "+v("p")+".");add("3. Substitute","P(X = "+v("k")+") = C("+v("n")+","+v("k")+") × "+v("p")+"^"+v("k")+" × (1−"+v("p")+")^("+v("n")+"−"+v("k")+")");add("4. Calculate",clean(result.result));}
+    } else if(activeTool==="Calculus"){
+      const expression=read("expression"),variable=read("variable")||"x";
+      if(operation==="derivative"){add("1. Identify the function","f("+variable+") = "+expression);add("2. Apply differentiation rules","Use the power rule, constant multiple rule, sum rule, and chain/product rules as required.");add("3. Symbolic derivative","d"+(read("order")==="1"?"":"⁽"+read("order")+"⁾")+"f / d"+variable+(read("order")==="1"?"":"⁽"+read("order")+"⁾")+" = "+result.result);}
+      else if(operation==="integral"){add("1. Identify the integrand","∫ ("+expression+") d"+variable);add("2. Apply integration rules","Find an antiderivative whose derivative equals the integrand.");add("3. Include the constant of integration","∫ f("+variable+") d"+variable+" = "+result.result+" + C (where supported).");}
+      else if(operation==="definite_integral"){add("1. Set up the definite integral","∫ from "+read("lower")+" to "+read("upper")+" of ("+expression+") d"+variable);add("2. Find an antiderivative","Let F′("+variable+") = f("+variable+").");add("3. Apply the Fundamental Theorem of Calculus","F("+read("upper")+") − F("+read("lower")+") = "+result.result);}
+      else {add("1. State the limit","lim as "+variable+" → "+read("point")+" of ("+expression+").");add("2. Evaluate symbolically","The symbolic engine evaluates the requested one-sided or two-sided limit.");add("3. Limit value",String(result.result));}
+    } else if(activeTool==="Graphing Calculator"){
+      add("1. Interpret the input","The expression defines y as a function of x, or an implicit relation in x and y.");
+      add("2. Sample the requested interval","The graph engine evaluates the expression at evenly spaced x-coordinates and keeps undefined points as gaps.");
+      add("3. Plot the coordinates","Each valid (x, y) pair is mapped onto the coordinate plane; the curve is an approximation based on the sample density.");
+    } else if(activeTool==="Matrix Calculator"){
+      add("1. Identify the matrix operation","The selected operation is "+operation.replaceAll("_"," ")+".");
+      add("2. Apply the corresponding linear-algebra rule","The requested operation is applied to the entered matrix or matrices.");
+      add("3. Review row operations and intermediate matrices","For detailed matrix working, enable the server-generated step-by-step option; the result includes the exact row-operation sequence when supported.");
+    }
+    return steps;
+  }
+
+  function appendWorkedSolution(container,form,result) {
+    const steps=workedSolutionSteps(form,result);
+    if(!steps.length)return;
+    const section=document.createElement("section");section.className="worked-solution";
+    const heading=document.createElement("h3");heading.textContent="Step-by-step solution";
+    const intro=document.createElement("p");intro.className="worked-solution-intro";intro.textContent="A worked explanation showing the formula, substitution, and reasoning behind the result.";
+    const list=document.createElement("ol");
+    steps.forEach(step=>{const item=document.createElement("li");const title=document.createElement("strong");title.textContent=step.title;const detail=document.createElement("p");detail.textContent=step.detail;item.append(title,detail);list.append(item);});
+    section.append(heading,intro,list);container.append(section);
+  }
+
+  function renderResult(container,result,sourceForm=null) {
     container.replaceChildren();
     const isRecord=value=>value!==null&&typeof value==="object"&&!Array.isArray(value);
     const heading=(text)=>{const el=document.createElement("h3");el.className="result-summary-title";el.textContent=text;container.append(el);return el;};
@@ -337,6 +521,7 @@
     } else {
       const value=document.createElement("p");value.className="result-primary-value";value.textContent=text(result);container.append(value);
     }
+    if(sourceForm) appendWorkedSolution(container,sourceForm,result);
     const details=document.createElement("details");details.className="result-raw-details";
     const summary=document.createElement("summary");summary.textContent="Technical response";details.append(summary);
     const pre=document.createElement("pre");pre.className="result-json";pre.textContent=typeof result==="string"?result:JSON.stringify(result,null,2);details.append(pre);container.append(details);
@@ -936,7 +1121,7 @@
     const expr=txt("expression","Expression","","e.g. sin(pi / 2) + sqrt(25)");
     form.insertBefore(group("Expression",[expr]),form.querySelector(".form-actions"));
     addMathKeypad(form,"Scientific Calculator");
-    form.addEventListener("submit",async event=>{event.preventDefault();if(isBusy)return;isBusy=true;const submit=form.querySelector('[type="submit"]');submit.disabled=true;submit.textContent="Calculating…";try{const expression=val(form,"expression");if(!expression)throw new Error("Enter an expression to calculate.");const result=await api("/api/v1/calculate",{expression:transformDegreeTrig(expression)});renderResult(body,result);saveHistory({expression,result:result.result,displayedResult:formatNumber(result.result),angleMode,timestamp:new Date().toISOString()});}catch(error){body.replaceChildren();const p=document.createElement("p");p.className="result-error";p.textContent=error.message;body.append(p);}finally{isBusy=false;submit.disabled=false;submit.textContent="Calculate";}});
+    form.addEventListener("submit",async event=>{event.preventDefault();if(isBusy)return;isBusy=true;const submit=form.querySelector('[type="submit"]');submit.disabled=true;submit.textContent="Calculating…";try{const expression=val(form,"expression");if(!expression)throw new Error("Enter an expression to calculate.");const result=await api("/api/v1/calculate",{expression:transformDegreeTrig(expression)});renderResult(body,result,form);saveHistory({expression,result:result.result,displayedResult:formatNumber(result.result),angleMode,timestamp:new Date().toISOString()});}catch(error){body.replaceChildren();const p=document.createElement("p");p.className="result-error";p.textContent=error.message;body.append(p);}finally{isBusy=false;submit.disabled=false;submit.textContent="Calculate";}});
     output.append(historySection());
     const reference=formulaReferenceCard("Scientific Calculator");if(reference)workspace.append(reference);
     form.elements.expression.addEventListener("keydown",event=>{if(event.key==="Enter"){event.preventDefault();form.requestSubmit();}});
@@ -968,7 +1153,7 @@
       }
       case "Calculus": {const operation=val(form,"operation"),payload={operation,expression:val(form,"expression"),variable:val(form,"variable"),order:integer(form,"order"),direction:val(form,"direction"),point:val(form,"point")||"0"};if(operation==="definite_integral"){payload.lower=val(form,"lower");payload.upper=val(form,"upper");}if(operation==="integral"){delete payload.point;delete payload.direction;}return api("/api/v1/calculus",payload);}
       case "Matrix Calculator": {
-        const operation=val(form,"operation"),payload={operation,steps:val(form,"steps")==="true"};
+        const operation=val(form,"operation"),payload={operation,steps:true};
         const two=["add","subtract","multiply","equals"];
         if(!["identity","zero"].includes(operation))payload.matrix=matrixValue(form,"matrix_a");
         if(two.includes(operation))payload.matrix_b=matrixValue(form,"matrix_b");
@@ -1011,7 +1196,7 @@
       ])]],["Single equation",[txt("equation","Equation","","e.g. xy + yz = 3x^2yz","Use an equals sign. General polynomial mode accepts mixed terms and any degree in x, y, and z.")]],["System of equations",[area("system_equations","Equations (one per line)","x + y = 5\ny - x = 1","Enter each equation on a separate line.")]],["Binomial expansion",[txt("expression","Binomial expression","","e.g. (x + 2)^3")]]];break;
       case "Graphing Calculator":spec=[["Function or equation",[txt("expression","Function or equation","","e.g. sin(x), y = x^2, or y^2 = 18x"),num("x_min","Minimum x","-10"),num("x_max","Maximum x","10"),num("y_min","Minimum y","-10"),num("y_max","Maximum y","10"),num("points","Sample points","401","Functions use 2–2,000 samples; implicit equations use a contour grid.")]]];break;
       case "Calculus":spec=[["Calculus operation",[sel("operation","Operation",selectOptions.calculusOperation),sel("variable","Variable",options(["x","y","z","t"])),num("order","Derivative order","1"),txt("expression","Expression","","e.g. x^3 + sin(x)"),txt("lower","Lower bound","0"),txt("upper","Upper bound","1"),txt("point","Limit point","0"),sel("direction","Limit direction",options(["both","plus","minus"]))]]];break;
-      case "Matrix Calculator":spec=[["Matrix operation",[sel("operation","Matrix operation",selectOptions.matrixOperation),area("matrix_a","Matrix A","1, 2\n3, 4","Rows separated by new lines; values separated by commas."),area("matrix_b","Matrix B","5, 6\n7, 8","Required for add, subtract, multiply, and compare."),txt("scalar","Scalar","2"),num("power","Power","2"),num("size","Size for identity/zero","3"),num("row","Row (1-based)","1"),num("column","Column (1-based)","1"),area("vector","Vector b","5, 11","For solving Ax = b; values separated by commas."),sel("method","Inverse method",[["","Default"],["adjoint","Adjoint"],["gauss_jordan","Gauss–Jordan"]]),sel("steps","Step-by-step working",[["false","Off"],["true","On"]])]]];break;
+      case "Matrix Calculator":spec=[["Matrix operation",[sel("operation","Matrix operation",selectOptions.matrixOperation),area("matrix_a","Matrix A","1, 2\n3, 4","Rows separated by new lines; values separated by commas."),area("matrix_b","Matrix B","5, 6\n7, 8","Required for add, subtract, multiply, and compare."),txt("scalar","Scalar","2"),num("power","Power","2"),num("size","Size for identity/zero","3"),num("row","Row (1-based)","1"),num("column","Column (1-based)","1"),area("vector","Vector b","5, 11","For solving Ax = b; values separated by commas."),sel("method","Inverse method",[["","Default"],["adjoint","Adjoint"],["gauss_jordan","Gauss–Jordan"]]),sel("steps","Step-by-step working",[["true","On"],["false","Off"]])]]];break;
       case "Statistics":spec=[["Dataset",[sel("operation","Statistic",selectOptions.statsOperation),area("values","Values","12, 15, 18, 18, 21","Separate observations with commas, spaces, or new lines.")]]];break;
       case "Probability & Combinatorics":spec=[["Probability or counting inputs",[sel("operation","Operation",selectOptions.probabilityOperation),num("favorable","Favourable outcomes","1"),num("total","Total outcomes","6"),num("event_a","P(A)","0.5"),num("event_b","P(B)","0.4"),num("intersection","P(A ∩ B)","0.2"),num("n","n","5"),num("r","r","2"),num("p","Success probability p","0.5"),num("k","Successes k","2")]]];break;
       case "Unit Converter":{const dims=capabilities?.unit_dimensions||[],fallback=[{id:"length",units:["m","cm","km","mm","ft","in"]},{id:"mass",units:["kg","g","mg","lb","oz"]},{id:"temperature",units:["celsius","fahrenheit","kelvin"]},{id:"time",units:["s","min","h","day"]},{id:"volume",units:["L","mL"]}];const categories=dims.length?dims:fallback;const categoryOptions=categories.map(d=>[d.id,d.id.replaceAll("_"," ").replace(/\b\w/g,c=>c.toUpperCase())]);const initial=categories[0];const unitOptions=initial.units.map(unit=>[unit,String(unit).replaceAll("_"," ").replace(/\b\w/g,c=>c.toUpperCase())]);spec=[["Conversion type",[sel("conversion_type","What do you want to convert?",[["units","Physical units"],["currency","Currency"],["base","Number base"]])]],["Unit category",[sel("dimension","Unit category",categoryOptions)]],["Unit conversion",[num("value","Value","1"),sel("from_unit","From unit",unitOptions),sel("to_unit","To unit",unitOptions)]],["Currency conversion",[num("amount","Amount","100"),sel("from_currency","From currency",options(["INR","USD","EUR","GBP","JPY","CAD","AUD","CNY","SGD","AED"])),sel("to_currency","To currency",options(["USD","INR","EUR","GBP","JPY","CAD","AUD","CNY","SGD","AED"]))]],["Number base conversion",[txt("base_value","Integer value","255","e.g. 255 or FF"),num("from_base","From base","10"),num("to_base","To base","16")]]];break;}
