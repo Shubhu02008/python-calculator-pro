@@ -47,7 +47,7 @@ def _fetch_currency_rates(base_currency):
     """Fetch daily exchange rates; isolated for deterministic tests."""
     request = Request(
         f"https://open.er-api.com/v6/latest/{base_currency}",
-        headers={"User-Agent": "PythonCalculatorPro/1.0"},
+        headers={"User-Agent": "GanakCalculator/1.0"},
     )
     try:
         with urlopen(request, timeout=5) as response:
