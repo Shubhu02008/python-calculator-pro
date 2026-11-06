@@ -1,4 +1,4 @@
-"""Stable, UI-independent public API for Python Calculator Pro.
+"""Stable, UI-independent public API for Ganak Calculator.
 
 Application interfaces should call this module instead of importing parser or
 CLI implementation details directly. Public operations raise CalculatorError
