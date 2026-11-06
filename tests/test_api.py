@@ -38,6 +38,19 @@ def test_expression_endpoint_returns_structured_result():
     assert response.json()["result"] == 6
 
 
+def test_degree_mode_exact_angle_returns_fraction_and_approximation():
+    response = client.post(
+        "/api/v1/calculate",
+        json={"expression": "sin(radians(30))"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["result"] == pytest.approx(0.5)
+    assert body["exact_fraction"] == "1/2"
+    assert body["approximation"] == "0.5"
+
+
 def test_named_operation_endpoint():
     response = client.post(
         "/api/v1/operations",
