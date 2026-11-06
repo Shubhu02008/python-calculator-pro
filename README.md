@@ -1,4 +1,4 @@
-# Python Calculator Pro
+# Ganak Calculator
 
 A Python calculator engine for arithmetic, scientific functions, polynomial equations, and binomial expansions. The current interface is command-line based; a mobile button interface is a separate next step.
 
