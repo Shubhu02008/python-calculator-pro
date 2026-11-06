@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://ganak-calculator.onrender.com/sitemap.xml
+Sitemap: https://ganakcalculator.onrender.com/sitemap.xml
