@@ -47,6 +47,13 @@ try {
     const body = route.request().postDataJSON();
     await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ operation: body.operation, count: body.values.length, result: 3 }) });
   });
+  await page.route("**/api/v1/calculate", async route => {
+    const body = route.request().postDataJSON();
+    assert.equal(body.expression, "sin(radians(30))", "degree-mode scientific input should be converted to radians");
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({
+      result: 0.5, exact_fraction: "1/2", approximation: "0.5"
+    }) });
+  });
   await page.route("**/api/v1/probability", async route => {
     await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ operation: "simple", result: 1 / 3 }) });
   });
@@ -228,6 +235,12 @@ try {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("http://127.0.0.1:8000/index.html");
   await page.locator("#start-calculating").click();
+  await page.locator('#sidebar [data-tool="Scientific Calculator"]').click();
+  await page.locator('[name="expression"]').fill("sin 30");
+  await page.locator('.tool-form button[type="submit"]').click();
+  await page.locator(".result-primary-value").getByText("0.5", { exact: true }).waitFor({ timeout: 3000 });
+  assert.ok(await page.locator(".result-value-row").filter({ hasText: "exact_fraction" }).getByText("1/2", { exact: true }).count(), "scientific result should expose its exact fraction");
+  assert.ok(await page.locator(".result-value-row").filter({ hasText: "approximation" }).getByText("0.5", { exact: true }).count(), "scientific result should expose its decimal approximation");
   await page.locator('#sidebar [data-tool="Advanced Maths Studio"]').click();
   assert.equal(await page.locator("#workspace-title").innerText(), "Advanced Maths Studio");
   assert.ok(await page.locator("#sidebar").isVisible(), "calculator sidebar should remain visible when Studio opens");
