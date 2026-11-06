@@ -240,18 +240,20 @@
         const equation=read("equation").replace(/[−–]/g,"-").replace(/\s+/g,"");
         const parts=equation.split("=");
         if(parts.length===2){
-          const expression="("+parts[0]+")-("+parts[1]+")";
-          const terms=expression.match(/[+-]?[^+-]+/g)||[];
           const coeff={0:0,1:0,2:0};
           let valid=true;
-          for(const raw of terms){
-            const term=raw.replace(/\*/g,"");
-            const match=term.match(/^([+-]?)(?:(\d+(?:\.\d*)?|\.\d+))?(?:x(?:\^(\d+))?)?$/i);
-            if(!match){valid=false;break;}
-            const sign=match[1]==="-"?-1:1,hasX=/x/i.test(term),power=hasX?Number(match[3]||1):0;
-            if(power>2){valid=false;break;}
-            coeff[power]+=sign*(match[2]===undefined?(hasX?1:0):Number(match[2]));
-          }
+          const parseSide=(side,multiplier)=>{
+            const terms=side.match(/[+-]?[^+-]+/g)||[];
+            for(const raw of terms){
+              const term=raw.replace(/\*/g,"");
+              const match=term.match(/^([+-]?)(?:(\d+(?:\.\d*)?|\.\d+))?(?:x(?:\^(\d+))?)?$/i);
+              if(!match){valid=false;return;}
+              const sign=match[1]==="-"?-1:1,hasX=/x/i.test(term),power=hasX?Number(match[3]||1):0;
+              if(power>2){valid=false;return;}
+              coeff[power]+=multiplier*sign*(match[2]===undefined?(hasX?1:0):Number(match[2]));
+            }
+          };
+          parseSide(parts[0],1);parseSide(parts[1],-1);
           if(valid){
             const {0:c,1:b,2:a}=coeff;
             add("1. Rearrange the equation",equation+" = 0");
