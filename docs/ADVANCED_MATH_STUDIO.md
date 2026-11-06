@@ -2,7 +2,7 @@
 
 ## Goal
 
-Evolve Python Calculator Pro into an original, connected mathematics workspace inspired by the *capabilities* of interactive mathematics platforms. Do not copy GeoGebra's source code, branding, or exact interface.
+Evolve Ganak Calculator into an original, connected mathematics workspace inspired by the *capabilities* of interactive mathematics platforms. Do not copy GeoGebra's source code, branding, or exact interface.
 
 ## Current branch milestone: Studio foundation
 
