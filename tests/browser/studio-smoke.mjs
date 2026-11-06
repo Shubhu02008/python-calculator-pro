@@ -49,10 +49,16 @@ try {
   });
   await page.route("**/api/v1/calculate", async route => {
     const body = route.request().postDataJSON();
-    assert.equal(body.expression, "sin(radians(30))", "degree-mode scientific input should be converted to radians");
-    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({
-      result: 0.5, exact_fraction: "1/2", approximation: "0.5"
-    }) });
+    if (body.expression === "sin(radians(30))") {
+      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({
+        result: 0.5, exact_fraction: "1/2", approximation: "0.5"
+      }) });
+    } else {
+      assert.equal(body.expression, "tan 60", "tan 60 should be sent to the API in degree mode");
+      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({
+        result: 1.7320508075688772, exact_fraction: null, approximation: "1.732"
+      }) });
+    }
   });
   await page.route("**/api/v1/probability", async route => {
     await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ operation: "simple", result: 1 / 3 }) });
@@ -241,6 +247,10 @@ try {
   await page.locator(".result-primary-value").getByText("0.5", { exact: true }).waitFor({ timeout: 3000 });
   assert.ok(await page.locator(".result-value-row").filter({ has: page.getByText("exact fraction", { exact: true }) }).getByText("1/2", { exact: true }).count(), "scientific result should expose its exact fraction");
   assert.ok(await page.locator(".result-value-row").filter({ has: page.getByText("approximation", { exact: true }) }).getByText("0.5", { exact: true }).count(), "scientific result should expose its decimal approximation");
+  await page.locator('[name="expression"]').fill("tan 60");
+  await page.locator('.tool-form button[type="submit"]').click();
+  await page.getByText("√3", { exact: true }).waitFor({ timeout: 3000 });
+  assert.ok(await page.locator(".result-value-row").filter({ has: page.getByText("exact value", { exact: true }) }).getByText("√3", { exact: true }).count(), "tan 60 should show its exact radical value");
   await page.locator('#sidebar [data-tool="Advanced Maths Studio"]').click();
   assert.equal(await page.locator("#workspace-title").innerText(), "Advanced Maths Studio");
   assert.ok(await page.locator("#sidebar").isVisible(), "calculator sidebar should remain visible when Studio opens");
@@ -255,6 +265,9 @@ try {
   await page.locator('.tool-form button[type="submit"]').click();
   await page.getByText("Parabola / relation graph", { exact: true }).waitFor({ timeout: 3000 });
   assert.ok(relationRequests.some(request => request.relation === "y^2=18*x"), "equation solver should request the full parabola relation instead of sampling y as zero");
+  await page.locator('[name="equation"]').fill("x^2 - 5x + 6 = 0");
+  await page.locator('.tool-form button[type="submit"]').click();
+  await page.getByText("x = 2 or x = -2", { exact: true }).waitFor({ timeout: 3000 });
   await page.locator('#sidebar [data-tool="BMI Calculator"]').click();
   await page.locator('[name="height_unit"]').selectOption("imperial");
   assert.ok(await page.locator('[name="height_feet"]').isVisible(), "feet field should appear in imperial mode");
