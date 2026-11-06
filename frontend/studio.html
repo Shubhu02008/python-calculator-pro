@@ -102,7 +102,8 @@ graph.addEventListener("pointermove",event=>{
 });
 function finishPan(event){
   if(!dragState||dragState.id!==event.pointerId)return;
-  const moved=dragState.moved;
+  const moved=dragState.moved,view=dragState.view;
+  if(!moved){const pos=graphCoordinates(event),x=view.xmin+(pos.x-70)/806*(view.xmax-view.xmin);if(x>=view.xmin&&x<=view.xmax){$("#trace-x").value=Number(x.toPrecision(7));drawTrace();}}
   dragState=null;graph.style.cursor="grab";
   if(moved)plotFunctions();
 }
