@@ -9,7 +9,7 @@ Advanced Math Studio is the foundation for replacing the current Graphing Calcul
 - The main calculator uses a Python API and a custom SVG graph renderer.
 - `graphing.py` safely samples explicit functions and implicit relations.
 - `api.py` exposes graph sampling and has existing symbolic calculus, equation solving, matrix, statistics, and probability capabilities.
-- `frontend/studio.html` currently contains an isolated function graph and a starter numeric spreadsheet.
+- `frontend/studio.html` contains the integrated Advanced Maths Studio: Cartesian/parametric/polar/implicit graphing, a formula-enabled spreadsheet with CSV import and regression, symbolic calculus and equation solving, dynamic geometry, 3D surface plotting, statistics and probability, plus workspace save/load.
 - The Studio spreadsheet does not yet evaluate formulas or cell references, and its graph is not linked to a shared math document.
 
 ## Architecture principles
