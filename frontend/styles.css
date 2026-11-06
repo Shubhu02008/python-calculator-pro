@@ -361,3 +361,14 @@ body:not(.calculator-open) .app-shell{display:none}
 
 .topbar-feedback-button{min-height:34px;padding:0 12px;border:1px solid var(--border-color,#344763);border-radius:9px;background:var(--panel,#142138);color:var(--text,#eaf1ff);font-size:11px;font-weight:700;cursor:pointer}.topbar-feedback-button:hover{border-color:#78aaff;color:#a9c7ff}
 @media(max-width:520px){.topbar-feedback-button{min-height:31px;padding:0 9px;font-size:10px}}
+
+
+/* Textbook-style worked solutions */
+.worked-solution{margin-top:20px;padding:18px 19px;border:1px solid #2b4263;border-radius:13px;background:linear-gradient(145deg,#14233a,#101a2b)}
+.worked-solution h3{margin:0;color:#dce9ff;font-size:15px;letter-spacing:-.2px}
+.worked-solution-intro{margin:6px 0 14px;color:#94a9c7;font-size:11px;line-height:1.65}
+.worked-solution ol{display:grid;gap:12px;margin:0;padding-left:22px}
+.worked-solution li{padding-left:4px;color:#8fb7ff}
+.worked-solution li strong{display:block;color:#dce8fa;font-size:12px;font-weight:700}
+.worked-solution li p{margin:4px 0 0;color:#b6c6dc;font-family:"DM Mono",ui-monospace,monospace;font-size:11px;line-height:1.75;overflow-wrap:anywhere;white-space:pre-wrap}
+.worked-solution li::marker{color:#79aaff;font-weight:700}
