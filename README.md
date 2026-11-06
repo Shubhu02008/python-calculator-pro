@@ -1,6 +1,6 @@
 # Ganak Calculator
 
-A Python calculator engine for arithmetic, scientific functions, polynomial equations, and binomial expansions. The current interface is command-line based; a mobile button interface is a separate next step.
+A browser-based mathematics workspace backed by a Python calculation engine. Use the live [Ganak Calculator website](https://ganakcalculator.onrender.com/) for scientific calculations, equation solving, graphing, calculus, matrices, statistics, probability, conversions, and everyday tools. The Python command-line interface remains available for local use.
 
 **Requirements:** Python 3.11 or newer.
 
