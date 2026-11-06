@@ -239,8 +239,8 @@ try {
   await page.locator('[name="expression"]').fill("sin 30");
   await page.locator('.tool-form button[type="submit"]').click();
   await page.locator(".result-primary-value").getByText("0.5", { exact: true }).waitFor({ timeout: 3000 });
-  assert.ok(await page.locator(".result-value-row").filter({ hasText: "exact_fraction" }).getByText("1/2", { exact: true }).count(), "scientific result should expose its exact fraction");
-  assert.ok(await page.locator(".result-value-row").filter({ hasText: "approximation" }).getByText("0.5", { exact: true }).count(), "scientific result should expose its decimal approximation");
+  assert.ok(await page.locator(".result-value-row").filter({ has: page.getByText("exact fraction", { exact: true }) }).getByText("1/2", { exact: true }).count(), "scientific result should expose its exact fraction");
+  assert.ok(await page.locator(".result-value-row").filter({ has: page.getByText("approximation", { exact: true }) }).getByText("0.5", { exact: true }).count(), "scientific result should expose its decimal approximation");
   await page.locator('#sidebar [data-tool="Advanced Maths Studio"]').click();
   assert.equal(await page.locator("#workspace-title").innerText(), "Advanced Maths Studio");
   assert.ok(await page.locator("#sidebar").isVisible(), "calculator sidebar should remain visible when Studio opens");
