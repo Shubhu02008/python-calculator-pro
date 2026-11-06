@@ -1,4 +1,4 @@
-"""HTTP API adapter for Python Calculator Pro.
+"""HTTP API adapter for Ganak Calculator.
 
 Run locally with:
     python -m pip install -r requirements-api.txt
@@ -441,8 +441,8 @@ class CapabilitiesResult(BaseModel):
 
 
 app = FastAPI(
-    title="Python Calculator Pro API",
-    description="Versioned HTTP interface for the Python Calculator Pro engine.",
+    title="Ganak Calculator API",
+    description="Versioned HTTP interface for the Ganak Calculator engine.",
     version="1.0.0",
     debug=False,
 )
@@ -505,7 +505,7 @@ async def request_validation_error_handler(
 def root():
     """Describe the service without exposing implementation details."""
     return {
-        "name": "Python Calculator Pro API",
+        "name": "Ganak Calculator API",
         "version": app.version,
         "docs": "/docs",
     }
