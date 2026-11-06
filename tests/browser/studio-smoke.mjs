@@ -208,8 +208,8 @@ try {
   assert.equal(await page.locator("#stats-result .stat").nth(1).locator("strong").innerText(), "3", "statistics result should render in its result card");
   await page.locator("#probability-run").click();
   await page.locator("#probability-status").getByText("Calculation complete.", { exact: true }).waitFor({ timeout: 2000 });
-  await page.locator("#probability-result strong").waitFor({ timeout: 2000 });
-  assert.equal(await page.locator("#probability-result strong").innerText(), "0.3333333333333333", "probability result should render in the primary result field");
+  await page.locator("#probability-result > .stat > strong").waitFor({ timeout: 2000 });
+  assert.equal(await page.locator("#probability-result > .stat > strong").innerText(), "0.3333333333333333", "probability result should render in the primary result field");
   const workspaceDownloadPromise = page.waitForEvent("download");
   await page.locator("#save-workspace").click();
   const workspaceDownload = await workspaceDownloadPromise;
