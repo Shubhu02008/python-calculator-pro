@@ -1,4 +1,4 @@
-"""Safe symbolic and numerical matrix calculations for Python Calculator Pro."""
+"""Safe symbolic and numerical matrix calculations for Ganak Calculator."""
 import ast
 import operator
 from sympy import (
