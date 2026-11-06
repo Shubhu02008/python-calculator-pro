@@ -1,4 +1,4 @@
-"""Interactive command-line interface for Python Calculator Pro."""
+"""Interactive command-line interface for Ganak Calculator."""
 
 from engine import (
     CalculatorError,
@@ -11,7 +11,7 @@ from engine import (
 
 def main():
     """Run the interactive command-line calculator."""
-    print("===== Python Calculator Pro =====")
+    print("===== Ganak Calculator =====")
 
     while True:
         print("\nChoose an option:")
