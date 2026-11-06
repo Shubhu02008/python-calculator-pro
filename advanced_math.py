@@ -302,3 +302,64 @@ def _probability(value, label):
     if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or not 0 <= value <= 1:
         raise ValueError(f"{label} must be a probability between 0 and 1.")
     return float(value)
+
+
+
+def explain_calculus(operation, expression, *, variable="x", order=1, lower=None, upper=None, point="0", direction="both", result=None):
+    """Build a transparent symbolic derivation outline using the same safe parser as the solver."""
+    symbol = _SYMBOLS.get(variable)
+    if symbol is None or variable in {"pi", "e"}:
+        raise ValueError("Variable must be one of x, y, z, or t.")
+    expr = _parse_expression(expression)
+    steps = [{"title": "Start with the given expression", "detail": f"f({variable}) = {sp.sstr(expr)}"}]
+
+    def derivative_rule(node):
+        if node == symbol:
+            return f"d({variable})/d{variable} = 1"
+        if not node.has(symbol):
+            return f"d({sp.sstr(node)}/d{variable} = 0 (constant rule)"
+        if isinstance(node, sp.Add):
+            return "Differentiate each term separately (sum/difference rule)."
+        if isinstance(node, sp.Mul):
+            return "Apply the product rule: (uv)' = u'v + uv'."
+        if isinstance(node, sp.Pow):
+            base, exponent = node.as_base_exp()
+            if not exponent.has(symbol):
+                return f"Apply the power/chain rule to {sp.sstr(base)}^{sp.sstr(exponent)}."
+            return "The exponent also depends on the variable; use logarithmic differentiation."
+        if node.func in (sp.sin, sp.cos, sp.tan, sp.exp, sp.log):
+            return f"Apply the derivative rule for {node.func.__name__} and the chain rule to its inner function."
+        return f"Differentiate the subexpression {sp.sstr(node)} using its applicable symbolic rule."
+
+    if operation == "derivative":
+        current = expr
+        for index in range(order):
+            steps.append({"title": f"Differentiate (order {index + 1})", "detail": derivative_rule(current)})
+            current = sp.diff(current, symbol)
+            steps.append({"title": "Simplify this derivative", "detail": f"f⁽{index + 1}⁾({variable}) = {sp.sstr(current)}"})
+        steps.append({"title": "Final derivative", "detail": sp.sstr(current)})
+    elif operation in {"integral", "definite_integral"}:
+        steps.append({"title": "Choose an integration method", "detail": "Use linearity and the applicable reverse derivative rules; substitution or other methods may be needed for more complex expressions."})
+        anti = sp.integrate(expr, symbol)
+        steps.append({"title": "Find an antiderivative", "detail": f"F({variable}) = {sp.sstr(anti)} + C"})
+        if operation == "definite_integral":
+            lo, hi = _parse_bound(lower), _parse_bound(upper)
+            steps.append({"title": "Apply the Fundamental Theorem of Calculus", "detail": f"Evaluate F({sp.sstr(hi)}) − F({sp.sstr(lo)})."})
+            steps.append({"title": "Substitute the bounds", "detail": f"({sp.sstr(anti.subs(symbol, hi))}) − ({sp.sstr(anti.subs(symbol, lo))}) = {sp.sstr(result)}"})
+        else:
+            steps.append({"title": "Include the constant", "detail": "Add the arbitrary constant C because differentiating a constant gives zero."})
+    elif operation == "limit":
+        target = _parse_bound(point)
+        left = sp.limit(expr, symbol, target, dir="-") if direction in {"both", "minus"} else None
+        right = sp.limit(expr, symbol, target, dir="+") if direction in {"both", "plus"} else None
+        steps.append({"title": "Identify the approach", "detail": f"{variable} approaches {sp.sstr(target)} ({direction}-sided)."})
+        if direction == "both":
+            steps.append({"title": "Evaluate the left-hand limit", "detail": sp.sstr(left)})
+            steps.append({"title": "Evaluate the right-hand limit", "detail": sp.sstr(right)})
+            steps.append({"title": "Compare both sides", "detail": "The two-sided limit exists only when the left- and right-hand limits agree."})
+        else:
+            steps.append({"title": "Evaluate the one-sided limit", "detail": sp.sstr(left if direction == "minus" else right)})
+        steps.append({"title": "Final limit", "detail": sp.sstr(result)})
+    else:
+        raise ValueError("Unsupported calculus operation.")
+    return steps
