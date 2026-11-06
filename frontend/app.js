@@ -402,7 +402,9 @@
   }
 
   function appendWorkedSolution(container,form,result) {
-    const steps=workedSolutionSteps(form,result);
+    const steps=Array.isArray(result?.steps)&&result.steps.length
+      ? result.steps.map((step,index)=>({title:step.title||"Step "+(index+1),detail:step.detail||String(step)}))
+      : workedSolutionSteps(form,result);
     if(!steps.length)return;
     const section=document.createElement("section");section.className="worked-solution";
     const heading=document.createElement("h3");heading.textContent="Step-by-step solution";
