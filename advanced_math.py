@@ -317,7 +317,7 @@ def explain_calculus(operation, expression, *, variable="x", order=1, lower=None
         if node == symbol:
             return f"d({variable})/d{variable} = 1"
         if not node.has(symbol):
-            return f"d({sp.sstr(node)}/d{variable} = 0 (constant rule)"
+            return f"d({sp.sstr(node)})/d{variable} = 0 (constant rule)"
         if isinstance(node, sp.Add):
             return "Differentiate each term separately (sum/difference rule)."
         if isinstance(node, sp.Mul):
