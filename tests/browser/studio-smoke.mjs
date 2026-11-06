@@ -147,7 +147,8 @@ try {
   await page.locator("#cas-operation").selectOption("derivative");
   await page.locator("#cas-expression").fill("x^2");
   await page.locator("#cas-run").click();
-  await page.getByText("2*x", { exact: true }).waitFor({ timeout: 2000 });
+  await page.locator("#cas-result-value").waitFor({ timeout: 2000 });
+  assert.equal(await page.locator("#cas-result-value").innerText(), "2*x", "CAS derivative result should render in the result field");
   await page.locator("#cas-operation").selectOption("solve_equation");
   await page.locator("#cas-expression").fill("x^2=4");
   await page.locator("#cas-run").click();
@@ -157,7 +158,8 @@ try {
   await page.locator("#cas-lower").fill("0");
   await page.locator("#cas-upper").fill("1");
   await page.locator("#cas-run").click();
-  await page.getByText("1/3", { exact: true }).waitFor({ timeout: 2000 });
+  await page.locator("#cas-result-value").waitFor({ timeout: 2000 });
+  assert.equal(await page.locator("#cas-result-value").innerText(), "1/3", "CAS definite-integral result should render in the result field");
   await page.locator(".tab[data-view='geometry']").click();
   await page.locator("#geometry-tool").selectOption("point");
   await page.locator("#geometry-canvas").click({ position: { x: 80, y: 80 } });
