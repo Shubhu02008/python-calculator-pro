@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: python-calculator-pro-api
+    name: ganak-calculator-api
     runtime: python
     plan: free
     region: singapore
@@ -11,11 +11,11 @@ services:
       - key: CALCULATOR_CORS_ORIGINS
         fromService:
           type: web
-          name: python-calculator-pro-site
+          name: ganak-calculator
           envVarKey: RENDER_EXTERNAL_URL
 
   - type: web
-    name: python-calculator-pro-site
+    name: ganak-calculator
     runtime: static
     buildCommand: sh frontend/build-config.sh
     staticPublishPath: frontend
@@ -23,5 +23,5 @@ services:
       - key: API_BASE_URL
         fromService:
           type: web
-          name: python-calculator-pro-api
+          name: ganak-calculator-api
           envVarKey: RENDER_EXTERNAL_URL
