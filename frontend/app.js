@@ -414,8 +414,26 @@
     section.append(heading,intro,list);container.append(section);
   }
 
+  function exactTrigValue(expression) {
+    const source=String(expression||"").trim().replace(/\s+/g,"").toLowerCase();
+    const match=source.match(/^(sin|cos|tan)\(?([+-]?\d+(?:\.\d+)?)\)?$/);
+    if(!match)return null;
+    const fn=match[1],angle=Number(match[2]);
+    if(angleMode==="RAD")return null;
+    const normalized=((angle%360)+360)%360;
+    const values={
+      sin:{0:"0",30:"1/2",45:"√2/2",60:"√3/2",90:"1",120:"√3/2",135:"√2/2",150:"1/2",180:"0",210:"−1/2",225:"−√2/2",240:"−√3/2",270:"−1",300:"−√3/2",315:"−√2/2",330:"−1/2"},
+      cos:{0:"1",30:"√3/2",45:"√2/2",60:"1/2",90:"0",120:"−1/2",135:"−√2/2",150:"−√3/2",180:"−1",210:"−√3/2",225:"−√2/2",240:"−1/2",270:"0",300:"1/2",315:"√2/2",330:"√3/2"},
+      tan:{0:"0",30:"√3/3",45:"1",60:"√3",120:"−√3",135:"−1",150:"−√3/3",180:"0",210:"√3/3",225:"1",240:"√3",300:"−√3",315:"−1",330:"−√3/3"}
+    };
+    return values[fn][String(normalized)]||null;
+  }
   function renderResult(container,result,sourceForm=null) {
     container.replaceChildren();
+    if(activeTool==="Equations"&&sourceForm&&["linear","quadratic"].includes(val(sourceForm,"equation_mode"))&&result&&typeof result==="object"&&!Array.isArray(result)&&!Array.isArray(result.solutions)){
+      const candidates=[result.value_1,result.value_2,result.value1,result.value2,result.root_1,result.root_2].filter(value=>value!==undefined&&value!==null&&value!=="");
+      if(candidates.length)result={...result,solutions:candidates.map(value=>typeof value==="object"?value:{real:Number(value),imaginary:0}),status:result.status||"solved"};
+    }
     const isRecord=value=>value!==null&&typeof value==="object"&&!Array.isArray(value);
     const heading=(text)=>{const el=document.createElement("h3");el.className="result-summary-title";el.textContent=text;container.append(el);return el;};
     const text=(value)=>value===null||value===undefined?"—":typeof value==="string"?value:typeof value==="number"?formatNumber(value):JSON.stringify(value);
@@ -524,8 +542,14 @@
       if(typeof result.result==="number"||typeof result.result==="string"){
         heading("Answer");const answer=document.createElement("p");answer.className="result-primary-value";answer.textContent=text(result.result);container.append(answer);
       }
+      if(activeTool==="Scientific Calculator"&&sourceForm&&!result.exact_fraction){
+        const exact=exactTrigValue(val(sourceForm,"expression"));
+        if(exact)row("exact_value",exact);
+      }
       Object.entries(result).forEach(([key,value])=>{
         if(key==="result"&&(typeof value==="number"||typeof value==="string"))return;
+        if(activeTool==="Scientific Calculator"&&key==="exact_fraction"&&!value)return;
+        if(["value_1","value_2","value1","value2","root_1","root_2"].includes(key)&&Array.isArray(result.solutions))return;
         if(key==="points"||key==="solutions"||key==="expansion")return;
         if(Array.isArray(value)&&/step|working|derivation/i.test(key)){
           const section=document.createElement("section");section.className="solution-steps";
