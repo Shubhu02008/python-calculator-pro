@@ -351,7 +351,7 @@ def test_root_describes_api_service():
     response = client.get("/")
     assert response.status_code == 200
     body = response.json()
-    assert body["name"] == "Python Calculator Pro API"
+    assert body["name"] == "Ganak Calculator API"
     assert body["docs"] == "/docs"
 
 
