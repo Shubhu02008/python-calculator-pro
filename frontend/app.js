@@ -515,7 +515,8 @@
         });
         const line=document.createElement("div");line.className="root-result";
         const label=document.createElement("span");label.textContent="Answer";
-        const answer=document.createElement("strong");answer.textContent="x = "+values.join(" or x = ");
+        const variable=Array.isArray(result.variables)&&result.variables.length?result.variables[0]:"x";
+        const answer=document.createElement("strong");answer.textContent=variable+" = "+values.join(" or "+variable+" = ");
         line.append(label,answer);container.append(line);
       } else if(!result.solutions.length && !result.message){
         const message=document.createElement("p");message.className="result-summary-message";message.textContent="No individual roots were returned for this equation.";container.append(message);
@@ -528,8 +529,9 @@
         result.solutions.forEach((root,index)=>{
           const real=Number(root.real),imag=Number(root.imaginary||0);
           let value;
-          if(Math.abs(imag)<1e-12)value="x = "+formatNumber(real);
-          else value="x = "+formatNumber(real)+(imag<0?" − ":" + ")+formatNumber(Math.abs(imag))+"i";
+          const variable=Array.isArray(result.variables)&&result.variables.length?result.variables[0]:"x";
+          if(Math.abs(imag)<1e-12)value=variable+" = "+formatNumber(real);
+          else value=variable+" = "+formatNumber(real)+(imag<0?" − ":" + ")+formatNumber(Math.abs(imag))+"i";
           const line=document.createElement("div");line.className="root-result";
           const label=document.createElement("span");label.textContent="Root "+(index+1);
           const answer=document.createElement("strong");answer.textContent=value;line.append(label,answer);container.append(line);
@@ -1188,8 +1190,6 @@
         if(mode==="system")return api("/api/v1/equations/system",{equations:val(form,"system_equations").split(/\n+/).map(line=>line.trim()).filter(Boolean)});
         const equation=val(form,"equation").replace(/[−–]/g,"-").trim();
         if(!equation.includes("="))throw new Error("Enter an equation with an equals sign, for example x^2 + y = 5.");
-        if(/\by\b/i.test(equation)){const relation=equation.replace(/\bz\b/gi,"0");const graph=await api("/api/v1/graph/relation",{relation,x_min:-10,x_max:10,y_min:-10,y_max:10,grid_size:100});return {...graph,relation,graph_only:true,message:"This is a two-variable relation. Its curve is plotted below; any z terms are fixed at zero for this 2D view."};}
-        return api("/api/v1/equations/solve",{equation, equation_type:mode});
       }
       case "Graphing Calculator": {
         const x_min=number(form,"x_min"),x_max=number(form,"x_max"),points=integer(form,"points");
