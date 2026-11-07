@@ -707,21 +707,21 @@ def solve(request: EquationRequest):
         raise CalculatorError(
             "Could not interpret this equation. Try x^2 - 5x + 6 = 0, 2x + 3y = 12, or x^2 + y + z + 18 = 0."
         ) from exc
-    result = solve_equation(equation)
-    if isinstance(result, str):
-        status = (
-            "infinite_solutions"
-            if result == "Infinite solutions"
-            else "no_solution"
-        )
-        return {"status": status, "solutions": [], "message": result}
-    solutions = []
-    for root in result:
-        if isinstance(root, complex):
-            solutions.append({"real": root.real, "imaginary": root.imag})
-        else:
-            solutions.append({"real": float(root), "imaginary": 0.0})
-    return {"status": "solved", "solutions": solutions, "message": None, "degree": int(degree)}
+    variable_name = used[0]
+    variable = symbols[variable_name]
+    polynomial = sp.Poly(relation_expr, variable)
+    try:
+        roots = sp.solve(polynomial.as_expr(), variable)
+        numeric_roots = [complex(sp.N(root, 30)) for root in roots]
+        if len(numeric_roots) != int(degree):
+            numeric_roots = [complex(root) for root in sp.nroots(polynomial, maxsteps=200)]
+    except Exception as exc:
+        raise CalculatorError("The equation was recognized, but its roots could not be calculated reliably.") from exc
+    solutions = [{"real": float(root.real), "imaginary": float(root.imag)} for root in numeric_roots]
+    return {
+        "status": "solved", "solutions": solutions, "message": None,
+        "variables": [variable_name], "relations": [], "degree": int(degree)
+    }
 
 
 @app.post("/api/v1/equations/system")
