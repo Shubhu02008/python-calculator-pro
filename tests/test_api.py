@@ -482,3 +482,17 @@ def test_calculate_returns_exact_fraction_for_common_degree_trig_value():
     assert body["result"] == pytest.approx(0.5)
     assert body["exact_fraction"] == "1/2"
     assert body["approximation"] == "0.5"
+
+
+@pytest.mark.parametrize("variable", ["x", "y", "z"])
+def test_single_variable_quadratic_solves_using_selected_variable(variable):
+    response = client.post(
+        "/api/v1/equations/solve",
+        json={"equation": f"{variable}^2 - 5{variable} + 6 = 0", "equation_type": "quadratic"},
+    )
+    assert response.status_code == 200, response.json()
+    body = response.json()
+    assert body["status"] == "solved"
+    assert body["variables"] == [variable]
+    assert [root["real"] for root in body["solutions"]] == pytest.approx([2, 3])
+    assert all(root["imaginary"] == 0 for root in body["solutions"])
