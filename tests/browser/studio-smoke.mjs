@@ -54,7 +54,7 @@ try {
         result: 0.5, exact_fraction: "1/2", approximation: "0.5"
       }) });
     } else {
-      assert.equal(body.expression, "tan 60", "tan 60 should be sent to the API in degree mode");
+      assert.equal(body.expression, "tan(radians(60))", "degree-mode tan 60 should be converted to radians before the API request");
       await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({
         result: 1.7320508075688772, exact_fraction: null, approximation: "1.732"
       }) });
