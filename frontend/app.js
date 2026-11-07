@@ -696,7 +696,7 @@
     makeControl("Reset","Reset graph view",()=>{Object.assign(view,initialView);render();scheduleResample();});
     render();figure.append(controls,svg,caption);return figure;
   }
-  function drawRelationGraph(segments,bounds={},relation=null) {
+  function drawRelationGraph(segments,bounds={},relation=null,rootSolutions=[]) {
     const figure=document.createElement("figure");figure.className="graph-figure";
     const width=900,height=520,pad={left:68,right:24,top:24,bottom:54},plotW=width-pad.left-pad.right,plotH=height-pad.top-pad.bottom;
     if(!segments.length){const msg=document.createElement("figcaption");msg.textContent="No real curve was found in this viewing window. Try a wider x/y range.";figure.append(msg);return figure;}
@@ -727,6 +727,21 @@
       if(d){const clipId="relation-clip-"+Math.random().toString(36).slice(2),defs=node("defs"),clip=node("clipPath",{id:clipId});clip.append(node("rect",{x:pad.left,y:pad.top,width:plotW,height:plotH}));defs.append(clip);svg.append(defs,node("path",{d,class:"graph-curve","clip-path":"url(#"+clipId+")"}));}
       svg.append(node("text",{x:(pad.left+width-pad.right)/2,y:height-8,"text-anchor":"middle",class:"graph-axis-title"},"x"));
       svg.append(node("text",{x:16,y:height/2,transform:"rotate(-90 16 "+(height/2)+")","text-anchor":"middle",class:"graph-axis-title"},"y"));
+      // Mark each real algebraic root on the implicit graph (for example y=2 and y=3).
+      if(Array.isArray(rootSolutions)){
+        const realRoots=rootSolutions.filter(root=>root&&Number.isFinite(Number(root.real))&&Math.abs(Number(root.imaginary||0))<1e-10);
+        const markerX=Math.max(view.xmin,Math.min(view.xmax,0));
+        realRoots.forEach((root,index)=>{
+          const value=Number(root.real);
+          if(value<view.ymin||value>view.ymax)return;
+          const sx=px(markerX),sy=py(value),label="y"+(index+1)+" = "+fmt(value);
+          const lx=Math.min(width-pad.right-112,Math.max(pad.left+5,sx+9));
+          const ly=Math.max(pad.top+18,Math.min(height-pad.bottom-5,sy-9));
+          svg.append(node("circle",{cx:sx,cy:sy,r:6,class:"graph-coordinate-point"}));
+          svg.append(node("rect",{x:lx-4,y:ly-16,width:Math.min(112,label.length*7+10),height:23,rx:5,class:"graph-coordinate-label-bg"}));
+          svg.append(node("text",{x:lx+1,y:ly,"text-anchor":"start",class:"graph-coordinate-label"},label));
+        });
+      }
       if(selectedPoint&&selectedPoint.x>=view.xmin&&selectedPoint.x<=view.xmax&&selectedPoint.y>=view.ymin&&selectedPoint.y<=view.ymax){
         const sx=px(selectedPoint.x),sy=py(selectedPoint.y),label="("+fmt(selectedPoint.x)+", "+fmt(selectedPoint.y)+")",lx=Math.min(width-pad.right-125,Math.max(pad.left+4,sx+10)),ly=Math.max(pad.top+18,sy-10);
         svg.append(node("line",{x1:sx,y1:pad.top,x2:sx,y2:height-pad.bottom,class:"graph-coordinate-guide"}),node("line",{x1:pad.left,y1:sy,x2:width-pad.right,y2:sy,class:"graph-coordinate-guide"}),node("circle",{cx:sx,cy:sy,r:5,class:"graph-coordinate-point"}),node("rect",{x:lx-4,y:ly-16,width:Math.min(125,label.length*7+10),height:23,rx:5,class:"graph-coordinate-label-bg"}),node("text",{x:lx+1,y:ly,"text-anchor":"start",class:"graph-coordinate-label"},label));
@@ -810,7 +825,7 @@
     catch{ x_min=-10; x_max=10; }
     if(!Number.isFinite(x_min)||!Number.isFinite(x_max)||x_min>=x_max){x_min=-10;x_max=10;}
     try{
-      if(graphExpression.relation){const bounds={x_min,x_max,y_min:-10,y_max:10};const sampled=await api("/api/v1/graph/relation",{relation:graphExpression.relation,...bounds,grid_size:100});if(Array.isArray(sampled.segments)&&sampled.segments.length){section.append(drawRelationGraph(sampled.segments,bounds,graphExpression.relation));const caption=document.createElement("p");caption.className="field-help";caption.textContent="The complete 2D relation is plotted, including both branches where present.";section.append(caption);}else{const msg=document.createElement("p");msg.className="field-help";msg.textContent="No visible curve segments were found in this viewing range.";section.append(msg);}return;}
+      if(graphExpression.relation){const bounds={x_min,x_max,y_min:-10,y_max:10};const sampled=await api("/api/v1/graph/relation",{relation:graphExpression.relation,...bounds,grid_size:100});if(Array.isArray(sampled.segments)&&sampled.segments.length){section.append(drawRelationGraph(sampled.segments,bounds,graphExpression.relation,result?.status==="solved"?result.solutions:[]));const caption=document.createElement("p");caption.className="field-help";caption.textContent="The complete 2D relation is plotted, including both branches where present.";section.append(caption);}else{const msg=document.createElement("p");msg.className="field-help";msg.textContent="No visible curve segments were found in this viewing range.";section.append(msg);}return;}
       const expression=graphExpression;
       const sampled=await api("/api/v1/graph/sample",{expression,x_min,x_max,points:401});
       if(Array.isArray(sampled.points)&&sampled.points.length) {
