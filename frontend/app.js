@@ -1205,6 +1205,10 @@
         if(mode==="system")return api("/api/v1/equations/system",{equations:val(form,"system_equations").split(/\n+/).map(line=>line.trim()).filter(Boolean)});
         const equation=val(form,"equation").replace(/[−–]/g,"-").trim();
         if(!equation.includes("="))throw new Error("Enter an equation with an equals sign, for example x^2 + y = 5.");
+        const variables=[...new Set((equation.match(/[xyz]/gi)||[]).map(name=>name.toLowerCase()))];
+        if(variables.length>1){
+          return api("/api/v1/graph/relation",{relation:equation,x_min:-10,x_max:10,y_min:-10,y_max:10,grid_size:80});
+        }
         return api("/api/v1/equations/solve",{equation, equation_type:mode});
       }
       case "Graphing Calculator": {
