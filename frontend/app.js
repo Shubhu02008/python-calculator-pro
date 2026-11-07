@@ -1190,6 +1190,7 @@
         if(mode==="system")return api("/api/v1/equations/system",{equations:val(form,"system_equations").split(/\n+/).map(line=>line.trim()).filter(Boolean)});
         const equation=val(form,"equation").replace(/[−–]/g,"-").trim();
         if(!equation.includes("="))throw new Error("Enter an equation with an equals sign, for example x^2 + y = 5.");
+        return api("/api/v1/equations/solve",{equation, equation_type:mode});
       }
       case "Graphing Calculator": {
         const x_min=number(form,"x_min"),x_max=number(form,"x_max"),points=integer(form,"points");
