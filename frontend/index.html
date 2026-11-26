@@ -1,6 +1,20 @@
 <!doctype html>
 <html lang="en">
 <head>
+  <!-- Sentry browser error monitoring. The loader URL contains the frontend project's public key. -->
+  <script>
+    window.sentryOnLoad = function () {
+      Sentry.init({
+        environment: "production",
+        sendDefaultPii: false,
+        tracesSampleRate: 0
+      });
+    };
+  </script>
+  <script
+    src="https://js-de.sentry-cdn.com/607b60eeb0b1ebfbe69d2f97a27f9cc8.min.js"
+    crossorigin="anonymous"
+  ></script>
 <script async src="https://www.googletagmanager.com/gtm.js?id=GTM-MRTCPMST"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
