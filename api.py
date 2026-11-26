@@ -13,6 +13,8 @@ import os
 from decimal import Decimal, InvalidOperation
 from typing import Literal
 
+import sentry_sdk
+from sentry_sdk.integrations.fastapi import FastApiIntegration
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -51,6 +53,27 @@ from engine import (
     solve_equation_system,
 )
 
+
+# Sentry is enabled only when SENTRY_DSN is configured in the deployment
+# environment. Do not place the DSN in source control.
+_sentry_dsn = os.getenv("SENTRY_DSN", "").strip()
+if _sentry_dsn:
+    sentry_sdk.init(
+        dsn=_sentry_dsn,
+        integrations=[FastApiIntegration()],
+        environment=os.getenv("SENTRY_ENVIRONMENT", "production"),
+        traces_sample_rate=float(os.getenv("SENTRY_TRACES_SAMPLE_RATE", "0.0")),
+        send_default_pii=False,
+    )
+
+
+Number = StrictInt | StrictFloat
+_DEFAULT_CORS_ORIGINS = (
+    "http://localhost:3000,"
+    "http://127.0.0.1:3000,"
+    "http://localhost:5173,"
+    "http://127.0.0.1:5173"
+)
 
 Number = StrictInt | StrictFloat
 _DEFAULT_CORS_ORIGINS = (
